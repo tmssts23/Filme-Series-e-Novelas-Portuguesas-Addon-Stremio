@@ -1,0 +1,2 @@
+# Ignorar node_modules no upload (Railway instala com npm install)
+node_modules

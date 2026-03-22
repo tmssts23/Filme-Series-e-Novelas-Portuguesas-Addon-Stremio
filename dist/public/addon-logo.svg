@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Bandeira de Portugal em forma de bola">
+  <defs>
+    <radialGradient id="ptSphere" cx="32%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45"/>
+      <stop offset="35%" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.25"/>
+    </radialGradient>
+    <clipPath id="ptBall">
+      <circle cx="256" cy="256" r="236"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#ptBall)">
+    <rect x="0" y="0" width="256" height="512" fill="#046A38"/>
+    <rect x="256" y="0" width="256" height="512" fill="#DA020E"/>
+    <!-- Esfera armilar + escudo (simplificado, centro na junção verde/vermelho) -->
+    <circle cx="256" cy="256" r="80" fill="#FFCC00" stroke="#1a1a1a" stroke-width="3"/>
+    <circle cx="256" cy="256" r="60" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+    <ellipse cx="256" cy="256" rx="60" ry="24" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+    <ellipse cx="256" cy="256" rx="24" ry="60" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+    <path fill="#DA020E" stroke="#1a1a1a" stroke-width="2"
+      d="M256 218c-22 0-40 18-40 40v6c0 16 12 30 28 34v28h24v-28c16-4 28-18 28-34v-6c0-22-18-40-40-40z"/>
+  </g>
+  <circle cx="256" cy="256" r="236" fill="url(#ptSphere)" pointer-events="none"/>
+  <circle cx="256" cy="256" r="236" fill="none" stroke="#1a1a1a" stroke-width="4" opacity="0.35"/>
+</svg>

@@ -1,0 +1,12 @@
+# Blueprint Render — https://render.com/docs/blueprint-spec
+# Cria o serviço: Dashboard → New → Blueprint → cola este repo.
+
+services:
+  - type: web
+    name: novelaspt-stremio-addon
+    runtime: node
+    region: frankfurt
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /manifest.json
