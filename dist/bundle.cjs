@@ -9998,7 +9998,7 @@ var require_form_data = __commonJS({
     var parseUrl = require("url").parse;
     var fs2 = require("fs");
     var Stream = require("stream").Stream;
-    var crypto = require("crypto");
+    var crypto2 = require("crypto");
     var mime = require_mime_types();
     var asynckit = require_asynckit();
     var setToStringTag = require_es_set_tostringtag();
@@ -10204,7 +10204,7 @@ var require_form_data = __commonJS({
       return Buffer.concat([dataBuffer, Buffer.from(this._lastBoundary())]);
     };
     FormData2.prototype._generateBoundary = function() {
-      this._boundary = "--------------------------" + crypto.randomBytes(12).toString("hex");
+      this._boundary = "--------------------------" + crypto2.randomBytes(12).toString("hex");
     };
     FormData2.prototype.getLengthSync = function() {
       var knownLength = this._overheadLength + this._valueLength;
@@ -10896,7 +10896,7 @@ var require_axios = __commonJS({
   "node_modules/axios/dist/node/axios.cjs"(exports2, module2) {
     "use strict";
     var FormData$1 = require_form_data();
-    var crypto = require("crypto");
+    var crypto2 = require("crypto");
     var url = require("url");
     var proxyFromEnv = require_proxy_from_env();
     var http2 = require("http");
@@ -10911,7 +10911,7 @@ var require_axios = __commonJS({
       return e && typeof e === "object" && "default" in e ? e : { "default": e };
     }
     var FormData__default = /* @__PURE__ */ _interopDefaultLegacy(FormData$1);
-    var crypto__default = /* @__PURE__ */ _interopDefaultLegacy(crypto);
+    var crypto__default = /* @__PURE__ */ _interopDefaultLegacy(crypto2);
     var url__default = /* @__PURE__ */ _interopDefaultLegacy(url);
     var proxyFromEnv__default = /* @__PURE__ */ _interopDefaultLegacy(proxyFromEnv);
     var http__default = /* @__PURE__ */ _interopDefaultLegacy(http2);
@@ -49625,8 +49625,8 @@ var require_snapshot_utils = __commonJS({
         match: new Set(matchHeaders.map((header) => caseSensitive ? header : header.toLowerCase()))
       };
     }
-    var crypto = runtimeFeatures.has("crypto") ? require("node:crypto") : null;
-    var hashId = crypto?.hash ? (value) => crypto.hash("sha256", value, "base64url") : (value) => Buffer.from(value).toString("base64url");
+    var crypto2 = runtimeFeatures.has("crypto") ? require("node:crypto") : null;
+    var hashId = crypto2?.hash ? (value) => crypto2.hash("sha256", value, "base64url") : (value) => Buffer.from(value).toString("base64url");
     function isUndiciHeaders(headers) {
       return Array.isArray(headers) && (headers.length & 1) === 0;
     }
@@ -55507,10 +55507,10 @@ var require_subresource_integrity = __commonJS({
     var assert = require("node:assert");
     var { runtimeFeatures } = require_runtime_features();
     var validSRIHashAlgorithmTokenSet = /* @__PURE__ */ new Map([["sha256", 0], ["sha384", 1], ["sha512", 2]]);
-    var crypto;
+    var crypto2;
     if (runtimeFeatures.has("crypto")) {
-      crypto = require("node:crypto");
-      const cryptoHashes = crypto.getHashes();
+      crypto2 = require("node:crypto");
+      const cryptoHashes = crypto2.getHashes();
       if (cryptoHashes.length === 0) {
         validSRIHashAlgorithmTokenSet.clear();
       }
@@ -55600,7 +55600,7 @@ var require_subresource_integrity = __commonJS({
       return result;
     }
     var applyAlgorithmToBytes = (algorithm, bytes) => {
-      return crypto.hash(algorithm, bytes, "base64");
+      return crypto2.hash(algorithm, bytes, "base64");
     };
     function caseSensitiveMatch(actualValue, expectedValue) {
       let actualValueLength = actualValue.length;
@@ -58528,7 +58528,7 @@ var require_connection = __commonJS({
     var { WebsocketFrameSend } = require_frame();
     var assert = require("node:assert");
     var { runtimeFeatures } = require_runtime_features();
-    var crypto = runtimeFeatures.has("crypto") ? require("node:crypto") : null;
+    var crypto2 = runtimeFeatures.has("crypto") ? require("node:crypto") : null;
     var warningEmitted = false;
     function establishWebSocketConnection(url, protocols, client, handler, options) {
       const requestURL = url;
@@ -58548,7 +58548,7 @@ var require_connection = __commonJS({
         const headersList = getHeadersList(new Headers(options.headers));
         request.headersList = headersList;
       }
-      const keyValue = crypto.randomBytes(16).toString("base64");
+      const keyValue = crypto2.randomBytes(16).toString("base64");
       request.headersList.append("sec-websocket-key", keyValue, true);
       request.headersList.append("sec-websocket-version", "13", true);
       for (const protocol of protocols) {
@@ -58588,7 +58588,7 @@ var require_connection = __commonJS({
             return;
           }
           const secWSAccept = response.headersList.get("Sec-WebSocket-Accept");
-          const digest = crypto.hash("sha1", keyValue + uid, "base64");
+          const digest = crypto2.hash("sha1", keyValue + uid, "base64");
           if (secWSAccept !== digest) {
             failWebsocketConnection(handler, 1002, "Incorrect hash received in Sec-WebSocket-Accept header.");
             return;
@@ -61270,6 +61270,21 @@ var require_cinemeta = __commonJS({
       timeout: 8e3,
       validateStatus: () => true
     });
+    function trailersFromCinemetaMeta(meta) {
+      const streams = meta.trailerStreams;
+      if (Array.isArray(streams) && streams.length) {
+        return streams.map((t) => {
+          const id = (t.ytId || t.source || "").trim();
+          return id ? { source: id, type: "Trailer" } : null;
+        }).filter(Boolean);
+      }
+      const tr = meta.trailers;
+      if (!Array.isArray(tr) || !tr.length) return void 0;
+      return tr.map((t) => {
+        const id = typeof t.source === "string" ? t.source.trim() : "";
+        return id ? { source: id, type: t.type === "Clip" ? "Clip" : "Trailer" } : null;
+      }).filter(Boolean);
+    }
     async function getMetaByImdbId(type, imdbId) {
       if (!imdbId || typeof imdbId !== "string") return null;
       const cleanId = imdbId.trim().toLowerCase();
@@ -61278,6 +61293,7 @@ var require_cinemeta = __commonJS({
         const res = await client.get(`/meta/${type}/${cleanId}.json`);
         if (res.status !== 200 || !res.data?.meta) return null;
         const meta = res.data.meta;
+        const trailers = trailersFromCinemetaMeta(meta);
         return {
           poster: meta.poster || void 0,
           description: meta.description || meta.overview || void 0,
@@ -61289,13 +61305,65 @@ var require_cinemeta = __commonJS({
           genres: meta.genres || void 0,
           cast: meta.cast || void 0,
           director: meta.director || void 0,
-          imdbRating: meta.imdbRating || void 0
+          imdbRating: meta.imdbRating != null ? String(meta.imdbRating) : void 0,
+          trailers: trailers?.length ? trailers : void 0
         };
       } catch (err) {
         return null;
       }
     }
-    module2.exports = { getMetaByImdbId };
+    function normalizeTitleKey(s) {
+      if (!s || typeof s !== "string") return "";
+      return s.toLowerCase().normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+    }
+    var CINEMETA_SEARCH_DISABLED = process.env.STREMIO_NP_CINEMETA_SEARCH === "0";
+    function parseMetaReleaseYear(m) {
+      if (m.releaseInfo != null && String(m.releaseInfo).trim() !== "") {
+        const n = parseInt(String(m.releaseInfo).trim(), 10);
+        if (Number.isFinite(n) && n >= 1870 && n <= 2100) return n;
+      }
+      if (m.year != null) {
+        const n = parseInt(String(m.year), 10);
+        if (Number.isFinite(n) && n >= 1870 && n <= 2100) return n;
+      }
+      return null;
+    }
+    async function findImdbIdByTitle(type, title, hintYear) {
+      if (CINEMETA_SEARCH_DISABLED || !title || typeof title !== "string") return null;
+      const t = title.trim();
+      if (t.length < 2) return null;
+      const want = normalizeTitleKey(t);
+      if (!want) return null;
+      try {
+        const q = encodeURIComponent(t);
+        const res = await client.get(`/catalog/${type}/top/search=${q}.json`);
+        if (res.status !== 200 || !Array.isArray(res.data?.metas)) return null;
+        const metas = res.data.metas;
+        const candidates = [];
+        for (let i = 0; i < Math.min(metas.length, 40); i++) {
+          const m = metas[i];
+          const id = m.id || m.imdb_id;
+          if (!id || typeof id !== "string" || !id.startsWith("tt")) continue;
+          if (normalizeTitleKey(m.name || "") !== want) continue;
+          candidates.push({ id: id.toLowerCase(), year: parseMetaReleaseYear(m) });
+        }
+        if (!candidates.length) return null;
+        const y = hintYear != null && Number.isFinite(Number(hintYear)) ? parseInt(String(hintYear), 10) : null;
+        if (y != null) {
+          const withYear = candidates.filter((c) => c.year != null);
+          if (withYear.length) {
+            withYear.sort((a, b) => Math.abs(a.year - y) - Math.abs(b.year - y));
+            const best = withYear[0];
+            if (Math.abs(best.year - y) <= 5) return best.id;
+            return null;
+          }
+        }
+        return candidates[0].id;
+      } catch (_) {
+        return null;
+      }
+    }
+    module2.exports = { getMetaByImdbId, findImdbIdByTitle, normalizeTitleKey };
   }
 });
 
@@ -61306,7 +61374,7 @@ var require_scraper = __commonJS({
     var https = require("https");
     var axios = require_axios();
     var cheerio = require_commonjs4();
-    var { getMetaByImdbId } = require_cinemeta();
+    var { getMetaByImdbId, findImdbIdByTitle } = require_cinemeta();
     var BASE_URL = "https://novelasportuguesas.com";
     var FILMES_ARCHIVE = `${BASE_URL}/filme/`;
     var SERIES_ARCHIVE = `${BASE_URL}/serie/`;
@@ -61354,12 +61422,13 @@ var require_scraper = __commonJS({
     }
     function logCatalogRefresh(label, startUrl, stats) {
       const { items, archivePages, ms, synopsisRequests, synopsisOk } = stats;
-      const synPart = CATALOG_SYNOPSIS_ENABLED ? ` | p\xE1ginas de detalhe (resumos): ${synopsisRequests} pedidos, ${synopsisOk} OK` : " | resumos no cat\xE1logo: desativados (STREMIO_NP_CATALOG_SYNOPSIS=0)";
+      const synPart = CATALOG_SYNOPSIS_ENABLED || CATALOG_RELEASE_ENABLED ? ` | p\xE1ginas de detalhe (resumo/ano): ${synopsisRequests} pedidos, ${synopsisOk} OK` : " | p\xE1ginas de detalhe: desativadas (STREMIO_NP_CATALOG_SYNOPSIS=0 e STREMIO_NP_CATALOG_RELEASE=0)";
       console.log(
         `${LOG_PREFIX2} REFRESH cat\xE1logo [${label}] ${items} t\xEDtulos | p\xE1ginas de arquivo (listagem): ${archivePages}${synPart} | ${ms} ms | fonte: ${startUrl}`
       );
     }
     var CATALOG_SYNOPSIS_ENABLED = process.env.STREMIO_NP_CATALOG_SYNOPSIS !== "0";
+    var CATALOG_RELEASE_ENABLED = process.env.STREMIO_NP_CATALOG_RELEASE !== "0";
     var CATALOG_SYNOPSIS_CONCURRENCY = Math.max(1, Number(process.env.STREMIO_NP_SYNOPSIS_CONCURRENCY) || 8);
     var CATALOG_SYNOPSIS_MAX = Number(process.env.STREMIO_NP_MAX_SYNOPSIS);
     var CATALOG_DESC_PREVIEW_LEN = Math.min(2e3, Number(process.env.STREMIO_NP_CATALOG_DESC_LEN) || 900);
@@ -61465,6 +61534,82 @@ var require_scraper = __commonJS({
       if (raw.length > 25) return raw.slice(0, DESC_MAX);
       return "";
     }
+    function extractReleaseInfoFromDetailPage($, contentType) {
+      const raw = $(".details-desc").first().text().replace(/\s+/g, " ").trim().normalize("NFC");
+      const h1 = $("h1").first().text().replace(/\s+/g, " ").trim().normalize("NFC");
+      if (contentType === "movie") {
+        const m = raw.match(/Ano do Filme:\s*((?:19|20)\d{2})(?!\d)/i);
+        if (m) {
+          const y = parseInt(m[1], 10);
+          if (y >= 1870 && y <= 2100) return { year: y, releaseInfo: String(y) };
+        }
+      } else {
+        const m = raw.match(/Ano da\s+Série:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+Série:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano da\s+Serie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+Serie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano da\s+[Ss][ée]rie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+[Ss][ée]rie:\s*((?:19|20)\d{2})(?!\d)/i);
+        if (m) {
+          const y = parseInt(m[1], 10);
+          if (y >= 1870 && y <= 2100) return { year: y, releaseInfo: String(y) };
+        }
+      }
+      const periodMatch = raw.match(
+        /Per[ií]odo(?:\s+de exibi[cç][aã]o)?\s*:\s*(.+?)(?=(?:Nome do|Nome da|Ano do|Ano da|Resumo)|$)/i
+      );
+      if (periodMatch) {
+        const slice = periodMatch[1].trim().replace(/\s*-\s*/g, "-");
+        const years = slice.match(/\b((?:19|20)\d{2})\b/g);
+        if (years && years.length >= 2) {
+          const ys = [...new Set(years.map((y) => parseInt(y, 10)))].sort((a, b) => a - b);
+          return {
+            year: ys[0],
+            releaseInfo: `${ys[0]}-${ys[ys.length - 1]}`
+          };
+        }
+        if (years && years.length === 1) {
+          const y = parseInt(years[0], 10);
+          if (y >= 1870 && y <= 2100) return { year: y, releaseInfo: String(y) };
+        }
+      }
+      const paren = h1.match(/\((\d{4})\)/);
+      if (paren) {
+        const y = parseInt(paren[1], 10);
+        if (y >= 1870 && y <= 2100) return { year: y, releaseInfo: String(y) };
+      }
+      return null;
+    }
+    var META_YEAR_MIN = 1870;
+    var META_YEAR_MAX = 2100;
+    function isPlausibleMetaYear(y) {
+      const n = typeof y === "number" ? y : parseInt(String(y), 10);
+      return Number.isFinite(n) && n >= META_YEAR_MIN && n <= META_YEAR_MAX;
+    }
+    function sanitizeItemYearRelease(item) {
+      if (item.year != null) {
+        if (!isPlausibleMetaYear(item.year)) {
+          delete item.year;
+        } else {
+          item.year = typeof item.year === "number" ? item.year : parseInt(String(item.year), 10);
+        }
+      }
+      if (item.releaseInfo != null) {
+        const s = String(item.releaseInfo).trim();
+        if (/^\d{1,3}$/.test(s)) {
+          delete item.releaseInfo;
+        }
+      }
+      if (item.year != null && (item.releaseInfo == null || String(item.releaseInfo).trim() === "")) {
+        item.releaseInfo = String(item.year);
+      }
+    }
+    function assignReleaseFromDetail($, item, contentType) {
+      const rel = extractReleaseInfoFromDetailPage($, contentType);
+      if (!rel) return;
+      if (rel.year != null) item.year = rel.year;
+      if (rel.releaseInfo != null && String(rel.releaseInfo).trim() !== "") {
+        item.releaseInfo = String(rel.releaseInfo).trim();
+      } else if (rel.year != null) {
+        item.releaseInfo = String(rel.year);
+      }
+      sanitizeItemYearRelease(item);
+    }
     function remapEpisodeSeasons(rawList) {
       if (!rawList.length) return [];
       const ssids = [...new Set(rawList.map((e) => e.rawSsid))].sort((a, b) => a - b);
@@ -61477,24 +61622,53 @@ var require_scraper = __commonJS({
         name: e.name
       }));
     }
+    function imdbPageLink(imdbIdClean, ratingStr) {
+      const name = ratingStr != null && String(ratingStr).trim() !== "" ? `IMDb ${String(ratingStr).trim()}/10` : "IMDb";
+      return {
+        name,
+        category: "info",
+        url: `https://www.imdb.com/title/${imdbIdClean}`
+      };
+    }
     async function enrichMetaFromCinemeta(item, stremioType) {
-      if (!item.imdbId || !String(item.imdbId).startsWith("tt")) return item;
-      const siteDesc = (item.description || "").trim();
-      if (siteDesc.length >= 160) return item;
+      const rawId = item.imdbId && String(item.imdbId).trim();
+      if (!rawId || !rawId.toLowerCase().startsWith("tt")) return item;
+      const imdbIdClean = rawId.toLowerCase();
       const cm = await getMetaByImdbId(stremioType, item.imdbId);
-      if (!cm) return item;
-      if (cm.description) {
-        item.description = siteDesc ? `${siteDesc}
+      const siteDesc = (item.description || "").trim();
+      if (cm) {
+        if (siteDesc.length < 160 && cm.description) {
+          item.description = siteDesc ? `${siteDesc}
 
 ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX);
+        }
+        if (cm.poster && !item.poster) item.poster = cm.poster;
+        if (cm.background && !item.background) item.background = cm.background;
+        if (cm.genres?.length && !item.genres?.length) item.genres = cm.genres;
+        if (cm.cast && !item.cast) item.cast = cm.cast;
+        if (cm.director && !item.director) item.director = cm.director;
+        if (cm.runtime && !item.runtime) item.runtime = cm.runtime;
+        if (cm.imdbRating != null) item.imdbRating = cm.imdbRating;
+        if (cm.trailers?.length) item.trailers = cm.trailers;
       }
-      if (cm.poster && !item.poster) item.poster = cm.poster;
-      if (cm.background && !item.background) item.background = cm.background;
-      if (cm.genres?.length && !item.genres?.length) item.genres = cm.genres;
-      if (cm.cast && !item.cast) item.cast = cm.cast;
-      if (cm.director && !item.director) item.director = cm.director;
-      if (cm.imdbRating != null && item.imdbRating == null) item.imdbRating = cm.imdbRating;
-      if (cm.runtime && !item.runtime) item.runtime = cm.runtime;
+      const links = [imdbPageLink(imdbIdClean, item.imdbRating)];
+      const yt = item.trailers && item.trailers.find((t) => t && typeof t.source === "string" && t.source.trim());
+      if (yt) {
+        const vid = yt.source.trim();
+        links.push({
+          name: "Trailer (YouTube)",
+          category: "trailers",
+          url: `https://www.youtube.com/watch?v=${vid}`
+        });
+      } else {
+        links.push({
+          name: "Trailers / v\xEDdeos (IMDb)",
+          category: "trailers",
+          url: `https://www.imdb.com/title/${imdbIdClean}/videogallery/`
+        });
+      }
+      item.links = links;
+      sanitizeItemYearRelease(item);
       return item;
     }
     function parseDisplayItems($, items, seenSlugs, contentType) {
@@ -61535,33 +61709,43 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       });
     }
     async function hydrateCatalogSynopses(items, wpPathSeg) {
-      if (!CATALOG_SYNOPSIS_ENABLED || !items.length) {
+      const wantSynopsis = CATALOG_SYNOPSIS_ENABLED;
+      const wantRelease = CATALOG_RELEASE_ENABLED;
+      if (!wantSynopsis && !wantRelease || !items.length) {
         return { synopsisRequests: 0, synopsisOk: 0 };
       }
-      let list = items;
-      if (Number.isFinite(CATALOG_SYNOPSIS_MAX) && CATALOG_SYNOPSIS_MAX > 0) {
-        list = items.slice(0, CATALOG_SYNOPSIS_MAX);
-      }
+      const synopsisCap = wantSynopsis && Number.isFinite(CATALOG_SYNOPSIS_MAX) && CATALOG_SYNOPSIS_MAX > 0 ? CATALOG_SYNOPSIS_MAX : Infinity;
+      const contentType = wpPathSeg === "filme" ? "movie" : "series";
+      const needsDetailFetch = (item, indexInAll) => {
+        const needRelease = wantRelease && item.year == null && item.releaseInfo == null;
+        const needSynopsis = wantSynopsis && !item.description && indexInAll < synopsisCap;
+        return needRelease || needSynopsis;
+      };
       let synopsisRequests = 0;
       let synopsisOk = 0;
-      if (list.length > 80) {
+      const estFetches = items.filter((it, idx) => needsDetailFetch(it, idx)).length;
+      if (estFetches > 80) {
         console.log(
-          `${LOG_PREFIX2} Resumos do cat\xE1logo: a consultar ${list.length} p\xE1ginas de detalhe (${wpPathSeg})\u2026`
+          `${LOG_PREFIX2} Cat\xE1logo (${wpPathSeg}): a consultar ~${estFetches} p\xE1ginas de detalhe (resumo e/ou ano)\u2026`
         );
       }
-      for (let i = 0; i < list.length; i += CATALOG_SYNOPSIS_CONCURRENCY) {
-        const batch = list.slice(i, i + CATALOG_SYNOPSIS_CONCURRENCY);
+      for (let i = 0; i < items.length; i += CATALOG_SYNOPSIS_CONCURRENCY) {
+        const batch = items.slice(i, i + CATALOG_SYNOPSIS_CONCURRENCY);
         await Promise.all(
-          batch.map(async (item) => {
-            if (item.description) return;
+          batch.map(async (item, j) => {
+            const idx = i + j;
+            if (!needsDetailFetch(item, idx)) return;
             try {
               synopsisRequests += 1;
               const res = await client.get(`/${wpPathSeg}/${item.slug}/`);
               if (res.status !== 200 || typeof res.data !== "string") return;
               synopsisOk += 1;
               const $ = cheerio.load(res.data);
-              const desc = extractSynopsis($);
-              if (desc) item.description = desc.slice(0, CATALOG_DESC_PREVIEW_LEN);
+              assignReleaseFromDetail($, item, contentType);
+              if (wantSynopsis && !item.description && idx < synopsisCap) {
+                const desc = extractSynopsis($);
+                if (desc) item.description = desc.slice(0, CATALOG_DESC_PREVIEW_LEN);
+              }
             } catch (_) {
             }
           })
@@ -61573,6 +61757,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const now = Date.now();
       if (filmesCache && now - filmesCache.time < CACHE_MS) {
         logCatalogCacheHit("filmes", filmesCache.items.length, filmesCache.time);
+        sanitizeCatalogItems(filmesCache.items);
         return filmesCache.items;
       }
       const t0 = Date.now();
@@ -61588,6 +61773,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         synopsisOk,
         ms: Date.now() - t0
       });
+      sanitizeCatalogItems(items);
       return items;
     }
     function normalizeListPageUrl(absUrl) {
@@ -61696,6 +61882,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const now = Date.now();
       if (seriesPortuguesasCache && now - seriesPortuguesasCache.time < CACHE_MS) {
         logCatalogCacheHit("s\xE9ries portuguesas", seriesPortuguesasCache.items.length, seriesPortuguesasCache.time);
+        sanitizeCatalogItems(seriesPortuguesasCache.items);
         return seriesPortuguesasCache.items;
       }
       const t0 = Date.now();
@@ -61710,12 +61897,14 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         synopsisOk,
         ms: Date.now() - t0
       });
+      sanitizeCatalogItems(items);
       return items;
     }
     async function getNovelasPortuguesas() {
       const now = Date.now();
       if (novelasPortuguesasCache && now - novelasPortuguesasCache.time < CACHE_MS) {
         logCatalogCacheHit("novelas portuguesas", novelasPortuguesasCache.items.length, novelasPortuguesasCache.time);
+        sanitizeCatalogItems(novelasPortuguesasCache.items);
         return novelasPortuguesasCache.items;
       }
       const t0 = Date.now();
@@ -61730,6 +61919,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         synopsisOk,
         ms: Date.now() - t0
       });
+      sanitizeCatalogItems(items);
       return items;
     }
     function wpPostIdFromHtml(html) {
@@ -61744,13 +61934,29 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const rawName = $("h1").first().text().trim() || $(".heading-archive, .display-page-heading h1").first().text().trim() || slug.replace(/-/g, " ");
       const name = toTitleCase(rawName);
       let year = null;
-      const yMatch = $("body").text().match(/\((\d{4})\)/) || $("body").text().match(/\b(19|20)\d{2}\b/);
-      if (yMatch) year = parseInt(yMatch[1] || yMatch[0], 10);
+      let releaseInfo = null;
+      const rel = extractReleaseInfoFromDetailPage($, "movie");
+      if (rel) {
+        if (rel.year != null) year = rel.year;
+        if (rel.releaseInfo != null) releaseInfo = String(rel.releaseInfo).trim();
+      }
+      if (year == null) {
+        const h1y = $("h1").first().text().match(/\((\d{4})\)/);
+        const bodyOneLine = $("body").text().replace(/\s+/g, " ");
+        const bodyAno = bodyOneLine.match(/\bAno do\s+Filme:\s*((?:19|20)\d{2})(?!\d)/i);
+        const yMatch = h1y || bodyAno;
+        if (yMatch) year = parseInt(yMatch[1], 10);
+      }
+      if (!releaseInfo && year != null) releaseInfo = String(year);
       let imdbId = null;
       const bodyText = $("body").text();
       const bodyHtml = $.html();
       const imdbMatch = bodyText.match(/IMDb[:\s]*(tt\d{7,9})/i) || bodyText.match(/(tt\d{7,9})/) || bodyHtml.match(/imdb\.com\/title\/(tt\d{7,9})/i);
       if (imdbMatch) imdbId = imdbMatch[1] || imdbMatch[0];
+      const itemPre = { year, releaseInfo };
+      sanitizeItemYearRelease(itemPre);
+      year = itemPre.year ?? null;
+      releaseInfo = itemPre.releaseInfo ?? null;
       let poster = $('meta[property="og:image"]').attr("content") || $(".display-item img.thumb, .item-box img").first().attr("src") || $("img.thumb, .poster img").first().attr("data-original");
       if (poster && !poster.startsWith("http")) poster = absoluteUrl(poster);
       if (poster) poster = poster.trim();
@@ -61768,13 +61974,19 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         slug,
         type: "movie",
         year: year || void 0,
+        releaseInfo: releaseInfo || void 0,
         poster: poster || void 0,
         background: background || void 0,
         description,
         imdbId: imdbId || void 0,
         wpPostId: Number.isFinite(wpPostId) && wpPostId > 0 ? wpPostId : void 0
       };
+      if (!item.imdbId) {
+        const resolved = await findImdbIdByTitle("movie", item.name, item.year ?? null);
+        if (resolved) item.imdbId = resolved;
+      }
       await enrichMetaFromCinemeta(item, "movie");
+      sanitizeItemYearRelease(item);
       return item;
     }
     async function getSeriesMeta(slug) {
@@ -61785,13 +61997,29 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const rawName = $("h1").first().text().trim() || $(".display-page-heading h1").first().text().trim() || slug.replace(/-/g, " ");
       const name = toTitleCase(rawName);
       let year = null;
-      const yMatch = $("body").text().match(/\((\d{4})\)/) || $("body").text().match(/\b(19|20)\d{2}\b/);
-      if (yMatch) year = parseInt(yMatch[1] || yMatch[0], 10);
+      let releaseInfo = null;
+      const relS = extractReleaseInfoFromDetailPage($, "series");
+      if (relS) {
+        if (relS.year != null) year = relS.year;
+        if (relS.releaseInfo != null) releaseInfo = String(relS.releaseInfo).trim();
+      }
+      if (year == null) {
+        const h1y = $("h1").first().text().match(/\((\d{4})\)/);
+        const bodyOneLine = $("body").text().replace(/\s+/g, " ");
+        const bodyAno = bodyOneLine.match(/\bAno do\s+Série:\s*((?:19|20)\d{2})(?!\d)/i) || bodyOneLine.match(/\bAno da\s+Série:\s*((?:19|20)\d{2})(?!\d)/i);
+        const yMatch = h1y || bodyAno;
+        if (yMatch) year = parseInt(yMatch[1], 10);
+      }
+      if (!releaseInfo && year != null) releaseInfo = String(year);
       let imdbId = null;
       const bodyText = $("body").text();
       const bodyHtml = $.html();
       const imdbMatch = bodyText.match(/IMDb[:\s]*(tt\d{7,9})/i) || bodyText.match(/(tt\d{7,9})/) || bodyHtml.match(/imdb\.com\/title\/(tt\d{7,9})/i);
       if (imdbMatch) imdbId = imdbMatch[1] || imdbMatch[0];
+      const itemPreS = { year, releaseInfo };
+      sanitizeItemYearRelease(itemPreS);
+      year = itemPreS.year ?? null;
+      releaseInfo = itemPreS.releaseInfo ?? null;
       let poster = $('meta[property="og:image"]').attr("content");
       if (poster && !poster.startsWith("http")) poster = absoluteUrl(poster);
       if (poster) poster = poster.trim();
@@ -61830,18 +62058,34 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         slug,
         type: "series",
         year: year || void 0,
+        releaseInfo: releaseInfo || void 0,
         poster: poster || void 0,
         background: background || void 0,
         description,
         imdbId: imdbId || void 0,
         episodes
       };
+      if (!item.imdbId) {
+        const resolved = await findImdbIdByTitle("series", item.name, item.year ?? null);
+        if (resolved) item.imdbId = resolved;
+      }
       await enrichMetaFromCinemeta(item, "series");
+      sanitizeItemYearRelease(item);
       return item;
+    }
+    function normalizeStreamUrlKey(u) {
+      if (!u || typeof u !== "string") return "";
+      try {
+        const x = new URL(u.trim());
+        return `${x.origin}${x.pathname}${x.search}`.toLowerCase();
+      } catch (_) {
+        return u.trim().toLowerCase();
+      }
     }
     async function getMovieStreamSources(wpPostId) {
       if (!wpPostId) return [];
       const out = [];
+      const seen = /* @__PURE__ */ new Set();
       for (let n = 1; n <= 30; n++) {
         const res = await zetaClient.get(`/${wpPostId}/mv/${n}`);
         if (res.status !== 200 || !res.data) break;
@@ -61851,9 +62095,12 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         let u = d.embed_url.trim();
         if (u.startsWith("//")) u = "https:" + u;
         if (u.startsWith("http://")) u = u.replace(/^http:\/\//i, "https://");
+        const key = normalizeStreamUrlKey(u);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
         out.push({
           type: "url",
-          title: `Op\xE7\xE3o ${n}`,
+          title: `Op\xE7\xE3o ${out.length + 1}`,
           url: u
         });
       }
@@ -61865,24 +62112,40 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       if (res.status !== 200 || !res.data) return [];
       const embed = res.data.embed;
       if (!Array.isArray(embed) || embed.length === 0) return [];
-      return embed.map((item, i) => {
+      const seen = /* @__PURE__ */ new Set();
+      const rows = [];
+      for (let i = 0; i < embed.length; i++) {
+        const item = embed[i];
         let u = (item.code || "").trim();
         if (u.startsWith("//")) u = "https:" + u;
         if (u.startsWith("http://")) u = u.replace(/^http:\/\//i, "https://");
-        const title = item.name || item.title || `Op\xE7\xE3o ${item.num || i + 1}`;
-        return u ? { type: "url", title, url: u } : null;
-      }).filter(Boolean);
+        if (!u) continue;
+        const key = normalizeStreamUrlKey(u);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        const title = item.name || item.title || `Op\xE7\xE3o ${rows.length + 1}`;
+        rows.push({ type: "url", title, url: u });
+      }
+      return rows;
     }
     async function getSeriesEpisodes(seriesSlug) {
       const meta = await getSeriesMeta(seriesSlug);
       if (!meta || !meta.episodes) return [];
       return meta.episodes;
     }
+    function sanitizeCatalogItems(items) {
+      if (!Array.isArray(items) || !items.length) return items;
+      for (const it of items) {
+        sanitizeItemYearRelease(it);
+      }
+      return items;
+    }
     module2.exports = {
       BASE_URL,
       getFilmes,
       getSeriesPortuguesas,
       getNovelasPortuguesas,
+      sanitizeCatalogItems,
       getFilmeMeta,
       getSeriesMeta,
       getMovieStreamSources,
@@ -61894,12 +62157,14 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
 
 // index.js
 var http = require("http");
+var crypto = require("crypto");
 var fs = require("fs");
 var os = require("os");
 var path = require("path");
 var scraper = require_scraper();
 var PORT = process.env.PORT || 7e3;
 var LOG_PREFIX = "[NovelasPT]";
+var EXPOSE_IMDB_ID_TO_CLIENT = process.env.STREMIO_NP_EXPOSE_IMDB_ID === "1";
 var MOVIE_PREFIX = "novelaspt_movie_";
 var SERIES_PREFIX = "novelaspt_series_";
 var ADDON_DISPLAY_NAME = "Filmes, Series e Novelas Portuguesas Addon Stremio";
@@ -61917,7 +62182,7 @@ function getManifest(config, originBase) {
     id: "pt.filmes-series-portuguesas",
     name: ADDON_DISPLAY_NAME,
     description: "Filmes, s\xE9ries e novelas portugueses. Cat\xE1logos separados: filmes, s\xE9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
-    version: "1.0.4",
+    version: "1.0.12",
     resources: ["catalog", "meta", "stream"],
     types: ["movie", "series"],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -61927,10 +62192,43 @@ function getManifest(config, originBase) {
       { type: "series", id: "novelaspt_series", name: "S\xE9ries Portuguesas", extra: [{ name: "search", isRequired: false }] },
       { type: "series", id: "novelaspt_novelas", name: "Novelas Portuguesas", extra: [{ name: "search", isRequired: false }] }
     ],
-    behaviorHints: base
+    behaviorHints: base,
+    stremioAddonsConfig: {
+      issuer: "https://stremio-addons.net",
+      signature: "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..CvmszUdKMfeHbghC9AHUrg.yH5koKZYZegsGzt5niT80p9iegzINGvYKaBGqboGYbCaomKmUBr_FWYB7xH3cmXNT8qf2xFNxBsMMmWEUt-vzY2N_daIh1uLIMihzvN6aygGHV5AAjyrJmqG4anQYQ5U.u3_ityrxIwgFlCZg2n7DHg"
+    }
   };
 }
+var STREMIO_YEAR_MIN = 1870;
+var STREMIO_YEAR_MAX = 2100;
+function plausibleStremioYear(y) {
+  if (y == null) return null;
+  const n = typeof y === "number" ? y : parseInt(String(y), 10);
+  if (!Number.isFinite(n) || n < STREMIO_YEAR_MIN || n > STREMIO_YEAR_MAX) return null;
+  return n;
+}
+function stremioReleaseInfoFromItem(item) {
+  const ri = item.releaseInfo != null ? String(item.releaseInfo).trim() : "";
+  if (ri) {
+    if (/^\d{1,3}$/.test(ri)) return void 0;
+    return ri;
+  }
+  const y = plausibleStremioYear(item.year);
+  return y != null ? String(y) : void 0;
+}
+function seriesBaseYearForVideos(item) {
+  const y = plausibleStremioYear(item.year);
+  if (y != null) return y;
+  const ri = item.releaseInfo != null ? String(item.releaseInfo).trim() : "";
+  const m = ri.match(/((?:19|20)\d{2})/);
+  if (m) {
+    const n = parseInt(m[1], 10);
+    if (n >= STREMIO_YEAR_MIN && n <= STREMIO_YEAR_MAX) return n;
+  }
+  return null;
+}
 function metaPreviewFromItem(item) {
+  const releaseInfo = stremioReleaseInfoFromItem(item);
   return {
     id: item.id,
     type: item.type,
@@ -61938,11 +62236,13 @@ function metaPreviewFromItem(item) {
     poster: item.poster,
     posterShape: "poster",
     description: item.description,
-    releaseInfo: item.year ? String(item.year) : void 0,
-    imdbId: item.imdbId
+    ...releaseInfo != null && { releaseInfo },
+    ...EXPOSE_IMDB_ID_TO_CLIENT && item.imdbId != null && { imdbId: item.imdbId, imdb_id: item.imdbId },
+    ...item.imdbRating != null && item.imdbRating !== "" && { imdbRating: String(item.imdbRating) }
   };
 }
 function metaFullFromItem(item) {
+  const releaseInfo = stremioReleaseInfoFromItem(item);
   const base = {
     id: item.id,
     type: item.type,
@@ -61950,24 +62250,55 @@ function metaFullFromItem(item) {
     posterShape: "poster",
     ...item.poster != null && { poster: item.poster },
     ...item.description != null && item.description !== "" && { description: item.description },
-    ...(item.releaseInfo != null ? item.releaseInfo : item.year != null) && { releaseInfo: String(item.releaseInfo ?? item.year) },
-    ...item.imdbId != null && { imdbId: item.imdbId },
+    ...releaseInfo != null && { releaseInfo },
+    ...EXPOSE_IMDB_ID_TO_CLIENT && item.imdbId != null && { imdbId: item.imdbId, imdb_id: item.imdbId },
     ...item.background != null && { background: item.background },
     ...item.genres != null && item.genres.length > 0 && { genres: item.genres },
     ...item.cast != null && { cast: item.cast },
     ...item.director != null && { director: item.director },
-    ...item.imdbRating != null && { imdbRating: item.imdbRating },
-    ...item.runtime != null && { runtime: item.runtime }
+    ...item.imdbRating != null && item.imdbRating !== "" && { imdbRating: String(item.imdbRating) },
+    ...item.runtime != null && { runtime: item.runtime },
+    ...item.trailers != null && Array.isArray(item.trailers) && item.trailers.length > 0 && { trailers: item.trailers },
+    ...item.links != null && Array.isArray(item.links) && item.links.length > 0 && { links: item.links }
   };
   if (item.type === "series" && item.episodes && item.episodes.length) {
-    base.videos = item.episodes.map((ep) => ({
-      id: `${item.id}:${ep.season}:${ep.episode}`,
-      title: ep.name || `Epis\xF3dio ${ep.episode}`,
-      episode: ep.episode,
-      season: ep.season
-    }));
+    const y0 = seriesBaseYearForVideos(item) ?? 2020;
+    base.videos = item.episodes.map((ep, idx) => {
+      const day = 1 + idx % 28;
+      const mon = 1 + (idx + ep.season * 31 + ep.episode) % 12;
+      const released = `${y0}-${String(mon).padStart(2, "0")}-${String(day).padStart(2, "0")}T12:00:00.000Z`;
+      return {
+        id: `${item.id}:${ep.season}:${ep.episode}`,
+        title: ep.name || `Epis\xF3dio ${ep.episode}`,
+        episode: ep.episode,
+        season: ep.season,
+        released
+      };
+    });
   }
   return base;
+}
+function dedupeStreamSourcesByUrl(sources) {
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  for (const s of sources) {
+    const u = s && s.url;
+    if (!u || typeof u !== "string") continue;
+    let key;
+    try {
+      const x = new URL(u.trim());
+      key = `${x.origin}${x.pathname}${x.search}`.toLowerCase();
+    } catch (_) {
+      key = u.trim().toLowerCase();
+    }
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(s);
+  }
+  return out;
+}
+function streamIdFromUrl(url) {
+  return crypto.createHash("sha256").update(String(url)).digest("hex").slice(0, 24);
 }
 async function handleCatalog(type, id, extra, config) {
   let items = [];
@@ -61986,9 +62317,16 @@ async function handleCatalog(type, id, extra, config) {
   }
   const search = extra?.search;
   const beforeSearch = items.length;
-  if (search && typeof search === "string") {
-    const q = search.toLowerCase();
-    items = items.filter((i) => i.name.toLowerCase().includes(q));
+  if (search && typeof search === "string" && search.trim() !== "") {
+    const q = normalizeForCatalogSearch(search);
+    items = items.filter((i) => {
+      if (!q) return true;
+      const name = normalizeForCatalogSearch(i.name || "");
+      if (name.includes(q)) return true;
+      const slugAsText = normalizeForCatalogSearch(String(i.slug || "").replace(/-/g, " "));
+      if (slugAsText.includes(q)) return true;
+      return false;
+    });
     console.log(
       `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \u2192 ${items.length} metas (pesquisa "${search}" filtrou ${beforeSearch} \u2192 ${items.length})`
     );
@@ -62015,7 +62353,18 @@ async function handleMeta(type, id, config) {
     item = await scraper.getSeriesMeta(slug);
   }
   if (!item) return { meta: null };
-  return { meta: metaFullFromItem(item) };
+  scraper.sanitizeCatalogItems([item]);
+  const metaOut = metaFullFromItem(item);
+  const kind = decoded.startsWith(MOVIE_PREFIX) ? "filme" : "s\xE9rie ou novela (mesmo tipo no Stremio)";
+  const ri = metaOut.releaseInfo ?? "-";
+  const yr = item.year != null ? String(item.year) : "-";
+  const imdbInternal = item.imdbId ?? "-";
+  const imdbClient = EXPOSE_IMDB_ID_TO_CLIENT ? "sim" : "n\xE3o (evita fus\xE3o Cinemeta)";
+  const note = item.imdbRating != null ? String(item.imdbRating) : "-";
+  console.log(
+    `${LOG_PREFIX} meta stremio=${type} | ${kind} | t\xEDtulo="${item.name}" | slug=${slug} | releaseInfo=${ri} | year=${yr} | imdbId_interno=${imdbInternal} | imdb_id\u2192cliente=${imdbClient} | imdbRating=${note}`
+  );
+  return { meta: metaOut };
 }
 async function handleStream(type, id, extra, _config) {
   const decoded = decodeURIComponent(String(id || ""));
@@ -62025,13 +62374,24 @@ async function handleStream(type, id, extra, _config) {
   const itemNameBase = "Novelas Portuguesas";
   let itemName = itemNameBase;
   let sources = [];
+  let slugForLog = "";
+  let kindLog = "";
+  let epLog = "";
   if (type === "movie") {
+    kindLog = "filme";
     const slug = decoded.replace(MOVIE_PREFIX, "");
+    slugForLog = slug;
     const meta = await scraper.getFilmeMeta(slug);
-    if (!meta?.wpPostId) return { streams: [] };
+    if (!meta?.wpPostId) {
+      console.log(
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xEDtulo="${meta?.name || "?"}" | slug=${slug} | sem wpPostId \u2192 0 op\xE7\xF5es`
+      );
+      return { streams: [] };
+    }
     itemName = meta.name || itemNameBase;
     sources = await scraper.getMovieStreamSources(meta.wpPostId);
   } else if (type === "series") {
+    kindLog = "s\xE9rie/novela";
     const epMatch = decoded.match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
     let slug;
     let season;
@@ -62045,16 +62405,41 @@ async function handleStream(type, id, extra, _config) {
       season = Math.max(1, parseInt(String(extra?.season ?? 1), 10) || 1);
       episode = Math.max(1, parseInt(String(extra?.episode ?? 1), 10) || 1);
     }
+    slugForLog = slug;
     const meta = await scraper.getSeriesMeta(slug);
-    if (!meta) return { streams: [] };
+    if (!meta) {
+      console.log(
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | slug=${slug} | meta inexistente \u2192 0 op\xE7\xF5es`
+      );
+      return { streams: [] };
+    }
     itemName = meta.name || itemNameBase;
     const ep = meta.episodes?.find((e) => e.season === season && e.episode === episode);
-    if (!ep?.wpPid) return { streams: [] };
+    const epLabel = `S${String(season).padStart(2, "0")}E${String(episode).padStart(2, "0")}`;
+    const epTitle = ep?.name ? ` "${ep.name}"` : "";
+    epLog = ` | epis\xF3dio=${epLabel}${epTitle}`;
+    if (!ep?.wpPid) {
+      console.log(
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xEDtulo="${itemName}" | slug=${slug}${epLog} | sem wpPid \u2192 0 op\xE7\xF5es`
+      );
+      return { streams: [] };
+    }
     sources = await scraper.getTvEpisodeStreamSources(ep.wpPid);
   }
-  if (!sources.length) return { streams: [] };
+  sources = dedupeStreamSourcesByUrl(sources);
+  const opts = sources.map((s, i) => `${i + 1}) ${s.title || "Player"}`).join(" | ");
+  if (!sources.length) {
+    console.log(
+      `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xEDtulo="${itemName}" | slug=${slugForLog}${epLog} | 0 op\xE7\xF5es (Zeta/embed vazio)`
+    );
+    return { streams: [] };
+  }
+  console.log(
+    `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xEDtulo="${itemName}" | slug=${slugForLog}${epLog} | ${sources.length} op\xE7\xE3o(\xF5es): ${opts}`
+  );
   return {
     streams: sources.map((s) => ({
+      id: `novelaspt-${streamIdFromUrl(s.url)}`,
       name: itemName,
       title: s.title || "Player",
       externalUrl: s.url,
@@ -62077,6 +62462,31 @@ function parseRequestUrl(req) {
   const u = new URL(req.url || "/", `http://${host}`);
   const query = Object.fromEntries(u.searchParams);
   return { pathname: u.pathname, query };
+}
+function parseCatalogPathExtras(pathRest) {
+  const extra = {};
+  if (!pathRest || pathRest.length <= 3) return extra;
+  for (let i = 3; i < pathRest.length; i++) {
+    let seg = decodeURIComponent(String(pathRest[i]));
+    seg = seg.replace(/\.json$/i, "");
+    if (!seg) continue;
+    for (const pair of seg.split("&")) {
+      const eq = pair.indexOf("=");
+      if (eq <= 0) continue;
+      const k = pair.slice(0, eq).trim();
+      let v = pair.slice(eq + 1);
+      try {
+        v = decodeURIComponent(v.replace(/\+/g, " "));
+      } catch (_) {
+      }
+      if (k) extra[k] = v;
+    }
+  }
+  return extra;
+}
+function normalizeForCatalogSearch(s) {
+  if (!s || typeof s !== "string") return "";
+  return s.toLowerCase().normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "").replace(/\s+/g, " ").trim();
 }
 function localIPv4Addresses() {
   const nets = os.networkInterfaces();
@@ -62167,8 +62577,9 @@ var server = http.createServer(async (req, res) => {
     }
     if (pathRest[0] === "catalog" && pathRest.length >= 3) {
       const type = pathRest[1];
-      const id = decodeURIComponent(pathRest[2].replace(/\.json$/, ""));
-      const result = await handleCatalog(type, id, query, config);
+      const id = decodeURIComponent(String(pathRest[2]).replace(/\.json$/i, ""));
+      const extra = { ...query, ...parseCatalogPathExtras(pathRest) };
+      const result = await handleCatalog(type, id, extra, config);
       sendJson(res, 200, result, method, { ...CORS });
       return;
     }
@@ -62238,6 +62649,22 @@ if (!fs.existsSync(configurePath)) {
   fs.writeFileSync(configurePath, getConfigureHtml(), "utf8");
 }
 var HOST = "0.0.0.0";
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`
+${LOG_PREFIX} A porta ${PORT} j\xE1 est\xE1 em uso (outra inst\xE2ncia do addon ou outro programa).`);
+    console.error("  \u2022 Fecha a outra janela onde correste npm start / node dist/bundle.cjs.");
+    console.error("  \u2022 PowerShell \u2014 outra porta:  $env:PORT=7001; npm start");
+    console.error("  \u2022 CMD \u2014 outra porta:          set PORT=7001 && npm start");
+    console.error(
+      `  \u2022 Ver quem usa a porta:     Get-NetTCPConnection -LocalPort ${PORT} | Select-Object OwningProcess
+`
+    );
+  } else {
+    console.error(`${LOG_PREFIX} Erro ao arrancar o servidor:`, err.message);
+  }
+  process.exit(1);
+});
 server.listen(PORT, HOST, () => {
   console.log(`Addon a correr em http://127.0.0.1:${PORT} (todas as interfaces: porta ${PORT})`);
   console.log(`Configura\xE7\xE3o / ajuda: http://127.0.0.1:${PORT}/configure`);
@@ -62247,6 +62674,9 @@ server.listen(PORT, HOST, () => {
   );
   console.log(
     `${LOG_PREFIX} Endpoints Stremio: movie/novelaspt_filmes | series/novelaspt_series | series/novelaspt_novelas`
+  );
+  console.log(
+    `${LOG_PREFIX} Meta JSON: imdb_id ao cliente = ${EXPOSE_IMDB_ID_TO_CLIENT ? "SIM (STREMIO_NP_EXPOSE_IMDB_ID=1)" : "N\xC3O (recomendado: evita fus\xE3o com Cinemeta e o efeito \u201Cano 20 / IMDb a desaparecer\u201D). imdbRating + link IMDb mant\xEAm-se."}`
   );
   console.log("");
   console.log("Stremio \u2014 instalar o addon:");

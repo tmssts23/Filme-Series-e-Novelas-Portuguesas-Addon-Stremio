@@ -12,7 +12,7 @@
   <g clip-path="url(#ptBall)">
     <rect x="0" y="0" width="256" height="512" fill="#046A38"/>
     <rect x="256" y="0" width="256" height="512" fill="#DA020E"/>
-    <!-- Esfera armilar + escudo (simplificado, centro na junção verde/vermelho) -->
+    <!-- Esfera armilar + escudo (simplificado, centro na junï¿½ï¿½o verde/vermelho) -->
     <circle cx="256" cy="256" r="80" fill="#FFCC00" stroke="#1a1a1a" stroke-width="3"/>
     <circle cx="256" cy="256" r="60" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
     <ellipse cx="256" cy="256" rx="60" ry="24" fill="none" stroke="#1a1a1a" stroke-width="2"/>

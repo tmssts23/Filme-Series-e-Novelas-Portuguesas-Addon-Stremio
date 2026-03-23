@@ -4,6 +4,7 @@
  */
 
 const http = require('http');
+const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -12,6 +13,12 @@ const scraper = require('./lib/scraper');
 
 const PORT = process.env.PORT || 7000;
 const LOG_PREFIX = '[NovelasPT]';
+/**
+ * Por defeito NÃO enviamos imdbId/imdb_id no JSON do meta: o Stremio costuma fundir com o Cinemeta
+ * pelo mesmo tt e substituir ano/nota (efeito “pisca certo e fica 20 / sem IMDb”).
+ * Para expor: STREMIO_NP_EXPOSE_IMDB_ID=1
+ */
+const EXPOSE_IMDB_ID_TO_CLIENT = process.env.STREMIO_NP_EXPOSE_IMDB_ID === '1';
 
 // Prefixo dos nossos IDs
 const MOVIE_PREFIX = 'novelaspt_movie_';
@@ -38,7 +45,7 @@ function getManifest(config, originBase) {
     name: ADDON_DISPLAY_NAME,
     description:
       'Filmes, séries e novelas portugueses. Catálogos separados: filmes, séries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).',
-    version: '1.0.4',
+    version: '1.0.12',
     resources: ['catalog', 'meta', 'stream'],
     types: ['movie', 'series'],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -49,10 +56,53 @@ function getManifest(config, originBase) {
       { type: 'series', id: 'novelaspt_novelas', name: 'Novelas Portuguesas', extra: [{ name: 'search', isRequired: false }] },
     ],
     behaviorHints: base,
+    stremioAddonsConfig: {
+      issuer: 'https://stremio-addons.net',
+      signature:
+        'eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..CvmszUdKMfeHbghC9AHUrg.yH5koKZYZegsGzt5niT80p9iegzINGvYKaBGqboGYbCaomKmUBr_FWYB7xH3cmXNT8qf2xFNxBsMMmWEUt-vzY2N_daIh1uLIMihzvN6aygGHV5AAjyrJmqG4anQYQ5U.u3_ityrxIwgFlCZg2n7DHg',
+    },
   };
 }
 
+const STREMIO_YEAR_MIN = 1870;
+const STREMIO_YEAR_MAX = 2100;
+
+function plausibleStremioYear(y) {
+  if (y == null) return null;
+  const n = typeof y === 'number' ? y : parseInt(String(y), 10);
+  if (!Number.isFinite(n) || n < STREMIO_YEAR_MIN || n > STREMIO_YEAR_MAX) return null;
+  return n;
+}
+
+/**
+ * Só `releaseInfo` (string) para o ano no meta Stremio — não enviamos `year` numérico nem `released` no
+ * objeto meta (evita clientes a mostrarem fragmentos tipo “20”).
+ */
+function stremioReleaseInfoFromItem(item) {
+  const ri = item.releaseInfo != null ? String(item.releaseInfo).trim() : '';
+  if (ri) {
+    if (/^\d{1,3}$/.test(ri)) return undefined;
+    return ri;
+  }
+  const y = plausibleStremioYear(item.year);
+  return y != null ? String(y) : undefined;
+}
+
+/** Ano base (número) para datas sintéticas em `videos` de séries. */
+function seriesBaseYearForVideos(item) {
+  const y = plausibleStremioYear(item.year);
+  if (y != null) return y;
+  const ri = item.releaseInfo != null ? String(item.releaseInfo).trim() : '';
+  const m = ri.match(/((?:19|20)\d{2})/);
+  if (m) {
+    const n = parseInt(m[1], 10);
+    if (n >= STREMIO_YEAR_MIN && n <= STREMIO_YEAR_MAX) return n;
+  }
+  return null;
+}
+
 function metaPreviewFromItem(item) {
+  const releaseInfo = stremioReleaseInfoFromItem(item);
   return {
     id: item.id,
     type: item.type,
@@ -60,12 +110,15 @@ function metaPreviewFromItem(item) {
     poster: item.poster,
     posterShape: 'poster',
     description: item.description,
-    releaseInfo: item.year ? String(item.year) : undefined,
-    imdbId: item.imdbId,
+    ...(releaseInfo != null && { releaseInfo }),
+    ...(EXPOSE_IMDB_ID_TO_CLIENT &&
+      item.imdbId != null && { imdbId: item.imdbId, imdb_id: item.imdbId }),
+    ...(item.imdbRating != null && item.imdbRating !== '' && { imdbRating: String(item.imdbRating) }),
   };
 }
 
 function metaFullFromItem(item) {
+  const releaseInfo = stremioReleaseInfoFromItem(item);
   const base = {
     id: item.id,
     type: item.type,
@@ -73,24 +126,60 @@ function metaFullFromItem(item) {
     posterShape: 'poster',
     ...(item.poster != null && { poster: item.poster }),
     ...(item.description != null && item.description !== '' && { description: item.description }),
-    ...((item.releaseInfo != null ? item.releaseInfo : item.year != null) && { releaseInfo: String(item.releaseInfo ?? item.year) }),
-    ...(item.imdbId != null && { imdbId: item.imdbId }),
+    ...(releaseInfo != null && { releaseInfo }),
+    ...(EXPOSE_IMDB_ID_TO_CLIENT &&
+      item.imdbId != null && { imdbId: item.imdbId, imdb_id: item.imdbId }),
     ...(item.background != null && { background: item.background }),
     ...(item.genres != null && item.genres.length > 0 && { genres: item.genres }),
     ...(item.cast != null && { cast: item.cast }),
     ...(item.director != null && { director: item.director }),
-    ...(item.imdbRating != null && { imdbRating: item.imdbRating }),
+    ...(item.imdbRating != null && item.imdbRating !== '' && { imdbRating: String(item.imdbRating) }),
     ...(item.runtime != null && { runtime: item.runtime }),
+    ...(item.trailers != null &&
+      Array.isArray(item.trailers) &&
+      item.trailers.length > 0 && { trailers: item.trailers }),
+    ...(item.links != null && Array.isArray(item.links) && item.links.length > 0 && { links: item.links }),
   };
   if (item.type === 'series' && item.episodes && item.episodes.length) {
-    base.videos = item.episodes.map((ep) => ({
-      id: `${item.id}:${ep.season}:${ep.episode}`,
-      title: ep.name || `Episódio ${ep.episode}`,
-      episode: ep.episode,
-      season: ep.season,
-    }));
+    const y0 = seriesBaseYearForVideos(item) ?? 2020;
+    base.videos = item.episodes.map((ep, idx) => {
+      const day = 1 + (idx % 28);
+      const mon = 1 + ((idx + ep.season * 31 + ep.episode) % 12);
+      const released = `${y0}-${String(mon).padStart(2, '0')}-${String(day).padStart(2, '0')}T12:00:00.000Z`;
+      return {
+        id: `${item.id}:${ep.season}:${ep.episode}`,
+        title: ep.name || `Episódio ${ep.episode}`,
+        episode: ep.episode,
+        season: ep.season,
+        released,
+      };
+    });
   }
   return base;
+}
+
+function dedupeStreamSourcesByUrl(sources) {
+  const seen = new Set();
+  const out = [];
+  for (const s of sources) {
+    const u = s && s.url;
+    if (!u || typeof u !== 'string') continue;
+    let key;
+    try {
+      const x = new URL(u.trim());
+      key = `${x.origin}${x.pathname}${x.search}`.toLowerCase();
+    } catch (_) {
+      key = u.trim().toLowerCase();
+    }
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(s);
+  }
+  return out;
+}
+
+function streamIdFromUrl(url) {
+  return crypto.createHash('sha256').update(String(url)).digest('hex').slice(0, 24);
 }
 
 async function handleCatalog(type, id, extra, config) {
@@ -110,9 +199,16 @@ async function handleCatalog(type, id, extra, config) {
   }
   const search = extra?.search;
   const beforeSearch = items.length;
-  if (search && typeof search === 'string') {
-    const q = search.toLowerCase();
-    items = items.filter(i => i.name.toLowerCase().includes(q));
+  if (search && typeof search === 'string' && search.trim() !== '') {
+    const q = normalizeForCatalogSearch(search);
+    items = items.filter((i) => {
+      if (!q) return true;
+      const name = normalizeForCatalogSearch(i.name || '');
+      if (name.includes(q)) return true;
+      const slugAsText = normalizeForCatalogSearch(String(i.slug || '').replace(/-/g, ' '));
+      if (slugAsText.includes(q)) return true;
+      return false;
+    });
     console.log(
       `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} → ${items.length} metas (pesquisa "${search}" filtrou ${beforeSearch} → ${items.length})`,
     );
@@ -143,8 +239,18 @@ async function handleMeta(type, id, config) {
     item = await scraper.getSeriesMeta(slug);
   }
   if (!item) return { meta: null };
-  // Capas e descrições apenas do site (já vêm em getFilmeMeta / getSeriesMeta)
-  return { meta: metaFullFromItem(item) };
+  scraper.sanitizeCatalogItems([item]);
+  const metaOut = metaFullFromItem(item);
+  const kind = decoded.startsWith(MOVIE_PREFIX) ? 'filme' : 'série ou novela (mesmo tipo no Stremio)';
+  const ri = metaOut.releaseInfo ?? '-';
+  const yr = item.year != null ? String(item.year) : '-';
+  const imdbInternal = item.imdbId ?? '-';
+  const imdbClient = EXPOSE_IMDB_ID_TO_CLIENT ? 'sim' : 'não (evita fusão Cinemeta)';
+  const note = item.imdbRating != null ? String(item.imdbRating) : '-';
+  console.log(
+    `${LOG_PREFIX} meta stremio=${type} | ${kind} | título="${item.name}" | slug=${slug} | releaseInfo=${ri} | year=${yr} | imdbId_interno=${imdbInternal} | imdb_id→cliente=${imdbClient} | imdbRating=${note}`,
+  );
+  return { meta: metaOut };
 }
 
 async function handleStream(type, id, extra, _config) {
@@ -155,14 +261,25 @@ async function handleStream(type, id, extra, _config) {
   const itemNameBase = 'Novelas Portuguesas';
   let itemName = itemNameBase;
   let sources = [];
+  let slugForLog = '';
+  let kindLog = '';
+  let epLog = '';
 
   if (type === 'movie') {
+    kindLog = 'filme';
     const slug = decoded.replace(MOVIE_PREFIX, '');
+    slugForLog = slug;
     const meta = await scraper.getFilmeMeta(slug);
-    if (!meta?.wpPostId) return { streams: [] };
+    if (!meta?.wpPostId) {
+      console.log(
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | título="${meta?.name || '?'}" | slug=${slug} | sem wpPostId → 0 opções`,
+      );
+      return { streams: [] };
+    }
     itemName = meta.name || itemNameBase;
     sources = await scraper.getMovieStreamSources(meta.wpPostId);
   } else if (type === 'series') {
+    kindLog = 'série/novela';
     const epMatch = decoded.match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
     let slug;
     let season;
@@ -176,18 +293,43 @@ async function handleStream(type, id, extra, _config) {
       season = Math.max(1, parseInt(String(extra?.season ?? 1), 10) || 1);
       episode = Math.max(1, parseInt(String(extra?.episode ?? 1), 10) || 1);
     }
+    slugForLog = slug;
     const meta = await scraper.getSeriesMeta(slug);
-    if (!meta) return { streams: [] };
+    if (!meta) {
+      console.log(
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | slug=${slug} | meta inexistente → 0 opções`,
+      );
+      return { streams: [] };
+    }
     itemName = meta.name || itemNameBase;
     const ep = meta.episodes?.find((e) => e.season === season && e.episode === episode);
-    if (!ep?.wpPid) return { streams: [] };
+    const epLabel = `S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`;
+    const epTitle = ep?.name ? ` "${ep.name}"` : '';
+    epLog = ` | episódio=${epLabel}${epTitle}`;
+    if (!ep?.wpPid) {
+      console.log(
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | título="${itemName}" | slug=${slug}${epLog} | sem wpPid → 0 opções`,
+      );
+      return { streams: [] };
+    }
     sources = await scraper.getTvEpisodeStreamSources(ep.wpPid);
   }
 
-  if (!sources.length) return { streams: [] };
+  sources = dedupeStreamSourcesByUrl(sources);
+  const opts = sources.map((s, i) => `${i + 1}) ${s.title || 'Player'}`).join(' | ');
+  if (!sources.length) {
+    console.log(
+      `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | título="${itemName}" | slug=${slugForLog}${epLog} | 0 opções (Zeta/embed vazio)`,
+    );
+    return { streams: [] };
+  }
+  console.log(
+    `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | título="${itemName}" | slug=${slugForLog}${epLog} | ${sources.length} opção(ões): ${opts}`,
+  );
 
   return {
     streams: sources.map((s) => ({
+      id: `novelaspt-${streamIdFromUrl(s.url)}`,
       name: itemName,
       title: s.title || 'Player',
       externalUrl: s.url,
@@ -213,6 +355,44 @@ function parseRequestUrl(req) {
   const u = new URL(req.url || '/', `http://${host}`);
   const query = Object.fromEntries(u.searchParams);
   return { pathname: u.pathname, query };
+}
+
+/**
+ * Stremio pede extras do catálogo no path, não só em ?search=
+ * Ex.: /catalog/movie/novelaspt_filmes/search=lulu.json
+ *     /catalog/series/novelaspt_series/search=amor%20perfeito&skip=0.json
+ */
+function parseCatalogPathExtras(pathRest) {
+  const extra = {};
+  if (!pathRest || pathRest.length <= 3) return extra;
+  for (let i = 3; i < pathRest.length; i++) {
+    let seg = decodeURIComponent(String(pathRest[i]));
+    seg = seg.replace(/\.json$/i, '');
+    if (!seg) continue;
+    for (const pair of seg.split('&')) {
+      const eq = pair.indexOf('=');
+      if (eq <= 0) continue;
+      const k = pair.slice(0, eq).trim();
+      let v = pair.slice(eq + 1);
+      try {
+        v = decodeURIComponent(v.replace(/\+/g, ' '));
+      } catch (_) {
+        /* mantém v */
+      }
+      if (k) extra[k] = v;
+    }
+  }
+  return extra;
+}
+
+function normalizeForCatalogSearch(s) {
+  if (!s || typeof s !== 'string') return '';
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function localIPv4Addresses() {
@@ -318,8 +498,9 @@ const server = http.createServer(async (req, res) => {
 
     if (pathRest[0] === 'catalog' && pathRest.length >= 3) {
       const type = pathRest[1];
-      const id = decodeURIComponent(pathRest[2].replace(/\.json$/, ''));
-      const result = await handleCatalog(type, id, query, config);
+      const id = decodeURIComponent(String(pathRest[2]).replace(/\.json$/i, ''));
+      const extra = { ...query, ...parseCatalogPathExtras(pathRest) };
+      const result = await handleCatalog(type, id, extra, config);
       sendJson(res, 200, result, method, { ...CORS });
       return;
     }
@@ -396,6 +577,22 @@ if (!fs.existsSync(configurePath)) {
 }
 
 const HOST = '0.0.0.0';
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n${LOG_PREFIX} A porta ${PORT} já está em uso (outra instância do addon ou outro programa).`);
+    console.error('  • Fecha a outra janela onde correste npm start / node dist/bundle.cjs.');
+    console.error('  • PowerShell — outra porta:  $env:PORT=7001; npm start');
+    console.error('  • CMD — outra porta:          set PORT=7001 && npm start');
+    console.error(
+      `  • Ver quem usa a porta:     Get-NetTCPConnection -LocalPort ${PORT} | Select-Object OwningProcess\n`,
+    );
+  } else {
+    console.error(`${LOG_PREFIX} Erro ao arrancar o servidor:`, err.message);
+  }
+  process.exit(1);
+});
+
 server.listen(PORT, HOST, () => {
   console.log(`Addon a correr em http://127.0.0.1:${PORT} (todas as interfaces: porta ${PORT})`);
   console.log(`Configuração / ajuda: http://127.0.0.1:${PORT}/configure`);
@@ -405,6 +602,9 @@ server.listen(PORT, HOST, () => {
   );
   console.log(
     `${LOG_PREFIX} Endpoints Stremio: movie/novelaspt_filmes | series/novelaspt_series | series/novelaspt_novelas`,
+  );
+  console.log(
+    `${LOG_PREFIX} Meta JSON: imdb_id ao cliente = ${EXPOSE_IMDB_ID_TO_CLIENT ? 'SIM (STREMIO_NP_EXPOSE_IMDB_ID=1)' : 'NÃO (recomendado: evita fusão com Cinemeta e o efeito “ano 20 / IMDb a desaparecer”). imdbRating + link IMDb mantêm-se.'}`,
   );
   console.log('');
   console.log('Stremio — instalar o addon:');
