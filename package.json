@@ -1,6 +1,6 @@
 {
   "name": "filmes-series-portuguesas-addon",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "Filmes, Series e Novelas Portuguesas Addon Stremio",
   "main": "dist/bundle.cjs",
   "scripts": {

@@ -45,7 +45,7 @@ function getManifest(config, originBase) {
     name: ADDON_DISPLAY_NAME,
     description:
       'Filmes, séries e novelas portugueses. Catálogos separados: filmes, séries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).',
-    version: '1.0.15',
+    version: '1.0.16',
     resources: ['catalog', 'meta', 'stream'],
     types: ['movie', 'series'],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -254,7 +254,7 @@ function stripStreamEpisodeSuffix(seriesId) {
 }
 
 async function handleMeta(type, id, config) {
-  const decoded = decodeURIComponent(String(id || ''));
+  const decoded = safeDecodeStremioId(id);
   if (!decoded.startsWith(MOVIE_PREFIX) && !decoded.startsWith(SERIES_PREFIX)) {
     return { meta: null };
   }
@@ -262,12 +262,26 @@ async function handleMeta(type, id, config) {
     ? decoded.replace(MOVIE_PREFIX, '')
     : stripStreamEpisodeSuffix(decoded);
   let item = null;
+  let metaFromCatalogOnly = false;
   if (decoded.startsWith(MOVIE_PREFIX)) {
     item = await scraper.getFilmeMeta(slug);
+    if (!item) {
+      item = scraper.minimalMovieMetaFromCatalog(slug);
+      metaFromCatalogOnly = !!item;
+    }
   } else {
     item = await scraper.getSeriesMeta(slug);
+    if (!item) {
+      item = scraper.minimalSeriesMetaFromCatalog(slug);
+      metaFromCatalogOnly = !!item;
+    }
   }
   if (!item) return { meta: null };
+  if (metaFromCatalogOnly) {
+    console.warn(
+      `${LOG_PREFIX} meta só a partir do catálogo (detalhe HTTP falhou) slug=${slug} type=${decoded.startsWith(MOVIE_PREFIX) ? 'movie' : 'series'}`,
+    );
+  }
   scraper.sanitizeCatalogItems([item]);
   const metaOut = metaFullFromItem(item);
   const kind = decoded.startsWith(MOVIE_PREFIX) ? 'filme' : 'série ou novela (mesmo tipo no Stremio)';
@@ -283,7 +297,7 @@ async function handleMeta(type, id, config) {
 }
 
 async function handleStream(type, id, extra, _config) {
-  const decoded = decodeURIComponent(String(id || ''));
+  const decoded = safeDecodeStremioId(id);
   if (!decoded.startsWith(MOVIE_PREFIX) && !decoded.startsWith(SERIES_PREFIX)) {
     return { streams: [] };
   }
@@ -426,6 +440,21 @@ function normalizeForCatalogSearch(s) {
 
 /** Stremio usa páginas de 100 metas; sem slice o cliente pede skip=100,200,… e nós devolvíamos sempre do início. */
 const STREMIO_CATALOG_PAGE_SIZE = 100;
+
+/** IDs no path do Stremio vêm codificados; % inválidos lançavam e o handler respondia 500 → “No metadata was found”. */
+function safeDecodeStremioId(raw) {
+  let s = String(raw || '');
+  for (let i = 0; i < 3; i++) {
+    try {
+      const next = decodeURIComponent(s.replace(/\+/g, ' '));
+      if (next === s) break;
+      s = next;
+    } catch (_) {
+      break;
+    }
+  }
+  return s;
+}
 
 function catalogSkipFromExtra(extra) {
   const v = extra && extra.skip;

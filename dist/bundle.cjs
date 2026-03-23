@@ -62024,12 +62024,85 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const m = html.match(/[?&]p=(\d+)/);
       return m ? parseInt(m[1], 10) : null;
     }
+    function detailPathsForSlug(wpSegment, slug) {
+      const s = String(slug || "").trim();
+      if (!s) return [];
+      const out = [`/${wpSegment}/${s}/`, `/${wpSegment}/${s}`];
+      if (s !== s.toLowerCase()) {
+        const lo = s.toLowerCase();
+        out.push(`/${wpSegment}/${lo}/`, `/${wpSegment}/${lo}`);
+      }
+      return [...new Set(out)];
+    }
+    async function fetchFirstOkHtml(pathList, retriesPerPath = 2) {
+      for (const path2 of pathList) {
+        const res = await safeClientGet(path2, retriesPerPath);
+        if (res && res.status === 200 && typeof res.data === "string") return res.data;
+      }
+      return null;
+    }
+    function findCatalogItemBySlug(slug, contentType) {
+      const s = String(slug || "").trim();
+      if (!s) return null;
+      const lists = [];
+      if (contentType === "movie") {
+        if (filmesCache?.items) lists.push(filmesCache.items);
+      } else {
+        if (seriesPortuguesasCache?.items) lists.push(seriesPortuguesasCache.items);
+        if (novelasPortuguesasCache?.items) lists.push(novelasPortuguesasCache.items);
+      }
+      const slo = s.toLowerCase();
+      for (const items of lists) {
+        const hit = items.find((i) => i.slug === s) || items.find((i) => String(i.slug || "").toLowerCase() === slo);
+        if (hit) return { ...hit };
+      }
+      return null;
+    }
+    function minimalMovieMetaFromCatalog(slug) {
+      const c = findCatalogItemBySlug(slug, "movie");
+      if (!c) return null;
+      return {
+        id: c.id,
+        name: c.name && String(c.name).trim() ? c.name : toTitleCase(String(slug).replace(/-/g, " ")),
+        slug: c.slug,
+        type: "movie",
+        poster: c.poster,
+        description: c.description,
+        releaseInfo: c.releaseInfo,
+        year: c.year,
+        wpPostId: void 0
+      };
+    }
+    function minimalSeriesMetaFromCatalog(slug) {
+      const c = findCatalogItemBySlug(slug, "series");
+      if (!c) return null;
+      return {
+        id: c.id,
+        name: c.name && String(c.name).trim() ? c.name : toTitleCase(String(slug).replace(/-/g, " ")),
+        slug: c.slug,
+        type: "series",
+        poster: c.poster,
+        description: c.description,
+        releaseInfo: c.releaseInfo,
+        year: c.year,
+        episodes: [
+          {
+            season: 1,
+            episode: 1,
+            name: "A sincronizar epis\xF3dios\u2026",
+            wpPid: void 0
+          }
+        ]
+      };
+    }
     async function getFilmeMeta(slug) {
-      const res = await safeClientGet(`/filme/${slug}/`, 3);
-      if (!res || res.status !== 200 || typeof res.data !== "string") return null;
-      const html = res.data;
+      const slugForIds = String(slug || "").trim();
+      if (!slugForIds) return null;
+      let html = await fetchFirstOkHtml(detailPathsForSlug("filme", slugForIds), 2);
+      if (!html) html = await fetchFirstOkHtml(detailPathsForSlug("serie", slugForIds), 2);
+      if (!html) return null;
       const $ = cheerio.load(html);
-      const rawName = $("h1").first().text().trim() || $(".heading-archive, .display-page-heading h1").first().text().trim() || slug.replace(/-/g, " ");
+      const rawName = $("h1").first().text().trim() || $(".heading-archive, .display-page-heading h1").first().text().trim() || slugForIds.replace(/-/g, " ");
       const name = toTitleCase(rawName);
       let year = null;
       let releaseInfo = null;
@@ -62067,9 +62140,9 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       } else if (description.length > DESC_MAX) description = description.slice(0, DESC_MAX);
       const wpPostId = wpPostIdFromHtml(html) || parseInt($(".zetaflix_player_option").first().attr("data-post") || "", 10) || null;
       const item = {
-        id: `novelaspt_movie_${slug}`,
+        id: `novelaspt_movie_${slugForIds}`,
         name,
-        slug,
+        slug: slugForIds,
         type: "movie",
         year: year || void 0,
         releaseInfo: releaseInfo || void 0,
@@ -62088,11 +62161,13 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       return item;
     }
     async function getSeriesMeta(slug) {
-      const res = await safeClientGet(`/serie/${slug}/`, 3);
-      if (!res || res.status !== 200 || typeof res.data !== "string") return null;
-      const html = res.data;
+      const slugForIds = String(slug || "").trim();
+      if (!slugForIds) return null;
+      let html = await fetchFirstOkHtml(detailPathsForSlug("serie", slugForIds), 2);
+      if (!html) html = await fetchFirstOkHtml(detailPathsForSlug("filme", slugForIds), 2);
+      if (!html) return null;
       const $ = cheerio.load(html);
-      const rawName = $("h1").first().text().trim() || $(".display-page-heading h1").first().text().trim() || slug.replace(/-/g, " ");
+      const rawName = $("h1").first().text().trim() || $(".display-page-heading h1").first().text().trim() || slugForIds.replace(/-/g, " ");
       const name = toTitleCase(rawName);
       let year = null;
       let releaseInfo = null;
@@ -62150,10 +62225,18 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       });
       const episodes = remapEpisodeSeasons(rawEpisodes);
       episodes.sort((a, b) => a.season - b.season || a.episode - b.episode);
+      if (!episodes.length) {
+        episodes.push({
+          season: 1,
+          episode: 1,
+          name: "Epis\xF3dios em atualiza\xE7\xE3o",
+          wpPid: void 0
+        });
+      }
       const item = {
-        id: `novelaspt_series_${slug}`,
+        id: `novelaspt_series_${slugForIds}`,
         name,
-        slug,
+        slug: slugForIds,
         type: "series",
         year: year || void 0,
         releaseInfo: releaseInfo || void 0,
@@ -62258,6 +62341,8 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       sanitizeCatalogItems,
       getFilmeMeta,
       getSeriesMeta,
+      minimalMovieMetaFromCatalog,
+      minimalSeriesMetaFromCatalog,
       getMovieStreamSources,
       getTvEpisodeStreamSources,
       getSeriesEpisodes
@@ -62292,7 +62377,7 @@ function getManifest(config, originBase) {
     id: "pt.filmes-series-portuguesas",
     name: ADDON_DISPLAY_NAME,
     description: "Filmes, s\xE9ries e novelas portugueses. Cat\xE1logos separados: filmes, s\xE9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
-    version: "1.0.15",
+    version: "1.0.16",
     resources: ["catalog", "meta", "stream"],
     types: ["movie", "series"],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -62480,18 +62565,32 @@ function stripStreamEpisodeSuffix(seriesId) {
   return String(seriesId).replace(SERIES_PREFIX, "");
 }
 async function handleMeta(type, id, config) {
-  const decoded = decodeURIComponent(String(id || ""));
+  const decoded = safeDecodeStremioId(id);
   if (!decoded.startsWith(MOVIE_PREFIX) && !decoded.startsWith(SERIES_PREFIX)) {
     return { meta: null };
   }
   const slug = decoded.startsWith(MOVIE_PREFIX) ? decoded.replace(MOVIE_PREFIX, "") : stripStreamEpisodeSuffix(decoded);
   let item = null;
+  let metaFromCatalogOnly = false;
   if (decoded.startsWith(MOVIE_PREFIX)) {
     item = await scraper.getFilmeMeta(slug);
+    if (!item) {
+      item = scraper.minimalMovieMetaFromCatalog(slug);
+      metaFromCatalogOnly = !!item;
+    }
   } else {
     item = await scraper.getSeriesMeta(slug);
+    if (!item) {
+      item = scraper.minimalSeriesMetaFromCatalog(slug);
+      metaFromCatalogOnly = !!item;
+    }
   }
   if (!item) return { meta: null };
+  if (metaFromCatalogOnly) {
+    console.warn(
+      `${LOG_PREFIX} meta s\xF3 a partir do cat\xE1logo (detalhe HTTP falhou) slug=${slug} type=${decoded.startsWith(MOVIE_PREFIX) ? "movie" : "series"}`
+    );
+  }
   scraper.sanitizeCatalogItems([item]);
   const metaOut = metaFullFromItem(item);
   const kind = decoded.startsWith(MOVIE_PREFIX) ? "filme" : "s\xE9rie ou novela (mesmo tipo no Stremio)";
@@ -62506,7 +62605,7 @@ async function handleMeta(type, id, config) {
   return { meta: metaOut };
 }
 async function handleStream(type, id, extra, _config) {
-  const decoded = decodeURIComponent(String(id || ""));
+  const decoded = safeDecodeStremioId(id);
   if (!decoded.startsWith(MOVIE_PREFIX) && !decoded.startsWith(SERIES_PREFIX)) {
     return { streams: [] };
   }
@@ -62628,6 +62727,19 @@ function normalizeForCatalogSearch(s) {
   return s.toLowerCase().normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "").replace(/\s+/g, " ").trim();
 }
 var STREMIO_CATALOG_PAGE_SIZE = 100;
+function safeDecodeStremioId(raw) {
+  let s = String(raw || "");
+  for (let i = 0; i < 3; i++) {
+    try {
+      const next = decodeURIComponent(s.replace(/\+/g, " "));
+      if (next === s) break;
+      s = next;
+    } catch (_) {
+      break;
+    }
+  }
+  return s;
+}
 function catalogSkipFromExtra(extra) {
   const v = extra && extra.skip;
   if (v == null) return 0;
