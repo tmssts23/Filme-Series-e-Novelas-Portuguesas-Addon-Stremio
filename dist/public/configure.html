@@ -1,33 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Configurar Addon — Filmes, Series e Novelas Portuguesas</title>
+  <title>Configurar Addon</title>
   <style>
-    * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 20px; }
-    h1 { font-size: 1.4rem; }
-    label { display: block; margin-top: 12px; font-weight: 500; }
-    select, input { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
-    button { margin-top: 20px; padding: 12px 24px; background: #2e7d32; color: #fff; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; width: 100%; }
-    button:hover { background: #1b5e20; }
-    .hint { font-size: 0.85rem; color: #444; margin-top: 12px; line-height: 1.45; }
-    .link { margin-top: 16px; word-break: break-all; font-size: 0.95rem; padding: 12px; background: #f5f5f5; border-radius: 6px; }
-    a { color: #1565c0; }
-    code { font-size: 0.88em; background: #eee; padding: 2px 6px; border-radius: 4px; }
+    body { font-family: Arial, sans-serif; max-width: 760px; margin: 32px auto; padding: 0 16px; }
+    code { background: #f2f2f2; padding: 2px 6px; border-radius: 4px; }
   </style>
 </head>
 <body>
-  <h1>Filmes, Series e Novelas Portuguesas Addon Stremio</h1>
-  <p>Conteúdo de <a href="https://novelasportuguesas.com/" target="_blank" rel="noopener">novelasportuguesas.com</a>. Os vídeos abrem no browser (external player).</p>
-  <p class="link"><strong>URL do manifest (copiar para o Stremio):</strong><br><code id="manifestUrl"></code></p>
-  <p class="hint"><strong>Stremio Desktop no mesmo PC:</strong> usa <code>http://127.0.0.1:PORT/manifest.json</code> (substitui PORT pelo número da porta, ex. 7000) ou o URL acima. O Stremio aceita HTTP apenas em <code>localhost</code> / <code>127.0.0.1</code>.</p>
-  <p class="hint"><strong>Stremio Web, telemóvel ou TV:</strong> costuma ser obrigatório <strong>HTTPS</strong>. Endereços <code>http://192.168.x.x/...</code> na rede local são muitas vezes recusados. Usa um túnel HTTPS (ex.: <a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> ou <a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/" target="_blank" rel="noopener">Cloudflare Tunnel</a>) e cola o <code>https://…/manifest.json</code> no Stremio.</p>
-  <p class="hint">No Stremio: Addons → colar o URL do manifest (ou “Addon catalog”, conforme a versão) → instalar.</p>
+  <h1>Filmes, Series e Novelas Portuguesas</h1>
+  <p>Usa este URL no Stremio:</p>
+  <p><code id="m"></code></p>
+  <p>Se usares Stremio Web/TV, coloca um URL HTTPS publico.</p>
   <script>
-    var m = location.origin + '/manifest.json';
-    document.getElementById('manifestUrl').textContent = m;
+    document.getElementById('m').textContent = location.origin + '/manifest.json';
   </script>
 </body>
 </html>

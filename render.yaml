@@ -1,36 +1,20 @@
-# Blueprint Render — https://render.com/docs/blueprint-spec
-# Cria o serviço: Dashboard → New → Blueprint → cola este repo.
-
 services:
   - type: web
     name: novelaspt-stremio-addon
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /manifest.json
     envVars:
-      # Catálogo em cloud: manter grelha rápida (sem pedir detalhe de todos os títulos no refresh).
-      - key: STREMIO_NP_CATALOG_RELEASE
-        value: "0"
-      - key: STREMIO_NP_CATALOG_SYNOPSIS
-        value: "0"
-      # Baseado nos benchmarks: metas tipicamente < 2.5s; timeout curto evita "pendurar" no cliente.
+      - key: STREMIO_NP_CACHE_MS
+        value: "21600000"
+      - key: STREMIO_NP_META_CACHE_MS
+        value: "21600000"
       - key: STREMIO_NP_META_TIMEOUT_MS
         value: "6000"
       - key: STREMIO_NP_META_RETRIES
         value: "1"
       - key: STREMIO_NP_META_MAX_PATHS
         value: "3"
-      # Cache runtime (catálogo + meta) para resposta imediata após warm-up.
-      - key: STREMIO_NP_CACHE_MS
-        value: "21600000"
-      - key: STREMIO_NP_META_CACHE_MS
-        value: "21600000"
-      # HTTP global (arquivo/streams): equilíbrio entre robustez e latência.
-      - key: STREMIO_NP_HTTP_TIMEOUT_MS
-        value: "25000"
-      # Se o IP da Render for bloqueado pelo site, ativar proxy residencial.
-      # - key: STREMIO_NP_PROXY
-      #   value: "http://user:pass@host:port"

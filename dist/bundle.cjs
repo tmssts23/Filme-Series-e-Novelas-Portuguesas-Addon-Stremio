@@ -1,36 +1,3 @@
-
-
-(function(){
-
-  if (typeof globalThis.Blob === 'undefined') globalThis.Blob = require('buffer').Blob;
-
-  if (typeof globalThis.File === 'undefined') {
-
-    var Blob = globalThis.Blob;
-
-    function File(bits, name, opts) {
-
-      if (!(this instanceof File)) return new File(bits, name, opts);
-
-      Blob.call(this, bits, opts || {});
-
-      this.name = name || '';
-
-      this.lastModified = (opts && opts.lastModified) || Date.now();
-
-    }
-
-    File.prototype = Object.create(Blob.prototype);
-
-    File.prototype.constructor = File;
-
-    globalThis.File = File;
-
-  }
-
-})();
-
-
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
@@ -9315,7 +9282,7 @@ var require_shams = __commonJS({
         return true;
       }
       var obj = {};
-      var sym = Symbol("test");
+      var sym = /* @__PURE__ */ Symbol("test");
       var symObj = Object(sym);
       if (typeof sym === "string") {
         return false;
@@ -9374,7 +9341,7 @@ var require_has_symbols = __commonJS({
       if (typeof origSymbol("foo") !== "symbol") {
         return false;
       }
-      if (typeof Symbol("bar") !== "symbol") {
+      if (typeof /* @__PURE__ */ Symbol("bar") !== "symbol") {
         return false;
       }
       return hasSymbolSham();
@@ -9631,7 +9598,7 @@ var require_get_intrinsic = __commonJS({
     var throwTypeError = function() {
       throw new $TypeError();
     };
-    var ThrowTypeError = $gOPD ? function() {
+    var ThrowTypeError = $gOPD ? (function() {
       try {
         arguments.callee;
         return throwTypeError;
@@ -9642,7 +9609,7 @@ var require_get_intrinsic = __commonJS({
           return throwTypeError;
         }
       }
-    }() : throwTypeError;
+    })() : throwTypeError;
     var hasSymbols = require_has_symbols()();
     var getProto = require_get_proto();
     var $ObjectGPO = require_Object_getPrototypeOf();
@@ -9906,7 +9873,7 @@ var require_get_intrinsic = __commonJS({
             if (!allowMissing) {
               throw new $TypeError("base intrinsic for " + name + " exists, but the property is not available.");
             }
-            return void 0;
+            return void undefined2;
           }
           if ($gOPD && i + 1 >= parts.length) {
             var desc = $gOPD(value, part);
@@ -11930,7 +11897,7 @@ var require_axios = __commonJS({
       });
       return parsed;
     };
-    var $internals = Symbol("internals");
+    var $internals = /* @__PURE__ */ Symbol("internals");
     function normalizeHeader(header) {
       return header && String(header).trim().toLowerCase();
     }
@@ -12227,7 +12194,7 @@ var require_axios = __commonJS({
       }
       return requestedURL;
     }
-    var VERSION = "1.13.6";
+    var VERSION2 = "1.13.6";
     function parseProtocol(url2) {
       const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url2);
       return match && match[1] || "";
@@ -12259,7 +12226,7 @@ var require_axios = __commonJS({
       }
       throw new AxiosError$1("Unsupported protocol " + protocol, AxiosError$1.ERR_NOT_SUPPORT);
     }
-    var kInternals = Symbol("internals");
+    var kInternals = /* @__PURE__ */ Symbol("internals");
     var AxiosTransformStream = class extends stream__default["default"].Transform {
       constructor(options) {
         options = utils$1.toFlatObject(
@@ -12464,13 +12431,13 @@ var require_axios = __commonJS({
       }
       headersHandler && headersHandler(computedHeaders);
       return stream.Readable.from(
-        async function* () {
+        (async function* () {
           for (const part of parts) {
             yield boundaryBytes;
             yield* part.encode();
           }
           yield footerBytes;
-        }()
+        })()
       );
     };
     var formDataToStream$1 = formDataToStream;
@@ -12973,7 +12940,7 @@ var require_axios = __commonJS({
           );
         }
         const headers = AxiosHeaders$1.from(config.headers).normalize();
-        headers.set("User-Agent", "axios/" + VERSION, false);
+        headers.set("User-Agent", "axios/" + VERSION2, false);
         const { onUploadProgress, onDownloadProgress } = config;
         const maxRate = config.maxRate;
         let maxUploadRate = void 0;
@@ -12986,7 +12953,7 @@ var require_axios = __commonJS({
               headers.set(formHeaders);
             },
             {
-              tag: `axios-${VERSION}-boundary`,
+              tag: `axios-${VERSION2}-boundary`,
               boundary: userBoundary && userBoundary[1] || void 0
             }
           );
@@ -14083,7 +14050,7 @@ var require_axios = __commonJS({
     var deprecatedWarnings = {};
     validators$1.transitional = function transitional(validator2, version, message) {
       function formatMessage(opt, desc) {
-        return "[Axios v" + VERSION + "] Transitional option '" + opt + "'" + desc + (message ? ". " + message : "");
+        return "[Axios v" + VERSION2 + "] Transitional option '" + opt + "'" + desc + (message ? ". " + message : "");
       }
       return (value, opt, opts) => {
         if (validator2 === false) {
@@ -14520,7 +14487,7 @@ var require_axios = __commonJS({
     axios.CanceledError = CanceledError$1;
     axios.CancelToken = CancelToken$1;
     axios.isCancel = isCancel;
-    axios.VERSION = VERSION;
+    axios.VERSION = VERSION2;
     axios.toFormData = toFormData;
     axios.AxiosError = AxiosError$1;
     axios.Cancel = axios.CanceledError;
@@ -14609,7 +14576,7 @@ var require_lib = __commonJS({
 var require_node = __commonJS({
   "node_modules/domhandler/lib/node.js"(exports2) {
     "use strict";
-    var __extends = exports2 && exports2.__extends || /* @__PURE__ */ function() {
+    var __extends = exports2 && exports2.__extends || /* @__PURE__ */ (function() {
       var extendStatics = function(d, b) {
         extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
           d2.__proto__ = b2;
@@ -14627,7 +14594,7 @@ var require_node = __commonJS({
         }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
       };
-    }();
+    })();
     var __assign = exports2 && exports2.__assign || function() {
       __assign = Object.assign || function(t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {
@@ -14644,7 +14611,7 @@ var require_node = __commonJS({
     var domelementtype_1 = require_lib();
     var Node = (
       /** @class */
-      function() {
+      (function() {
         function Node2() {
           this.parent = null;
           this.prev = null;
@@ -14702,12 +14669,12 @@ var require_node = __commonJS({
           return cloneNode(this, recursive);
         };
         return Node2;
-      }()
+      })()
     );
     exports2.Node = Node;
     var DataNode = (
       /** @class */
-      function(_super) {
+      (function(_super) {
         __extends(DataNode2, _super);
         function DataNode2(data) {
           var _this = _super.call(this) || this;
@@ -14729,12 +14696,12 @@ var require_node = __commonJS({
           configurable: true
         });
         return DataNode2;
-      }(Node)
+      })(Node)
     );
     exports2.DataNode = DataNode;
     var Text = (
       /** @class */
-      function(_super) {
+      (function(_super) {
         __extends(Text2, _super);
         function Text2() {
           var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -14749,12 +14716,12 @@ var require_node = __commonJS({
           configurable: true
         });
         return Text2;
-      }(DataNode)
+      })(DataNode)
     );
     exports2.Text = Text;
     var Comment = (
       /** @class */
-      function(_super) {
+      (function(_super) {
         __extends(Comment2, _super);
         function Comment2() {
           var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -14769,12 +14736,12 @@ var require_node = __commonJS({
           configurable: true
         });
         return Comment2;
-      }(DataNode)
+      })(DataNode)
     );
     exports2.Comment = Comment;
     var ProcessingInstruction = (
       /** @class */
-      function(_super) {
+      (function(_super) {
         __extends(ProcessingInstruction2, _super);
         function ProcessingInstruction2(name, data) {
           var _this = _super.call(this, data) || this;
@@ -14790,12 +14757,12 @@ var require_node = __commonJS({
           configurable: true
         });
         return ProcessingInstruction2;
-      }(DataNode)
+      })(DataNode)
     );
     exports2.ProcessingInstruction = ProcessingInstruction;
     var NodeWithChildren = (
       /** @class */
-      function(_super) {
+      (function(_super) {
         __extends(NodeWithChildren2, _super);
         function NodeWithChildren2(children) {
           var _this = _super.call(this) || this;
@@ -14835,12 +14802,12 @@ var require_node = __commonJS({
           configurable: true
         });
         return NodeWithChildren2;
-      }(Node)
+      })(Node)
     );
     exports2.NodeWithChildren = NodeWithChildren;
     var CDATA = (
       /** @class */
-      function(_super) {
+      (function(_super) {
         __extends(CDATA2, _super);
         function CDATA2() {
           var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -14855,12 +14822,12 @@ var require_node = __commonJS({
           configurable: true
         });
         return CDATA2;
-      }(NodeWithChildren)
+      })(NodeWithChildren)
     );
     exports2.CDATA = CDATA;
     var Document = (
       /** @class */
-      function(_super) {
+      (function(_super) {
         __extends(Document2, _super);
         function Document2() {
           var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -14875,12 +14842,12 @@ var require_node = __commonJS({
           configurable: true
         });
         return Document2;
-      }(NodeWithChildren)
+      })(NodeWithChildren)
     );
     exports2.Document = Document;
     var Element = (
       /** @class */
-      function(_super) {
+      (function(_super) {
         __extends(Element2, _super);
         function Element2(name, attribs, children, type) {
           if (children === void 0) {
@@ -14934,7 +14901,7 @@ var require_node = __commonJS({
           configurable: true
         });
         return Element2;
-      }(NodeWithChildren)
+      })(NodeWithChildren)
     );
     exports2.Element = Element;
     function isTag(node) {
@@ -15043,7 +15010,7 @@ var require_node = __commonJS({
 var require_lib2 = __commonJS({
   "node_modules/domhandler/lib/index.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -15052,10 +15019,10 @@ var require_lib2 = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
+    }));
     var __exportStar = exports2 && exports2.__exportStar || function(m, exports3) {
       for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
     };
@@ -15071,7 +15038,7 @@ var require_lib2 = __commonJS({
     };
     var DomHandler = (
       /** @class */
-      function() {
+      (function() {
         function DomHandler2(callback, options, elementCB) {
           this.dom = [];
           this.root = new node_js_1.Document(this.dom);
@@ -15191,7 +15158,7 @@ var require_lib2 = __commonJS({
           this.lastNode = null;
         };
         return DomHandler2;
-      }()
+      })()
     );
     exports2.DomHandler = DomHandler;
     exports2.default = DomHandler;
@@ -15294,7 +15261,7 @@ var require_decode_codepoint = __commonJS({
 var require_decode = __commonJS({
   "node_modules/entities/lib/decode.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -15303,13 +15270,13 @@ var require_decode = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
     var __importStar = exports2 && exports2.__importStar || function(mod) {
@@ -15389,7 +15356,7 @@ var require_decode = __commonJS({
     })(DecodingMode = exports2.DecodingMode || (exports2.DecodingMode = {}));
     var EntityDecoder = (
       /** @class */
-      function() {
+      (function() {
         function EntityDecoder2(decodeTree, emitCodePoint, errors) {
           this.decodeTree = decodeTree;
           this.emitCodePoint = emitCodePoint;
@@ -15568,7 +15535,7 @@ var require_decode = __commonJS({
           }
         };
         return EntityDecoder2;
-      }()
+      })()
     );
     exports2.EntityDecoder = EntityDecoder;
     function getDecoder(decodeTree) {
@@ -16050,7 +16017,7 @@ var require_lib4 = __commonJS({
       };
       return __assign.apply(this, arguments);
     };
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -16059,13 +16026,13 @@ var require_lib4 = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
     var __importStar = exports2 && exports2.__importStar || function(mod) {
@@ -16911,7 +16878,7 @@ var require_feeds = __commonJS({
 var require_lib5 = __commonJS({
   "node_modules/domutils/lib/index.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -16920,10 +16887,10 @@ var require_lib5 = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
+    }));
     var __exportStar = exports2 && exports2.__exportStar || function(m, exports3) {
       for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
     };
@@ -17149,7 +17116,7 @@ var require_decode_codepoint2 = __commonJS({
       [159, 376]
     ]);
     exports2.fromCodePoint = // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, n/no-unsupported-features/es-builtins
-    (_a = String.fromCodePoint) !== null && _a !== void 0 ? _a : (codePoint) => {
+    (_a = String.fromCodePoint) !== null && _a !== void 0 ? _a : ((codePoint) => {
       let output = "";
       if (codePoint > 65535) {
         codePoint -= 65536;
@@ -17158,7 +17125,7 @@ var require_decode_codepoint2 = __commonJS({
       }
       output += String.fromCharCode(codePoint);
       return output;
-    };
+    });
     function replaceCodePoint(codePoint) {
       var _a2;
       if (codePoint >= 55296 && codePoint <= 57343 || codePoint > 1114111) {
@@ -18405,7 +18372,7 @@ var require_Tokenizer = __commonJS({
 var require_Parser = __commonJS({
   "node_modules/htmlparser2/dist/commonjs/Parser.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -18414,16 +18381,16 @@ var require_Parser = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ function() {
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
       var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function(o2) {
           var ar = [];
@@ -18441,7 +18408,7 @@ var require_Parser = __commonJS({
         __setModuleDefault(result, mod);
         return result;
       };
-    }();
+    })();
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Parser = void 0;
     var Tokenizer_js_1 = __importStar(require_Tokenizer());
@@ -18900,7 +18867,7 @@ var require_Parser = __commonJS({
 var require_commonjs = __commonJS({
   "node_modules/htmlparser2/dist/commonjs/index.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -18909,16 +18876,16 @@ var require_commonjs = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ function() {
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
       var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function(o2) {
           var ar = [];
@@ -18936,7 +18903,7 @@ var require_commonjs = __commonJS({
         __setModuleDefault(result, mod);
         return result;
       };
-    }();
+    })();
     var __importDefault = exports2 && exports2.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
     };
@@ -19019,7 +18986,7 @@ var require_attributes = __commonJS({
     var htmlparser2_1 = require_commonjs();
     var hasOwn = (
       // @ts-expect-error `hasOwn` is a standard object method
-      (_a = Object.hasOwn) !== null && _a !== void 0 ? _a : (object, prop2) => Object.prototype.hasOwnProperty.call(object, prop2)
+      (_a = Object.hasOwn) !== null && _a !== void 0 ? _a : ((object, prop2) => Object.prototype.hasOwnProperty.call(object, prop2))
     );
     var rspace = /\s+/;
     var dataAttrPrefix = "data-";
@@ -19931,7 +19898,7 @@ var require_stringify2 = __commonJS({
 var require_commonjs2 = __commonJS({
   "node_modules/css-what/lib/commonjs/index.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -19940,10 +19907,10 @@ var require_commonjs2 = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
+    }));
     var __exportStar = exports2 && exports2.__exportStar || function(m, exports3) {
       for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
     };
@@ -21007,7 +20974,7 @@ var require_general = __commonJS({
 var require_compile2 = __commonJS({
   "node_modules/css-select/lib/compile.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -21016,13 +20983,13 @@ var require_compile2 = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
     var __importStar = exports2 && exports2.__importStar || function(mod) {
@@ -21139,7 +21106,7 @@ var require_compile2 = __commonJS({
 var require_lib7 = __commonJS({
   "node_modules/css-select/lib/index.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -21148,13 +21115,13 @@ var require_lib7 = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
     var __importStar = exports2 && exports2.__importStar || function(mod) {
@@ -21351,7 +21318,7 @@ var require_lib8 = __commonJS({
       };
       return __assign.apply(this, arguments);
     };
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -21360,13 +21327,13 @@ var require_lib8 = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
     var __importStar = exports2 && exports2.__importStar || function(mod) {
@@ -21622,7 +21589,7 @@ var require_lib8 = __commonJS({
 var require_traversing = __commonJS({
   "node_modules/cheerio/dist/commonjs/api/traversing.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -21631,16 +21598,16 @@ var require_traversing = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ function() {
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
       var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function(o2) {
           var ar = [];
@@ -21658,7 +21625,7 @@ var require_traversing = __commonJS({
         __setModuleDefault(result, mod);
         return result;
       };
-    }();
+    })();
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.children = exports2.siblings = exports2.prevUntil = exports2.prevAll = exports2.prev = exports2.nextUntil = exports2.nextAll = exports2.next = exports2.parentsUntil = exports2.parents = exports2.parent = void 0;
     exports2.find = find;
@@ -22531,7 +22498,7 @@ var require_extract = __commonJS({
 var require_cheerio = __commonJS({
   "node_modules/cheerio/dist/commonjs/cheerio.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -22540,16 +22507,16 @@ var require_cheerio = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ function() {
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
       var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function(o2) {
           var ar = [];
@@ -22567,7 +22534,7 @@ var require_cheerio = __commonJS({
         __setModuleDefault(result, mod);
         return result;
       };
-    }();
+    })();
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Cheerio = void 0;
     var Attributes = __importStar(require_attributes());
@@ -22610,7 +22577,7 @@ var require_cheerio = __commonJS({
 var require_load = __commonJS({
   "node_modules/cheerio/dist/commonjs/load.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -22619,16 +22586,16 @@ var require_load = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ function() {
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
       var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function(o2) {
           var ar = [];
@@ -22646,7 +22613,7 @@ var require_load = __commonJS({
         __setModuleDefault(result, mod);
         return result;
       };
-    }();
+    })();
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getLoad = getLoad;
     var options_js_1 = require_options();
@@ -36265,77 +36232,77 @@ var require_symbols = __commonJS({
   "node_modules/undici/lib/core/symbols.js"(exports2, module2) {
     "use strict";
     module2.exports = {
-      kClose: Symbol("close"),
-      kDestroy: Symbol("destroy"),
-      kDispatch: Symbol("dispatch"),
-      kUrl: Symbol("url"),
-      kWriting: Symbol("writing"),
-      kResuming: Symbol("resuming"),
-      kQueue: Symbol("queue"),
-      kConnect: Symbol("connect"),
-      kConnecting: Symbol("connecting"),
-      kKeepAliveDefaultTimeout: Symbol("default keep alive timeout"),
-      kKeepAliveMaxTimeout: Symbol("max keep alive timeout"),
-      kKeepAliveTimeoutThreshold: Symbol("keep alive timeout threshold"),
-      kKeepAliveTimeoutValue: Symbol("keep alive timeout"),
-      kKeepAlive: Symbol("keep alive"),
-      kHeadersTimeout: Symbol("headers timeout"),
-      kBodyTimeout: Symbol("body timeout"),
-      kServerName: Symbol("server name"),
-      kLocalAddress: Symbol("local address"),
-      kHost: Symbol("host"),
-      kNoRef: Symbol("no ref"),
-      kBodyUsed: Symbol("used"),
-      kBody: Symbol("abstracted request body"),
-      kRunning: Symbol("running"),
-      kBlocking: Symbol("blocking"),
-      kPending: Symbol("pending"),
-      kSize: Symbol("size"),
-      kBusy: Symbol("busy"),
-      kQueued: Symbol("queued"),
-      kFree: Symbol("free"),
-      kConnected: Symbol("connected"),
-      kClosed: Symbol("closed"),
-      kNeedDrain: Symbol("need drain"),
-      kReset: Symbol("reset"),
-      kDestroyed: Symbol.for("nodejs.stream.destroyed"),
-      kResume: Symbol("resume"),
-      kOnError: Symbol("on error"),
-      kMaxHeadersSize: Symbol("max headers size"),
-      kRunningIdx: Symbol("running index"),
-      kPendingIdx: Symbol("pending index"),
-      kError: Symbol("error"),
-      kClients: Symbol("clients"),
-      kClient: Symbol("client"),
-      kParser: Symbol("parser"),
-      kOnDestroyed: Symbol("destroy callbacks"),
-      kPipelining: Symbol("pipelining"),
-      kSocket: Symbol("socket"),
-      kHostHeader: Symbol("host header"),
-      kConnector: Symbol("connector"),
-      kStrictContentLength: Symbol("strict content length"),
-      kMaxRedirections: Symbol("maxRedirections"),
-      kMaxRequests: Symbol("maxRequestsPerClient"),
-      kProxy: Symbol("proxy agent options"),
-      kCounter: Symbol("socket request counter"),
-      kMaxResponseSize: Symbol("max response size"),
-      kHTTP2Session: Symbol("http2Session"),
-      kHTTP2SessionState: Symbol("http2Session state"),
-      kRetryHandlerDefaultRetry: Symbol("retry agent default retry"),
-      kConstruct: Symbol("constructable"),
-      kListeners: Symbol("listeners"),
-      kHTTPContext: Symbol("http context"),
-      kMaxConcurrentStreams: Symbol("max concurrent streams"),
-      kHTTP2InitialWindowSize: Symbol("http2 initial window size"),
-      kHTTP2ConnectionWindowSize: Symbol("http2 connection window size"),
-      kEnableConnectProtocol: Symbol("http2session connect protocol"),
-      kRemoteSettings: Symbol("http2session remote settings"),
-      kHTTP2Stream: Symbol("http2session client stream"),
-      kPingInterval: Symbol("ping interval"),
-      kNoProxyAgent: Symbol("no proxy agent"),
-      kHttpProxyAgent: Symbol("http proxy agent"),
-      kHttpsProxyAgent: Symbol("https proxy agent"),
-      kSocks5ProxyAgent: Symbol("socks5 proxy agent")
+      kClose: /* @__PURE__ */ Symbol("close"),
+      kDestroy: /* @__PURE__ */ Symbol("destroy"),
+      kDispatch: /* @__PURE__ */ Symbol("dispatch"),
+      kUrl: /* @__PURE__ */ Symbol("url"),
+      kWriting: /* @__PURE__ */ Symbol("writing"),
+      kResuming: /* @__PURE__ */ Symbol("resuming"),
+      kQueue: /* @__PURE__ */ Symbol("queue"),
+      kConnect: /* @__PURE__ */ Symbol("connect"),
+      kConnecting: /* @__PURE__ */ Symbol("connecting"),
+      kKeepAliveDefaultTimeout: /* @__PURE__ */ Symbol("default keep alive timeout"),
+      kKeepAliveMaxTimeout: /* @__PURE__ */ Symbol("max keep alive timeout"),
+      kKeepAliveTimeoutThreshold: /* @__PURE__ */ Symbol("keep alive timeout threshold"),
+      kKeepAliveTimeoutValue: /* @__PURE__ */ Symbol("keep alive timeout"),
+      kKeepAlive: /* @__PURE__ */ Symbol("keep alive"),
+      kHeadersTimeout: /* @__PURE__ */ Symbol("headers timeout"),
+      kBodyTimeout: /* @__PURE__ */ Symbol("body timeout"),
+      kServerName: /* @__PURE__ */ Symbol("server name"),
+      kLocalAddress: /* @__PURE__ */ Symbol("local address"),
+      kHost: /* @__PURE__ */ Symbol("host"),
+      kNoRef: /* @__PURE__ */ Symbol("no ref"),
+      kBodyUsed: /* @__PURE__ */ Symbol("used"),
+      kBody: /* @__PURE__ */ Symbol("abstracted request body"),
+      kRunning: /* @__PURE__ */ Symbol("running"),
+      kBlocking: /* @__PURE__ */ Symbol("blocking"),
+      kPending: /* @__PURE__ */ Symbol("pending"),
+      kSize: /* @__PURE__ */ Symbol("size"),
+      kBusy: /* @__PURE__ */ Symbol("busy"),
+      kQueued: /* @__PURE__ */ Symbol("queued"),
+      kFree: /* @__PURE__ */ Symbol("free"),
+      kConnected: /* @__PURE__ */ Symbol("connected"),
+      kClosed: /* @__PURE__ */ Symbol("closed"),
+      kNeedDrain: /* @__PURE__ */ Symbol("need drain"),
+      kReset: /* @__PURE__ */ Symbol("reset"),
+      kDestroyed: /* @__PURE__ */ Symbol.for("nodejs.stream.destroyed"),
+      kResume: /* @__PURE__ */ Symbol("resume"),
+      kOnError: /* @__PURE__ */ Symbol("on error"),
+      kMaxHeadersSize: /* @__PURE__ */ Symbol("max headers size"),
+      kRunningIdx: /* @__PURE__ */ Symbol("running index"),
+      kPendingIdx: /* @__PURE__ */ Symbol("pending index"),
+      kError: /* @__PURE__ */ Symbol("error"),
+      kClients: /* @__PURE__ */ Symbol("clients"),
+      kClient: /* @__PURE__ */ Symbol("client"),
+      kParser: /* @__PURE__ */ Symbol("parser"),
+      kOnDestroyed: /* @__PURE__ */ Symbol("destroy callbacks"),
+      kPipelining: /* @__PURE__ */ Symbol("pipelining"),
+      kSocket: /* @__PURE__ */ Symbol("socket"),
+      kHostHeader: /* @__PURE__ */ Symbol("host header"),
+      kConnector: /* @__PURE__ */ Symbol("connector"),
+      kStrictContentLength: /* @__PURE__ */ Symbol("strict content length"),
+      kMaxRedirections: /* @__PURE__ */ Symbol("maxRedirections"),
+      kMaxRequests: /* @__PURE__ */ Symbol("maxRequestsPerClient"),
+      kProxy: /* @__PURE__ */ Symbol("proxy agent options"),
+      kCounter: /* @__PURE__ */ Symbol("socket request counter"),
+      kMaxResponseSize: /* @__PURE__ */ Symbol("max response size"),
+      kHTTP2Session: /* @__PURE__ */ Symbol("http2Session"),
+      kHTTP2SessionState: /* @__PURE__ */ Symbol("http2Session state"),
+      kRetryHandlerDefaultRetry: /* @__PURE__ */ Symbol("retry agent default retry"),
+      kConstruct: /* @__PURE__ */ Symbol("constructable"),
+      kListeners: /* @__PURE__ */ Symbol("listeners"),
+      kHTTPContext: /* @__PURE__ */ Symbol("http context"),
+      kMaxConcurrentStreams: /* @__PURE__ */ Symbol("max concurrent streams"),
+      kHTTP2InitialWindowSize: /* @__PURE__ */ Symbol("http2 initial window size"),
+      kHTTP2ConnectionWindowSize: /* @__PURE__ */ Symbol("http2 connection window size"),
+      kEnableConnectProtocol: /* @__PURE__ */ Symbol("http2session connect protocol"),
+      kRemoteSettings: /* @__PURE__ */ Symbol("http2session remote settings"),
+      kHTTP2Stream: /* @__PURE__ */ Symbol("http2session client stream"),
+      kPingInterval: /* @__PURE__ */ Symbol("ping interval"),
+      kNoProxyAgent: /* @__PURE__ */ Symbol("no proxy agent"),
+      kHttpProxyAgent: /* @__PURE__ */ Symbol("http proxy agent"),
+      kHttpsProxyAgent: /* @__PURE__ */ Symbol("https proxy agent"),
+      kSocks5ProxyAgent: /* @__PURE__ */ Symbol("socks5 proxy agent")
     };
   }
 });
@@ -36348,7 +36315,7 @@ var require_timers = __commonJS({
     var RESOLUTION_MS = 1e3;
     var TICK_MS = (RESOLUTION_MS >> 1) - 1;
     var fastNowTimeout;
-    var kFastTimer = Symbol("kFastTimer");
+    var kFastTimer = /* @__PURE__ */ Symbol("kFastTimer");
     var fastTimers = [];
     var NOT_IN_LIST = -2;
     var TO_BE_CLEARED = -1;
@@ -36573,7 +36540,7 @@ var require_timers = __commonJS({
 var require_errors = __commonJS({
   "node_modules/undici/lib/core/errors.js"(exports2, module2) {
     "use strict";
-    var kUndiciError = Symbol.for("undici.error.UND_ERR");
+    var kUndiciError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR");
     var UndiciError = class extends Error {
       constructor(message, options) {
         super(message, options);
@@ -36587,7 +36554,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kConnectTimeoutError = Symbol.for("undici.error.UND_ERR_CONNECT_TIMEOUT");
+    var kConnectTimeoutError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_CONNECT_TIMEOUT");
     var ConnectTimeoutError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36602,7 +36569,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kHeadersTimeoutError = Symbol.for("undici.error.UND_ERR_HEADERS_TIMEOUT");
+    var kHeadersTimeoutError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_HEADERS_TIMEOUT");
     var HeadersTimeoutError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36617,7 +36584,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kHeadersOverflowError = Symbol.for("undici.error.UND_ERR_HEADERS_OVERFLOW");
+    var kHeadersOverflowError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_HEADERS_OVERFLOW");
     var HeadersOverflowError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36632,7 +36599,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kBodyTimeoutError = Symbol.for("undici.error.UND_ERR_BODY_TIMEOUT");
+    var kBodyTimeoutError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_BODY_TIMEOUT");
     var BodyTimeoutError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36647,7 +36614,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kInvalidArgumentError = Symbol.for("undici.error.UND_ERR_INVALID_ARG");
+    var kInvalidArgumentError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_INVALID_ARG");
     var InvalidArgumentError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36662,7 +36629,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kInvalidReturnValueError = Symbol.for("undici.error.UND_ERR_INVALID_RETURN_VALUE");
+    var kInvalidReturnValueError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_INVALID_RETURN_VALUE");
     var InvalidReturnValueError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36677,7 +36644,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kAbortError = Symbol.for("undici.error.UND_ERR_ABORT");
+    var kAbortError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_ABORT");
     var AbortError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36692,7 +36659,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kRequestAbortedError = Symbol.for("undici.error.UND_ERR_ABORTED");
+    var kRequestAbortedError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_ABORTED");
     var RequestAbortedError = class extends AbortError {
       constructor(message) {
         super(message);
@@ -36707,7 +36674,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kInformationalError = Symbol.for("undici.error.UND_ERR_INFO");
+    var kInformationalError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_INFO");
     var InformationalError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36722,7 +36689,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kRequestContentLengthMismatchError = Symbol.for("undici.error.UND_ERR_REQ_CONTENT_LENGTH_MISMATCH");
+    var kRequestContentLengthMismatchError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_REQ_CONTENT_LENGTH_MISMATCH");
     var RequestContentLengthMismatchError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36737,7 +36704,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kResponseContentLengthMismatchError = Symbol.for("undici.error.UND_ERR_RES_CONTENT_LENGTH_MISMATCH");
+    var kResponseContentLengthMismatchError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_RES_CONTENT_LENGTH_MISMATCH");
     var ResponseContentLengthMismatchError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36752,7 +36719,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kClientDestroyedError = Symbol.for("undici.error.UND_ERR_DESTROYED");
+    var kClientDestroyedError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_DESTROYED");
     var ClientDestroyedError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36767,7 +36734,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kClientClosedError = Symbol.for("undici.error.UND_ERR_CLOSED");
+    var kClientClosedError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_CLOSED");
     var ClientClosedError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36782,7 +36749,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kSocketError = Symbol.for("undici.error.UND_ERR_SOCKET");
+    var kSocketError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_SOCKET");
     var SocketError = class extends UndiciError {
       constructor(message, socket) {
         super(message);
@@ -36798,7 +36765,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kNotSupportedError = Symbol.for("undici.error.UND_ERR_NOT_SUPPORTED");
+    var kNotSupportedError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_NOT_SUPPORTED");
     var NotSupportedError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36813,7 +36780,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kBalancedPoolMissingUpstreamError = Symbol.for("undici.error.UND_ERR_BPL_MISSING_UPSTREAM");
+    var kBalancedPoolMissingUpstreamError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_BPL_MISSING_UPSTREAM");
     var BalancedPoolMissingUpstreamError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36828,7 +36795,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kHTTPParserError = Symbol.for("undici.error.UND_ERR_HTTP_PARSER");
+    var kHTTPParserError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_HTTP_PARSER");
     var HTTPParserError = class extends Error {
       constructor(message, code, data) {
         super(message);
@@ -36843,7 +36810,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kResponseExceededMaxSizeError = Symbol.for("undici.error.UND_ERR_RES_EXCEEDED_MAX_SIZE");
+    var kResponseExceededMaxSizeError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_RES_EXCEEDED_MAX_SIZE");
     var ResponseExceededMaxSizeError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -36858,7 +36825,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kRequestRetryError = Symbol.for("undici.error.UND_ERR_REQ_RETRY");
+    var kRequestRetryError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_REQ_RETRY");
     var RequestRetryError = class extends UndiciError {
       constructor(message, code, { headers, data }) {
         super(message);
@@ -36876,7 +36843,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kResponseError = Symbol.for("undici.error.UND_ERR_RESPONSE");
+    var kResponseError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_RESPONSE");
     var ResponseError = class extends UndiciError {
       constructor(message, code, { headers, body }) {
         super(message);
@@ -36894,7 +36861,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kSecureProxyConnectionError = Symbol.for("undici.error.UND_ERR_PRX_TLS");
+    var kSecureProxyConnectionError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_PRX_TLS");
     var SecureProxyConnectionError = class extends UndiciError {
       constructor(cause, message, options = {}) {
         super(message, { cause, ...options });
@@ -36910,7 +36877,7 @@ var require_errors = __commonJS({
         return true;
       }
     };
-    var kMaxOriginsReachedError = Symbol.for("undici.error.UND_ERR_MAX_ORIGINS_REACHED");
+    var kMaxOriginsReachedError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_MAX_ORIGINS_REACHED");
     var MaxOriginsReachedError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -38320,7 +38287,7 @@ var require_request = __commonJS({
     var { channels } = require_diagnostics();
     var { headerNameLowerCasedRecord } = require_constants();
     var invalidPathRegex = /[^\u0021-\u00ff]/;
-    var kHandler = Symbol("handler");
+    var kHandler = /* @__PURE__ */ Symbol("handler");
     var Request = class {
       constructor(origin, {
         path: path2,
@@ -38768,7 +38735,7 @@ var require_unwrap_handler = __commonJS({
     "use strict";
     var { parseHeaders } = require_util();
     var { InvalidArgumentError } = require_errors();
-    var kResume = Symbol("resume");
+    var kResume = /* @__PURE__ */ Symbol("resume");
     var UnwrapController = class {
       #paused = false;
       #reason = null;
@@ -38857,8 +38824,8 @@ var require_dispatcher_base = __commonJS({
       InvalidArgumentError
     } = require_errors();
     var { kDestroy, kClose, kClosed, kDestroyed, kDispatch } = require_symbols();
-    var kOnDestroyed = Symbol("onDestroyed");
-    var kOnClosed = Symbol("onClosed");
+    var kOnDestroyed = /* @__PURE__ */ Symbol("onDestroyed");
+    var kOnClosed = /* @__PURE__ */ Symbol("onClosed");
     var DispatcherBase = class extends Dispatcher {
       /** @type {boolean} */
       [kDestroyed] = false;
@@ -39988,7 +39955,7 @@ var require_constants3 = __commonJS({
 var require_global = __commonJS({
   "node_modules/undici/lib/web/fetch/global.js"(exports2, module2) {
     "use strict";
-    var globalOrigin = Symbol.for("undici.globalOrigin.1");
+    var globalOrigin = /* @__PURE__ */ Symbol.for("undici.globalOrigin.1");
     function getGlobalOrigin() {
       return globalThis[globalOrigin];
     }
@@ -43901,7 +43868,7 @@ var require_client_h2 = __commonJS({
       kHTTP2SessionState
     } = require_symbols();
     var { channels } = require_diagnostics();
-    var kOpenStreams = Symbol("open streams");
+    var kOpenStreams = /* @__PURE__ */ Symbol("open streams");
     var extractBody;
     var http2;
     try {
@@ -44648,7 +44615,7 @@ var require_client = __commonJS({
     } = require_symbols();
     var connectH1 = require_client_h1();
     var connectH2 = require_client_h2();
-    var kClosedResolve = Symbol("kClosedResolve");
+    var kClosedResolve = /* @__PURE__ */ Symbol("kClosedResolve");
     var getDefaultNodeMaxHeaderSize = http2 && http2.maxHeaderSize && Number.isInteger(http2.maxHeaderSize) && http2.maxHeaderSize > 0 ? () => http2.maxHeaderSize : () => {
       throw new InvalidArgumentError("http module not available or http.maxHeaderSize invalid");
     };
@@ -45181,17 +45148,17 @@ var require_pool_base = __commonJS({
     var DispatcherBase = require_dispatcher_base();
     var FixedQueue = require_fixed_queue();
     var { kConnected, kSize, kRunning, kPending, kQueued, kBusy, kFree, kUrl, kClose, kDestroy, kDispatch } = require_symbols();
-    var kClients = Symbol("clients");
-    var kNeedDrain = Symbol("needDrain");
-    var kQueue = Symbol("queue");
-    var kClosedResolve = Symbol("closed resolve");
-    var kOnDrain = Symbol("onDrain");
-    var kOnConnect = Symbol("onConnect");
-    var kOnDisconnect = Symbol("onDisconnect");
-    var kOnConnectionError = Symbol("onConnectionError");
-    var kGetDispatcher = Symbol("get dispatcher");
-    var kAddClient = Symbol("add client");
-    var kRemoveClient = Symbol("remove client");
+    var kClients = /* @__PURE__ */ Symbol("clients");
+    var kNeedDrain = /* @__PURE__ */ Symbol("needDrain");
+    var kQueue = /* @__PURE__ */ Symbol("queue");
+    var kClosedResolve = /* @__PURE__ */ Symbol("closed resolve");
+    var kOnDrain = /* @__PURE__ */ Symbol("onDrain");
+    var kOnConnect = /* @__PURE__ */ Symbol("onConnect");
+    var kOnDisconnect = /* @__PURE__ */ Symbol("onDisconnect");
+    var kOnConnectionError = /* @__PURE__ */ Symbol("onConnectionError");
+    var kGetDispatcher = /* @__PURE__ */ Symbol("get dispatcher");
+    var kAddClient = /* @__PURE__ */ Symbol("add client");
+    var kRemoveClient = /* @__PURE__ */ Symbol("remove client");
     var PoolBase = class extends DispatcherBase {
       [kQueue] = new FixedQueue();
       [kQueued] = 0;
@@ -45368,9 +45335,9 @@ var require_pool = __commonJS({
     var util = require_util();
     var { kUrl } = require_symbols();
     var buildConnector = require_connect();
-    var kOptions = Symbol("options");
-    var kConnections = Symbol("connections");
-    var kFactory = Symbol("factory");
+    var kOptions = /* @__PURE__ */ Symbol("options");
+    var kConnections = /* @__PURE__ */ Symbol("connections");
+    var kFactory = /* @__PURE__ */ Symbol("factory");
     function defaultFactory(origin, opts) {
       return new Client(origin, opts);
     }
@@ -45470,14 +45437,14 @@ var require_balanced_pool = __commonJS({
     var Pool = require_pool();
     var { kUrl } = require_symbols();
     var { parseOrigin } = require_util();
-    var kFactory = Symbol("factory");
-    var kOptions = Symbol("options");
-    var kGreatestCommonDivisor = Symbol("kGreatestCommonDivisor");
-    var kCurrentWeight = Symbol("kCurrentWeight");
-    var kIndex = Symbol("kIndex");
-    var kWeight = Symbol("kWeight");
-    var kMaxWeightPerServer = Symbol("kMaxWeightPerServer");
-    var kErrorPenalty = Symbol("kErrorPenalty");
+    var kFactory = /* @__PURE__ */ Symbol("factory");
+    var kOptions = /* @__PURE__ */ Symbol("options");
+    var kGreatestCommonDivisor = /* @__PURE__ */ Symbol("kGreatestCommonDivisor");
+    var kCurrentWeight = /* @__PURE__ */ Symbol("kCurrentWeight");
+    var kIndex = /* @__PURE__ */ Symbol("kIndex");
+    var kWeight = /* @__PURE__ */ Symbol("kWeight");
+    var kMaxWeightPerServer = /* @__PURE__ */ Symbol("kMaxWeightPerServer");
+    var kErrorPenalty = /* @__PURE__ */ Symbol("kErrorPenalty");
     function getGreatestCommonDivisor(a, b) {
       if (a === 0) return b;
       while (b !== 0) {
@@ -45617,10 +45584,10 @@ var require_round_robin_pool = __commonJS({
     var util = require_util();
     var { kUrl } = require_symbols();
     var buildConnector = require_connect();
-    var kOptions = Symbol("options");
-    var kConnections = Symbol("connections");
-    var kFactory = Symbol("factory");
-    var kIndex = Symbol("index");
+    var kOptions = /* @__PURE__ */ Symbol("options");
+    var kConnections = /* @__PURE__ */ Symbol("connections");
+    var kFactory = /* @__PURE__ */ Symbol("factory");
+    var kIndex = /* @__PURE__ */ Symbol("index");
     function defaultFactory(origin, opts) {
       return new Client(origin, opts);
     }
@@ -45725,13 +45692,13 @@ var require_agent = __commonJS({
     var Pool = require_pool();
     var Client = require_client();
     var util = require_util();
-    var kOnConnect = Symbol("onConnect");
-    var kOnDisconnect = Symbol("onDisconnect");
-    var kOnConnectionError = Symbol("onConnectionError");
-    var kOnDrain = Symbol("onDrain");
-    var kFactory = Symbol("factory");
-    var kOptions = Symbol("options");
-    var kOrigins = Symbol("origins");
+    var kOnConnect = /* @__PURE__ */ Symbol("onConnect");
+    var kOnDisconnect = /* @__PURE__ */ Symbol("onDisconnect");
+    var kOnConnectionError = /* @__PURE__ */ Symbol("onConnectionError");
+    var kOnDrain = /* @__PURE__ */ Symbol("onDrain");
+    var kFactory = /* @__PURE__ */ Symbol("factory");
+    var kOptions = /* @__PURE__ */ Symbol("options");
+    var kOrigins = /* @__PURE__ */ Symbol("origins");
     function defaultFactory(origin, opts) {
       return opts && opts.connections === 1 ? new Client(origin, opts) : new Pool(origin, opts);
     }
@@ -46335,11 +46302,11 @@ var require_socks5_proxy_agent = __commonJS({
     var buildConnector = require_connect();
     var { debuglog } = require("node:util");
     var debug = debuglog("undici:socks5-proxy");
-    var kProxyUrl = Symbol("proxy url");
-    var kProxyHeaders = Symbol("proxy headers");
-    var kProxyAuth = Symbol("proxy auth");
-    var kPool = Symbol("pool");
-    var kConnector = Symbol("connector");
+    var kProxyUrl = /* @__PURE__ */ Symbol("proxy url");
+    var kProxyHeaders = /* @__PURE__ */ Symbol("proxy headers");
+    var kProxyAuth = /* @__PURE__ */ Symbol("proxy auth");
+    var kPool = /* @__PURE__ */ Symbol("pool");
+    var kConnector = /* @__PURE__ */ Symbol("connector");
     var experimentalWarningEmitted = false;
     var Socks5ProxyAgent = class extends DispatcherBase {
       constructor(proxyUrl, options = {}) {
@@ -46522,13 +46489,13 @@ var require_proxy_agent = __commonJS({
     var Client = require_client();
     var { channels } = require_diagnostics();
     var Socks5ProxyAgent = require_socks5_proxy_agent();
-    var kAgent = Symbol("proxy agent");
-    var kClient = Symbol("proxy client");
-    var kProxyHeaders = Symbol("proxy headers");
-    var kRequestTls = Symbol("request tls settings");
-    var kProxyTls = Symbol("proxy tls settings");
-    var kConnectEndpoint = Symbol("connect endpoint function");
-    var kTunnelProxy = Symbol("tunnel proxy");
+    var kAgent = /* @__PURE__ */ Symbol("proxy agent");
+    var kClient = /* @__PURE__ */ Symbol("proxy client");
+    var kProxyHeaders = /* @__PURE__ */ Symbol("proxy headers");
+    var kRequestTls = /* @__PURE__ */ Symbol("request tls settings");
+    var kProxyTls = /* @__PURE__ */ Symbol("proxy tls settings");
+    var kConnectEndpoint = /* @__PURE__ */ Symbol("connect endpoint function");
+    var kTunnelProxy = /* @__PURE__ */ Symbol("tunnel proxy");
     function defaultProtocolPort(protocol) {
       return protocol === "https:" ? 443 : 80;
     }
@@ -47284,14 +47251,14 @@ var require_readable = __commonJS({
     var { RequestAbortedError, NotSupportedError, InvalidArgumentError, AbortError } = require_errors();
     var util = require_util();
     var { ReadableStreamFrom } = require_util();
-    var kConsume = Symbol("kConsume");
-    var kReading = Symbol("kReading");
-    var kBody = Symbol("kBody");
-    var kAbort = Symbol("kAbort");
-    var kContentType = Symbol("kContentType");
-    var kContentLength = Symbol("kContentLength");
-    var kUsed = Symbol("kUsed");
-    var kBytesRead = Symbol("kBytesRead");
+    var kConsume = /* @__PURE__ */ Symbol("kConsume");
+    var kReading = /* @__PURE__ */ Symbol("kReading");
+    var kBody = /* @__PURE__ */ Symbol("kBody");
+    var kAbort = /* @__PURE__ */ Symbol("kAbort");
+    var kContentType = /* @__PURE__ */ Symbol("kContentType");
+    var kContentLength = /* @__PURE__ */ Symbol("kContentLength");
+    var kUsed = /* @__PURE__ */ Symbol("kUsed");
+    var kBytesRead = /* @__PURE__ */ Symbol("kBytesRead");
     var noop = () => {
     };
     var BodyReadable = class extends Readable {
@@ -47861,8 +47828,8 @@ var require_abort_signal = __commonJS({
     "use strict";
     var { addAbortListener } = require_util();
     var { RequestAbortedError } = require_errors();
-    var kListener = Symbol("kListener");
-    var kSignal = Symbol("kSignal");
+    var kListener = /* @__PURE__ */ Symbol("kListener");
+    var kSignal = /* @__PURE__ */ Symbol("kSignal");
     function abort(self2) {
       if (self2.abort) {
         self2.abort(self2[kSignal]?.reason);
@@ -48088,7 +48055,7 @@ var require_api_pipeline = __commonJS({
     var { addSignal, removeSignal } = require_abort_signal();
     function noop() {
     }
-    var kResume = Symbol("resume");
+    var kResume = /* @__PURE__ */ Symbol("resume");
     var PipelineRequest = class extends Readable {
       constructor() {
         super({ autoDestroy: true });
@@ -48471,7 +48438,7 @@ var require_mock_errors = __commonJS({
   "node_modules/undici/lib/mock/mock-errors.js"(exports2, module2) {
     "use strict";
     var { UndiciError } = require_errors();
-    var kMockNotMatchedError = Symbol.for("undici.error.UND_MOCK_ERR_MOCK_NOT_MATCHED");
+    var kMockNotMatchedError = /* @__PURE__ */ Symbol.for("undici.error.UND_MOCK_ERR_MOCK_NOT_MATCHED");
     var MockNotMatchedError = class extends UndiciError {
       constructor(message) {
         super(message);
@@ -48497,33 +48464,33 @@ var require_mock_symbols = __commonJS({
   "node_modules/undici/lib/mock/mock-symbols.js"(exports2, module2) {
     "use strict";
     module2.exports = {
-      kAgent: Symbol("agent"),
-      kOptions: Symbol("options"),
-      kFactory: Symbol("factory"),
-      kDispatches: Symbol("dispatches"),
-      kDispatchKey: Symbol("dispatch key"),
-      kDefaultHeaders: Symbol("default headers"),
-      kDefaultTrailers: Symbol("default trailers"),
-      kContentLength: Symbol("content length"),
-      kMockAgent: Symbol("mock agent"),
-      kMockAgentSet: Symbol("mock agent set"),
-      kMockAgentGet: Symbol("mock agent get"),
-      kMockDispatch: Symbol("mock dispatch"),
-      kClose: Symbol("close"),
-      kOriginalClose: Symbol("original agent close"),
-      kOriginalDispatch: Symbol("original dispatch"),
-      kOrigin: Symbol("origin"),
-      kIsMockActive: Symbol("is mock active"),
-      kNetConnect: Symbol("net connect"),
-      kGetNetConnect: Symbol("get net connect"),
-      kConnected: Symbol("connected"),
-      kIgnoreTrailingSlash: Symbol("ignore trailing slash"),
-      kMockAgentMockCallHistoryInstance: Symbol("mock agent mock call history name"),
-      kMockAgentRegisterCallHistory: Symbol("mock agent register mock call history"),
-      kMockAgentAddCallHistoryLog: Symbol("mock agent add call history log"),
-      kMockAgentIsCallHistoryEnabled: Symbol("mock agent is call history enabled"),
-      kMockAgentAcceptsNonStandardSearchParameters: Symbol("mock agent accepts non standard search parameters"),
-      kMockCallHistoryAddLog: Symbol("mock call history add log")
+      kAgent: /* @__PURE__ */ Symbol("agent"),
+      kOptions: /* @__PURE__ */ Symbol("options"),
+      kFactory: /* @__PURE__ */ Symbol("factory"),
+      kDispatches: /* @__PURE__ */ Symbol("dispatches"),
+      kDispatchKey: /* @__PURE__ */ Symbol("dispatch key"),
+      kDefaultHeaders: /* @__PURE__ */ Symbol("default headers"),
+      kDefaultTrailers: /* @__PURE__ */ Symbol("default trailers"),
+      kContentLength: /* @__PURE__ */ Symbol("content length"),
+      kMockAgent: /* @__PURE__ */ Symbol("mock agent"),
+      kMockAgentSet: /* @__PURE__ */ Symbol("mock agent set"),
+      kMockAgentGet: /* @__PURE__ */ Symbol("mock agent get"),
+      kMockDispatch: /* @__PURE__ */ Symbol("mock dispatch"),
+      kClose: /* @__PURE__ */ Symbol("close"),
+      kOriginalClose: /* @__PURE__ */ Symbol("original agent close"),
+      kOriginalDispatch: /* @__PURE__ */ Symbol("original dispatch"),
+      kOrigin: /* @__PURE__ */ Symbol("origin"),
+      kIsMockActive: /* @__PURE__ */ Symbol("is mock active"),
+      kNetConnect: /* @__PURE__ */ Symbol("net connect"),
+      kGetNetConnect: /* @__PURE__ */ Symbol("get net connect"),
+      kConnected: /* @__PURE__ */ Symbol("connected"),
+      kIgnoreTrailingSlash: /* @__PURE__ */ Symbol("ignore trailing slash"),
+      kMockAgentMockCallHistoryInstance: /* @__PURE__ */ Symbol("mock agent mock call history name"),
+      kMockAgentRegisterCallHistory: /* @__PURE__ */ Symbol("mock agent register mock call history"),
+      kMockAgentAddCallHistoryLog: /* @__PURE__ */ Symbol("mock agent add call history log"),
+      kMockAgentIsCallHistoryEnabled: /* @__PURE__ */ Symbol("mock agent is call history enabled"),
+      kMockAgentAcceptsNonStandardSearchParameters: /* @__PURE__ */ Symbol("mock agent accepts non standard search parameters"),
+      kMockCallHistoryAddLog: /* @__PURE__ */ Symbol("mock call history add log")
     };
   }
 });
@@ -50083,11 +50050,11 @@ var require_snapshot_agent = __commonJS({
     var WrapHandler = require_wrap_handler();
     var { InvalidArgumentError, UndiciError } = require_errors();
     var { validateSnapshotMode } = require_snapshot_utils();
-    var kSnapshotRecorder = Symbol("kSnapshotRecorder");
-    var kSnapshotMode = Symbol("kSnapshotMode");
-    var kSnapshotPath = Symbol("kSnapshotPath");
-    var kSnapshotLoaded = Symbol("kSnapshotLoaded");
-    var kRealAgent = Symbol("kRealAgent");
+    var kSnapshotRecorder = /* @__PURE__ */ Symbol("kSnapshotRecorder");
+    var kSnapshotMode = /* @__PURE__ */ Symbol("kSnapshotMode");
+    var kSnapshotPath = /* @__PURE__ */ Symbol("kSnapshotPath");
+    var kSnapshotLoaded = /* @__PURE__ */ Symbol("kSnapshotLoaded");
+    var kRealAgent = /* @__PURE__ */ Symbol("kRealAgent");
     var warningEmitted = false;
     var SnapshotAgent = class extends MockAgent {
       constructor(opts = {}) {
@@ -50364,7 +50331,7 @@ var require_snapshot_agent = __commonJS({
 var require_global2 = __commonJS({
   "node_modules/undici/lib/global.js"(exports2, module2) {
     "use strict";
-    var globalDispatcher = Symbol.for("undici.globalDispatcher.1");
+    var globalDispatcher = /* @__PURE__ */ Symbol.for("undici.globalDispatcher.1");
     var { InvalidArgumentError } = require_errors();
     var Agent = require_agent();
     if (getGlobalDispatcher() === void 0) {
@@ -50473,7 +50440,7 @@ var require_redirect_handler = __commonJS({
     var { InvalidArgumentError } = require_errors();
     var EE = require("node:events");
     var redirectableStatusCodes = [300, 301, 302, 303, 307, 308];
-    var kBody = Symbol("body");
+    var kBody = /* @__PURE__ */ Symbol("body");
     var noop = () => {
     };
     var BodyAsyncIterable = class {
@@ -53509,7 +53476,7 @@ var require_sqlite_cache_store = __commonJS({
     var { Writable } = require("node:stream");
     var { assertCacheKey, assertCacheValue } = require_cache();
     var DatabaseSync;
-    var VERSION = 3;
+    var VERSION2 = 3;
     var MAX_ENTRY_SIZE = 2 * 1e3 * 1e3 * 1e3;
     module2.exports = class SqliteCacheStore {
       #maxEntrySize = MAX_ENTRY_SIZE;
@@ -53580,7 +53547,7 @@ var require_sqlite_cache_store = __commonJS({
       PRAGMA temp_store = memory;
       PRAGMA optimize;
 
-      CREATE TABLE IF NOT EXISTS cacheInterceptorV${VERSION} (
+      CREATE TABLE IF NOT EXISTS cacheInterceptorV${VERSION2} (
         -- Data specific to us
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         url TEXT NOT NULL,
@@ -53599,8 +53566,8 @@ var require_sqlite_cache_store = __commonJS({
         staleAt INTEGER NOT NULL
       );
 
-      CREATE INDEX IF NOT EXISTS idx_cacheInterceptorV${VERSION}_getValuesQuery ON cacheInterceptorV${VERSION}(url, method, deleteAt);
-      CREATE INDEX IF NOT EXISTS idx_cacheInterceptorV${VERSION}_deleteByUrlQuery ON cacheInterceptorV${VERSION}(deleteAt);
+      CREATE INDEX IF NOT EXISTS idx_cacheInterceptorV${VERSION2}_getValuesQuery ON cacheInterceptorV${VERSION2}(url, method, deleteAt);
+      CREATE INDEX IF NOT EXISTS idx_cacheInterceptorV${VERSION2}_deleteByUrlQuery ON cacheInterceptorV${VERSION2}(deleteAt);
     `);
         this.#getValuesQuery = this.#db.prepare(`
       SELECT
@@ -53615,7 +53582,7 @@ var require_sqlite_cache_store = __commonJS({
         vary,
         cachedAt,
         staleAt
-      FROM cacheInterceptorV${VERSION}
+      FROM cacheInterceptorV${VERSION2}
       WHERE
         url = ?
         AND method = ?
@@ -53623,7 +53590,7 @@ var require_sqlite_cache_store = __commonJS({
         deleteAt ASC
     `);
         this.#updateValueQuery = this.#db.prepare(`
-      UPDATE cacheInterceptorV${VERSION} SET
+      UPDATE cacheInterceptorV${VERSION2} SET
         body = ?,
         deleteAt = ?,
         statusCode = ?,
@@ -53637,7 +53604,7 @@ var require_sqlite_cache_store = __commonJS({
         id = ?
     `);
         this.#insertValueQuery = this.#db.prepare(`
-      INSERT INTO cacheInterceptorV${VERSION} (
+      INSERT INTO cacheInterceptorV${VERSION2} (
         url,
         method,
         body,
@@ -53653,20 +53620,20 @@ var require_sqlite_cache_store = __commonJS({
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
         this.#deleteByUrlQuery = this.#db.prepare(
-          `DELETE FROM cacheInterceptorV${VERSION} WHERE url = ?`
+          `DELETE FROM cacheInterceptorV${VERSION2} WHERE url = ?`
         );
         this.#countEntriesQuery = this.#db.prepare(
-          `SELECT COUNT(*) AS total FROM cacheInterceptorV${VERSION}`
+          `SELECT COUNT(*) AS total FROM cacheInterceptorV${VERSION2}`
         );
         this.#deleteExpiredValuesQuery = this.#db.prepare(
-          `DELETE FROM cacheInterceptorV${VERSION} WHERE deleteAt <= ?`
+          `DELETE FROM cacheInterceptorV${VERSION2} WHERE deleteAt <= ?`
         );
         this.#deleteOldValuesQuery = this.#maxCount === Infinity ? null : this.#db.prepare(`
-        DELETE FROM cacheInterceptorV${VERSION}
+        DELETE FROM cacheInterceptorV${VERSION2}
         WHERE id IN (
           SELECT
             id
-          FROM cacheInterceptorV${VERSION}
+          FROM cacheInterceptorV${VERSION2}
           ORDER BY cachedAt DESC
           LIMIT ?
         )
@@ -54773,7 +54740,7 @@ var require_request2 = __commonJS({
     var { kConstruct } = require_symbols();
     var assert = require("node:assert");
     var { getMaxListeners, setMaxListeners, defaultMaxListeners } = require("node:events");
-    var kAbortController = Symbol("abortController");
+    var kAbortController = /* @__PURE__ */ Symbol("abortController");
     var requestFinalizer = new FinalizationRegistry(({ signal, abort }) => {
       signal.removeEventListener("abort", abort);
     });
@@ -56484,7 +56451,7 @@ var require_fetch = __commonJS({
             fetchParams.controller.terminate(e);
           }
         };
-        requestBody = async function* () {
+        requestBody = (async function* () {
           try {
             for await (const bytes of request.body.stream) {
               yield* processBodyChunk(bytes);
@@ -56493,7 +56460,7 @@ var require_fetch = __commonJS({
           } catch (err) {
             processBodyError(err);
           }
-        }();
+        })();
       }
       try {
         const { body, status, statusText, headersList, socket } = await dispatch({ body: requestBody });
@@ -58678,8 +58645,8 @@ var require_permessage_deflate = __commonJS({
     var { createInflateRaw, Z_DEFAULT_WINDOWBITS } = require("node:zlib");
     var { isValidClientWindowBits } = require_util5();
     var tail = Buffer.from([0, 0, 255, 255]);
-    var kBuffer = Symbol("kBuffer");
-    var kLength = Symbol("kLength");
+    var kBuffer = /* @__PURE__ */ Symbol("kBuffer");
+    var kLength = /* @__PURE__ */ Symbol("kLength");
     var PerMessageDeflate = class {
       /** @type {import('node:zlib').InflateRaw} */
       #inflate;
@@ -61097,7 +61064,7 @@ var require_mime_type = __commonJS({
 var require_commonjs4 = __commonJS({
   "node_modules/cheerio/dist/commonjs/index.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -61106,19 +61073,19 @@ var require_commonjs4 = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
     var __exportStar = exports2 && exports2.__exportStar || function(m, exports3) {
       for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
     };
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ function() {
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
       var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function(o2) {
           var ar = [];
@@ -61136,7 +61103,7 @@ var require_commonjs4 = __commonJS({
         __setModuleDefault(result, mod);
         return result;
       };
-    }();
+    })();
     var __importDefault = exports2 && exports2.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
     };
@@ -61260,1218 +61227,401 @@ var require_commonjs4 = __commonJS({
   }
 });
 
-// lib/cinemeta.js
-var require_cinemeta = __commonJS({
-  "lib/cinemeta.js"(exports2, module2) {
-    var axios = require_axios();
-    var CINEMETA_URL = "https://v3-cinemeta.strem.io";
-    var client = axios.create({
-      baseURL: CINEMETA_URL,
-      timeout: 8e3,
-      validateStatus: () => true
-    });
-    function trailersFromCinemetaMeta(meta) {
-      const streams = meta.trailerStreams;
-      if (Array.isArray(streams) && streams.length) {
-        return streams.map((t) => {
-          const id = (t.ytId || t.source || "").trim();
-          return id ? { source: id, type: "Trailer" } : null;
-        }).filter(Boolean);
-      }
-      const tr = meta.trailers;
-      if (!Array.isArray(tr) || !tr.length) return void 0;
-      return tr.map((t) => {
-        const id = typeof t.source === "string" ? t.source.trim() : "";
-        return id ? { source: id, type: t.type === "Clip" ? "Clip" : "Trailer" } : null;
-      }).filter(Boolean);
-    }
-    async function getMetaByImdbId(type, imdbId) {
-      if (!imdbId || typeof imdbId !== "string") return null;
-      const cleanId = imdbId.trim().toLowerCase();
-      if (!cleanId.startsWith("tt")) return null;
-      try {
-        const res = await client.get(`/meta/${type}/${cleanId}.json`);
-        if (res.status !== 200 || !res.data?.meta) return null;
-        const meta = res.data.meta;
-        const trailers = trailersFromCinemetaMeta(meta);
-        return {
-          poster: meta.poster || void 0,
-          description: meta.description || meta.overview || void 0,
-          name: meta.name || void 0,
-          background: meta.background || void 0,
-          releaseInfo: meta.releaseInfo || void 0,
-          released: meta.released || void 0,
-          runtime: meta.runtime || void 0,
-          genres: meta.genres || void 0,
-          cast: meta.cast || void 0,
-          director: meta.director || void 0,
-          imdbRating: meta.imdbRating != null ? String(meta.imdbRating) : void 0,
-          trailers: trailers?.length ? trailers : void 0
-        };
-      } catch (err) {
-        return null;
-      }
-    }
-    function normalizeTitleKey(s) {
-      if (!s || typeof s !== "string") return "";
-      return s.toLowerCase().normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
-    }
-    var CINEMETA_SEARCH_DISABLED = process.env.STREMIO_NP_CINEMETA_SEARCH === "0";
-    function parseMetaReleaseYear(m) {
-      if (m.releaseInfo != null && String(m.releaseInfo).trim() !== "") {
-        const n = parseInt(String(m.releaseInfo).trim(), 10);
-        if (Number.isFinite(n) && n >= 1870 && n <= 2100) return n;
-      }
-      if (m.year != null) {
-        const n = parseInt(String(m.year), 10);
-        if (Number.isFinite(n) && n >= 1870 && n <= 2100) return n;
-      }
-      return null;
-    }
-    async function findImdbIdByTitle(type, title, hintYear) {
-      if (CINEMETA_SEARCH_DISABLED || !title || typeof title !== "string") return null;
-      const t = title.trim();
-      if (t.length < 2) return null;
-      const want = normalizeTitleKey(t);
-      if (!want) return null;
-      try {
-        const q = encodeURIComponent(t);
-        const res = await client.get(`/catalog/${type}/top/search=${q}.json`);
-        if (res.status !== 200 || !Array.isArray(res.data?.metas)) return null;
-        const metas = res.data.metas;
-        const candidates = [];
-        for (let i = 0; i < Math.min(metas.length, 40); i++) {
-          const m = metas[i];
-          const id = m.id || m.imdb_id;
-          if (!id || typeof id !== "string" || !id.startsWith("tt")) continue;
-          if (normalizeTitleKey(m.name || "") !== want) continue;
-          candidates.push({ id: id.toLowerCase(), year: parseMetaReleaseYear(m) });
-        }
-        if (!candidates.length) return null;
-        const y = hintYear != null && Number.isFinite(Number(hintYear)) ? parseInt(String(hintYear), 10) : null;
-        if (y != null) {
-          const withYear = candidates.filter((c) => c.year != null);
-          if (withYear.length) {
-            withYear.sort((a, b) => Math.abs(a.year - y) - Math.abs(b.year - y));
-            const best = withYear[0];
-            if (Math.abs(best.year - y) <= 5) return best.id;
-            return null;
-          }
-        }
-        return candidates[0].id;
-      } catch (_) {
-        return null;
-      }
-    }
-    module2.exports = { getMetaByImdbId, findImdbIdByTitle, normalizeTitleKey };
-  }
-});
-
 // lib/scraper.js
 var require_scraper = __commonJS({
   "lib/scraper.js"(exports2, module2) {
-    try {
-      require("dns").setDefaultResultOrder("ipv4first");
-    } catch (_) {
-    }
     var http2 = require("http");
     var https = require("https");
     var axios = require_axios();
     var cheerio = require_commonjs4();
-    var { getMetaByImdbId, findImdbIdByTitle } = require_cinemeta();
     var BASE_URL = "https://novelasportuguesas.com";
     var FILMES_ARCHIVE = `${BASE_URL}/filme/`;
     var SERIES_ARCHIVE = `${BASE_URL}/serie/`;
-    var NOVELAS_GENRE_ARCHIVE = `${BASE_URL}/genero/novelas/`;
+    var NOVELAS_ARCHIVE = `${BASE_URL}/genero/novelas/`;
     var ZETA_API = `${BASE_URL}/wp-json/zetaplayer/v2`;
-    var USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
-    function axiosProxyFromEnv() {
-      const raw = process.env.STREMIO_NP_PROXY || process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
-      if (!raw || typeof raw !== "string") return void 0;
-      try {
-        const u = new URL(raw.trim());
-        const protocol = (u.protocol || "http:").replace(/:$/, "");
-        const port = u.port ? parseInt(u.port, 10) : protocol === "https" ? 443 : 80;
-        const cfg = { protocol, host: u.hostname, port };
-        if (u.username) {
-          cfg.auth = {
-            username: decodeURIComponent(u.username),
-            password: decodeURIComponent(u.password || "")
-          };
-        }
-        return cfg;
-      } catch (_) {
-        return void 0;
-      }
-    }
-    var AXIOS_PROXY = axiosProxyFromEnv();
-    var IS_CLOUD_HOST = process.env.RENDER === "true" || !!process.env.FLY_APP_NAME || process.env.STREMIO_NP_LOW_CONCURRENCY === "1";
-    var HTTP_TIMEOUT_MS = Math.max(
-      8e3,
-      Number(process.env.STREMIO_NP_HTTP_TIMEOUT_MS) || (IS_CLOUD_HOST ? 45e3 : 25e3)
-    );
-    var HTTPS_MAX_SOCKETS = Math.max(
-      4,
-      Number(process.env.STREMIO_NP_MAX_HTTPS_SOCKETS) || (IS_CLOUD_HOST ? 40 : 64)
-    );
-    var httpsKeepAlive = new https.Agent({ keepAlive: true, maxSockets: HTTPS_MAX_SOCKETS });
-    var httpKeepAlive = new http2.Agent({ keepAlive: true, maxSockets: HTTPS_MAX_SOCKETS });
+    var USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131 Safari/537.36";
+    var HTTP_TIMEOUT_MS = Math.max(5e3, Number(process.env.STREMIO_NP_HTTP_TIMEOUT_MS) || 25e3);
+    var CATALOG_CACHE_MS = Math.max(6e4, Number(process.env.STREMIO_NP_CACHE_MS) || 6 * 60 * 60 * 1e3);
+    var META_CACHE_MS = Math.max(6e4, Number(process.env.STREMIO_NP_META_CACHE_MS) || CATALOG_CACHE_MS);
+    var META_TIMEOUT_MS = Math.max(2500, Number(process.env.STREMIO_NP_META_TIMEOUT_MS) || 6e3);
+    var META_RETRIES = Math.max(1, Number(process.env.STREMIO_NP_META_RETRIES) || 1);
+    var META_MAX_PATHS = Math.max(1, Number(process.env.STREMIO_NP_META_MAX_PATHS) || 3);
+    var ARCHIVE_MAX_PAGES = Math.max(1, Number(process.env.STREMIO_NP_MAX_ARCHIVE_PAGES) || 500);
+    var ARCHIVE_CONCURRENCY = Math.max(1, Number(process.env.STREMIO_NP_ARCHIVE_CONCURRENCY) || 10);
+    var RETRYABLE_CODES = /* @__PURE__ */ new Set(["ETIMEDOUT", "ECONNRESET", "ECONNABORTED", "ENOTFOUND", "EAI_AGAIN"]);
+    var RETRYABLE_STATUS = /* @__PURE__ */ new Set([403, 429, 502, 503, 504]);
+    var httpAgent = new http2.Agent({ keepAlive: true, maxSockets: 64 });
+    var httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 64 });
     var client = axios.create({
       baseURL: BASE_URL,
       timeout: HTTP_TIMEOUT_MS,
-      httpAgent: httpKeepAlive,
-      httpsAgent: httpsKeepAlive,
-      ...AXIOS_PROXY ? { proxy: AXIOS_PROXY } : {},
+      httpAgent,
+      httpsAgent,
       headers: {
         "User-Agent": USER_AGENT,
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "pt-PT,pt;q=0.9,en;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        Referer: `${BASE_URL}/`,
-        "Cache-Control": "no-cache"
+        Referer: `${BASE_URL}/`
       },
       validateStatus: () => true
     });
     var zetaClient = axios.create({
       baseURL: ZETA_API,
       timeout: Math.min(12e4, Math.max(12e3, HTTP_TIMEOUT_MS)),
-      httpAgent: httpKeepAlive,
-      httpsAgent: httpsKeepAlive,
-      ...AXIOS_PROXY ? { proxy: AXIOS_PROXY } : {},
+      httpAgent,
+      httpsAgent,
       headers: {
         "User-Agent": USER_AGENT,
         Accept: "application/json",
-        Referer: `${BASE_URL}/`,
-        "Accept-Language": "pt-PT,pt;q=0.9,en;q=0.8"
+        Referer: `${BASE_URL}/`
       },
       validateStatus: () => true
     });
     var filmesCache = null;
-    var seriesPortuguesasCache = null;
-    var novelasPortuguesasCache = null;
-    var CACHE_MS = Number(process.env.STREMIO_NP_CACHE_MS) || 6 * 60 * 60 * 1e3;
+    var seriesCache = null;
+    var novelasCache = null;
     var movieMetaCache = /* @__PURE__ */ new Map();
     var seriesMetaCache = /* @__PURE__ */ new Map();
-    var META_CACHE_MS = Number(process.env.STREMIO_NP_META_CACHE_MS) || CACHE_MS;
-    var LOG_PREFIX2 = "[NovelasPT]";
-    function clonePlain(obj) {
+    function clone(obj) {
       if (obj == null) return obj;
-      try {
-        return JSON.parse(JSON.stringify(obj));
-      } catch (_) {
-        return obj;
-      }
+      return JSON.parse(JSON.stringify(obj));
     }
-    function normalizeMetaCacheKey(slugLike) {
-      return stripDiacritics(String(slugLike || "").trim()).toLowerCase();
+    function normalizeSlug(s) {
+      return String(s || "").trim().normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "").toLowerCase();
     }
-    function getMetaCache(cacheMap, key, allowStale = false) {
-      const k = String(key || "").trim();
-      if (!k) return null;
-      const row = cacheMap.get(k);
-      if (!row || !row.item) return null;
-      const fresh = Date.now() - row.time < META_CACHE_MS;
-      if (!fresh && !allowStale) return null;
-      return clonePlain(row.item);
+    function absoluteUrl(u) {
+      const raw = String(u || "").trim();
+      if (!raw) return "";
+      if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+      if (raw.startsWith("//")) return `https:${raw}`;
+      if (raw.startsWith("/")) return `${BASE_URL}${raw}`;
+      return `${BASE_URL}/${raw}`;
     }
-    function setMetaCache(cacheMap, key, item) {
-      const k = String(key || "").trim();
-      if (!k || !item) return;
-      cacheMap.set(k, { time: Date.now(), item: clonePlain(item) });
+    function toTitleCase(s) {
+      return String(s || "").toLowerCase().replace(/\S+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1));
     }
-    function logCatalogCacheHit(label, count, cachedAtMs) {
-      const ageMin = Math.round((Date.now() - cachedAtMs) / 6e4);
-      const ttlMin = Math.max(0, Math.round((cachedAtMs + CACHE_MS - Date.now()) / 6e4));
-      console.log(
-        `${LOG_PREFIX2} CACHE cat\xC3\xA1logo [${label}] ${count} t\xC3\xADtulos | carregado h\xC3\xA1 ~${ageMin} min | TTL restante ~${ttlMin} min`
-      );
-    }
-    function logCatalogRefresh(label, startUrl, stats) {
-      const { items, archivePages, ms, synopsisRequests, synopsisOk } = stats;
-      const synPart = CATALOG_SYNOPSIS_ENABLED || CATALOG_RELEASE_ENABLED ? ` | p\xC3\xA1ginas de detalhe (resumo/ano): ${synopsisRequests} pedidos, ${synopsisOk} OK` : IS_CLOUD_HOST ? " | grelha r\xC3\xA1pida: sem resumo/ano extra (defeito na cloud; STREMIO_NP_CATALOG_SYNOPSIS=1 ou STREMIO_NP_CATALOG_RELEASE=1 para ativar)" : " | p\xC3\xA1ginas de detalhe: desativadas (STREMIO_NP_CATALOG_SYNOPSIS=0 e STREMIO_NP_CATALOG_RELEASE=0)";
-      console.log(
-        `${LOG_PREFIX2} REFRESH cat\xC3\xA1logo [${label}] ${items} t\xC3\xADtulos | p\xC3\xA1ginas de arquivo (listagem): ${archivePages}${synPart} | ${ms} ms | fonte: ${startUrl}`
-      );
-    }
-    var CATALOG_SYNOPSIS_ENABLED = IS_CLOUD_HOST ? process.env.STREMIO_NP_CATALOG_SYNOPSIS === "1" : process.env.STREMIO_NP_CATALOG_SYNOPSIS !== "0";
-    var CATALOG_RELEASE_ENABLED = IS_CLOUD_HOST ? process.env.STREMIO_NP_CATALOG_RELEASE === "1" : process.env.STREMIO_NP_CATALOG_RELEASE !== "0";
-    var CATALOG_SYNOPSIS_CONCURRENCY = Math.max(
-      1,
-      Number(process.env.STREMIO_NP_SYNOPSIS_CONCURRENCY) || (IS_CLOUD_HOST ? 16 : 10)
-    );
-    var CATALOG_SYNOPSIS_MAX = Number(process.env.STREMIO_NP_MAX_SYNOPSIS);
-    var CATALOG_DESC_PREVIEW_LEN = Math.min(2e3, Number(process.env.STREMIO_NP_CATALOG_DESC_LEN) || 900);
-    var ARCHIVE_PAGE_CONCURRENCY = Math.max(
-      1,
-      Number(process.env.STREMIO_NP_ARCHIVE_CONCURRENCY) || (IS_CLOUD_HOST ? 12 : 10)
-    );
-    var ARCHIVE_MAX_PAGES = Math.max(1, Number(process.env.STREMIO_NP_MAX_ARCHIVE_PAGES) || 500);
-    if (IS_CLOUD_HOST) {
-      const hyd = CATALOG_SYNOPSIS_ENABLED || CATALOG_RELEASE_ENABLED ? `grelha+detalhe ON (\xC3\u2014${CATALOG_SYNOPSIS_CONCURRENCY}; pode demorar com muitos t\xC3\xADtulos)` : "grelha+detalhe OFF (s\xC3\xB3 listagens; ano/resumo ao abrir o t\xC3\xADtulo)";
-      console.log(
-        `${LOG_PREFIX2} Cloud: ${HTTP_TIMEOUT_MS}ms | sockets ${HTTPS_MAX_SOCKETS} | arquivo\xC3\u2014${ARCHIVE_PAGE_CONCURRENCY} | ${hyd}`
-      );
-    }
-    if (AXIOS_PROXY) {
-      console.log(
-        `${LOG_PREFIX2} Proxy HTTP ativo (${AXIOS_PROXY.protocol}://${AXIOS_PROXY.host}:${AXIOS_PROXY.port}) \xE2\u20AC\u201D STREMIO_NP_PROXY/HTTPS_PROXY`
-      );
-    }
-    var RETRYABLE_NET_CODES = /* @__PURE__ */ new Set([
-      "ETIMEDOUT",
-      "ECONNRESET",
-      "ECONNABORTED",
-      "ENOTFOUND",
-      "EAI_AGAIN",
-      "ECONNREFUSED"
-    ]);
-    function logScrapeNetworkError(ctx, path2, err) {
-      const code = err && (err.code || err.cause?.code);
-      const msg = err && err.message || String(err);
-      const line = `${code ? `[${code}] ` : ""}${msg}`.slice(0, 200);
-      console.warn(`${LOG_PREFIX2} ${ctx}: ${path2} \xE2\u2020\u2019 ${line}`);
-    }
-    var RETRYABLE_HTTP_STATUS = /* @__PURE__ */ new Set([403, 429, 502, 503, 504]);
-    var META_DETAIL_TIMEOUT_MS = Math.max(2500, Number(process.env.STREMIO_NP_META_TIMEOUT_MS) || 4500);
-    var META_DETAIL_RETRIES = Math.max(1, Number(process.env.STREMIO_NP_META_RETRIES) || 1);
-    var META_DETAIL_MAX_PATHS = Math.max(1, Number(process.env.STREMIO_NP_META_MAX_PATHS) || 2);
     async function safeClientGet(path2, retries = 3, timeoutMs = HTTP_TIMEOUT_MS) {
-      const n = Math.max(1, retries);
       let last = null;
-      for (let attempt = 1; attempt <= n; attempt++) {
+      const n = Math.max(1, retries);
+      for (let i = 1; i <= n; i++) {
         try {
           const res = await client.get(path2, { timeout: timeoutMs });
           last = res;
-          if (res && res.status === 200) return res;
-          const st = res && res.status;
-          if (st && RETRYABLE_HTTP_STATUS.has(st) && attempt < n) {
-            const snippet = typeof res.data === "string" ? res.data.slice(0, 200).replace(/\s+/g, " ") : "";
-            const cf = /cloudflare|cf-ray|attention required|blocked/i.test(snippet);
-            console.warn(
-              `${LOG_PREFIX2} GET ${path2} \xE2\u2020\u2019 HTTP ${st}${cf ? " (poss\xC3\xADvel Cloudflare/bloqueio)" : ""} | tentativa ${attempt + 1}/${n}`
-            );
-            await new Promise((r) => setTimeout(r, 900 * attempt));
+          if (res.status === 200) return res;
+          if (RETRYABLE_STATUS.has(res.status) && i < n) {
+            await new Promise((r) => setTimeout(r, 500 * i));
             continue;
-          }
-          if (st && st !== 200) {
-            console.warn(`${LOG_PREFIX2} GET ${path2} \xE2\u2020\u2019 HTTP ${st} (sem mais reintentos neste pedido)`);
           }
           return res;
         } catch (e) {
           const code = e && (e.code || e.cause?.code);
-          const canRetry = attempt < n && RETRYABLE_NET_CODES.has(code);
-          if (canRetry) {
-            const wait = 500 * attempt;
-            console.warn(
-              `${LOG_PREFIX2} GET ${path2} ${code || "erro"} (${attempt}/${n}) \xE2\u2020\u2019 nova tentativa em ${wait}ms`
-            );
-            await new Promise((r) => setTimeout(r, wait));
+          if (i < n && RETRYABLE_CODES.has(code)) {
+            await new Promise((r) => setTimeout(r, 500 * i));
             continue;
           }
-          logScrapeNetworkError("GET falhou", path2, e);
           return null;
         }
       }
       return last;
     }
-    function toTitleCase(str) {
-      if (!str) return str;
-      return str.toLowerCase().replace(/\S+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1));
-    }
-    function absoluteUrl(u, base = BASE_URL) {
-      if (!u || typeof u !== "string") return u;
-      u = u.trim();
-      if (u.startsWith("//")) return "https:" + u;
-      if (u.startsWith("http")) return u;
-      const b = base.replace(/\/$/, "");
-      return u.startsWith("/") ? b + u : `${b}/${u}`;
-    }
-    function upgradeTmdbToOriginalForBackdrop(url) {
-      if (!url || typeof url !== "string") return url;
-      if (!/image\.tmdb\.org\/t\/p\//i.test(url)) return url;
-      return url.replace(/\/t\/p\/[^/]+\//i, "/t/p/original/");
-    }
-    var BACKDROP_SKIP_RE = /(logo\.png|favicon|gravatar|spacer|blank\.|pixel\.gif|1x1|emoji|smiley)/i;
-    function tmdbAssetFilename(url) {
-      if (!url || typeof url !== "string") return null;
-      const m = url.match(/image\.tmdb\.org\/t\/p\/[^/]+\/([^/?#]+)/i);
-      return m ? m[1].trim().toLowerCase() : null;
-    }
-    function extractSiteBackdropUrl($, posterUrl) {
-      const candidates = [];
-      function pushRaw(raw) {
-        if (!raw || typeof raw !== "string") return;
-        const u = absoluteUrl(raw.trim());
-        if (!/^https?:\/\//i.test(u)) return;
-        if (BACKDROP_SKIP_RE.test(u)) return;
-        candidates.push(upgradeTmdbToOriginalForBackdrop(u));
+    function extractArchiveMaxPage($, html) {
+      let max = 1;
+      const lastHref = $('link[rel="last"]').attr("href");
+      if (lastHref) {
+        const m2 = String(lastHref).match(/\/page\/(\d+)\/?/i);
+        if (m2) max = Math.max(max, parseInt(m2[1], 10) || 1);
       }
-      const primarySelectors = [
-        ".player-display img",
-        ".preplayer img",
-        ".icons-gallery .gallery-images img",
-        ".icons-gallery .image-icon img",
-        ".icons-gallery img",
-        ".display-page-heading img"
-      ];
-      for (const sel of primarySelectors) {
-        $(sel).each((_, el) => {
-          const $el = $(el);
-          pushRaw($el.attr("src") || $el.attr("data-src") || $el.attr("data-original"));
-        });
-      }
-      $(".main-content .wrapper img").not(".episodes-list img, .ep-thumb img, .search-results img, .comments img, .logo img").each((_, el) => {
-        const $el = $(el);
-        pushRaw($el.attr("src") || $el.attr("data-src") || $el.attr("data-original"));
+      $("a.page-numbers, a.page-number").each((_, el) => {
+        const n = parseInt($(el).text().trim(), 10);
+        if (Number.isFinite(n)) max = Math.max(max, n);
       });
-      const seen = /* @__PURE__ */ new Set();
-      const uniq = [];
-      for (const c of candidates) {
-        if (seen.has(c)) continue;
-        seen.add(c);
-        uniq.push(c);
+      const re = /\/page\/(\d+)\/?/gi;
+      let m;
+      while ((m = re.exec(String(html || ""))) != null) {
+        const n = parseInt(m[1], 10);
+        if (Number.isFinite(n)) max = Math.max(max, n);
       }
-      if (!uniq.length) return null;
-      const scoreUrl = (u) => {
-        if (/\/t\/p\/original\//i.test(u)) return 100;
-        if (/\/t\/p\/w1280\//i.test(u)) return 85;
-        if (/\/t\/p\/w780\//i.test(u)) return 70;
-        if (/\/t\/p\/w500\//i.test(u)) return 50;
-        if (/\/t\/p\/w\d+\//i.test(u)) return 30;
-        return 40;
-      };
-      uniq.sort((a, b) => scoreUrl(b) - scoreUrl(a));
-      const posterKey = posterUrl ? tmdbAssetFilename(posterUrl.trim()) : null;
-      if (posterKey) {
-        const alternate = uniq.find(
-          (u) => tmdbAssetFilename(u) && tmdbAssetFilename(u) !== posterKey && scoreUrl(u) >= 55
-        );
-        if (alternate) return upgradeTmdbToOriginalForBackdrop(alternate);
-      }
-      return uniq[0];
+      return Math.max(1, Math.min(max, ARCHIVE_MAX_PAGES));
     }
-    var DESC_MAX = 4500;
-    function extractSynopsis($) {
-      const raw = $(".details-desc").first().text().replace(/\s+/g, " ").trim();
-      if (!raw) {
-        const og = $('meta[property="og:description"]').attr("content");
-        return og && og.trim() || "";
-      }
-      const splitters = [
-        /Resumo do Filme:\s*(.+)/i,
-        /Resumo da [Ss]Ã©rie:\s*(.+)/i,
-        /Resumo:\s*(.+)/i,
-        /Sinopse:\s*(.+)/i
-      ];
-      for (const re of splitters) {
-        const m = raw.match(re);
-        if (m && m[1] && m[1].trim().length > 15) return m[1].trim().slice(0, DESC_MAX);
-      }
-      if (/Nome do Filme:/i.test(raw) || /Ano do Filme:/i.test(raw)) {
-        const parts = raw.split(/Resumo do Filme:\s*/i);
-        if (parts[1] && parts[1].trim().length > 15) return parts[1].trim().slice(0, DESC_MAX);
-      }
-      if (raw.length > 25) return raw.slice(0, DESC_MAX);
-      return "";
-    }
-    function extractReleaseInfoFromDetailPage($, contentType) {
-      const raw = $(".details-desc").first().text().replace(/\s+/g, " ").trim().normalize("NFC");
-      const h1 = $("h1").first().text().replace(/\s+/g, " ").trim().normalize("NFC");
-      if (contentType === "movie") {
-        const m = raw.match(/Ano do Filme:\s*((?:19|20)\d{2})(?!\d)/i);
-        if (m) {
-          const y = parseInt(m[1], 10);
-          if (y >= 1870 && y <= 2100) return { year: y, releaseInfo: String(y) };
-        }
-      } else {
-        const m = raw.match(/Ano da\s+SÃ©rie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+SÃ©rie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano da\s+Serie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+Serie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano da\s+[Ss][Ã©e]rie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+[Ss][Ã©e]rie:\s*((?:19|20)\d{2})(?!\d)/i);
-        if (m) {
-          const y = parseInt(m[1], 10);
-          if (y >= 1870 && y <= 2100) return { year: y, releaseInfo: String(y) };
-        }
-      }
-      const periodMatch = raw.match(
-        /Per[iÃ­]odo(?:\s+de exibi[cÃ§][aÃ£]o)?\s*:\s*(.+?)(?=(?:Nome do|Nome da|Ano do|Ano da|Resumo)|$)/i
-      );
-      if (periodMatch) {
-        const slice = periodMatch[1].trim().replace(/\s*-\s*/g, "-");
-        const years = slice.match(/\b((?:19|20)\d{2})\b/g);
-        if (years && years.length >= 2) {
-          const ys = [...new Set(years.map((y) => parseInt(y, 10)))].sort((a, b) => a - b);
-          return {
-            year: ys[0],
-            releaseInfo: `${ys[0]}-${ys[ys.length - 1]}`
-          };
-        }
-        if (years && years.length === 1) {
-          const y = parseInt(years[0], 10);
-          if (y >= 1870 && y <= 2100) return { year: y, releaseInfo: String(y) };
-        }
-      }
-      const paren = h1.match(/\((\d{4})\)/);
-      if (paren) {
-        const y = parseInt(paren[1], 10);
-        if (y >= 1870 && y <= 2100) return { year: y, releaseInfo: String(y) };
-      }
-      return null;
-    }
-    var META_YEAR_MIN = 1870;
-    var META_YEAR_MAX = 2100;
-    function isPlausibleMetaYear(y) {
-      const n = typeof y === "number" ? y : parseInt(String(y), 10);
-      return Number.isFinite(n) && n >= META_YEAR_MIN && n <= META_YEAR_MAX;
-    }
-    function sanitizeItemYearRelease(item) {
-      if (item.year != null) {
-        if (!isPlausibleMetaYear(item.year)) {
-          delete item.year;
-        } else {
-          item.year = typeof item.year === "number" ? item.year : parseInt(String(item.year), 10);
-        }
-      }
-      if (item.releaseInfo != null) {
-        const s = String(item.releaseInfo).trim();
-        if (/^\d{1,3}$/.test(s)) {
-          delete item.releaseInfo;
-        }
-      }
-      if (item.year != null && (item.releaseInfo == null || String(item.releaseInfo).trim() === "")) {
-        item.releaseInfo = String(item.year);
-      }
-    }
-    function assignReleaseFromDetail($, item, contentType) {
-      const rel = extractReleaseInfoFromDetailPage($, contentType);
-      if (!rel) return;
-      if (rel.year != null) item.year = rel.year;
-      if (rel.releaseInfo != null && String(rel.releaseInfo).trim() !== "") {
-        item.releaseInfo = String(rel.releaseInfo).trim();
-      } else if (rel.year != null) {
-        item.releaseInfo = String(rel.year);
-      }
-      sanitizeItemYearRelease(item);
-    }
-    function remapEpisodeSeasons(rawList) {
-      if (!rawList.length) return [];
-      const ssids = [...new Set(rawList.map((e) => e.rawSsid))].sort((a, b) => a - b);
-      const ssidToSeason = /* @__PURE__ */ new Map();
-      ssids.forEach((id, i) => ssidToSeason.set(id, i + 1));
-      return rawList.map((e) => ({
-        season: ssidToSeason.get(e.rawSsid),
-        episode: e.episode,
-        wpPid: e.wpPid,
-        name: e.name
-      }));
-    }
-    function imdbPageLink(imdbIdClean, ratingStr) {
-      const name = ratingStr != null && String(ratingStr).trim() !== "" ? `IMDb ${String(ratingStr).trim()}/10` : "IMDb";
-      return {
-        name,
-        category: "imdb",
-        url: imdbIdClean
-      };
-    }
-    async function enrichMetaFromCinemeta(item, stremioType) {
-      const rawId = item.imdbId && String(item.imdbId).trim();
-      if (!rawId || !rawId.toLowerCase().startsWith("tt")) return item;
-      const imdbIdClean = rawId.toLowerCase();
-      try {
-        const cm = await getMetaByImdbId(stremioType, item.imdbId);
-        const siteDesc = (item.description || "").trim();
-        if (cm) {
-          if (siteDesc.length < 160 && cm.description) {
-            item.description = siteDesc ? `${siteDesc}
-
-${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX);
-          }
-          if (cm.poster && !item.poster) item.poster = cm.poster;
-          if (cm.background && !item.background) item.background = cm.background;
-          if (cm.genres?.length && !item.genres?.length) item.genres = cm.genres;
-          if (cm.cast && !item.cast) item.cast = cm.cast;
-          if (cm.director && !item.director) item.director = cm.director;
-          if (cm.runtime && !item.runtime) item.runtime = cm.runtime;
-          if (cm.imdbRating != null) item.imdbRating = cm.imdbRating;
-          if (cm.trailers?.length) item.trailers = cm.trailers;
-        }
-        const links = [imdbPageLink(imdbIdClean, item.imdbRating)];
-        const tr = item.trailers;
-        const yt = Array.isArray(tr) && tr.find((t) => t && typeof t.source === "string" && t.source.trim());
-        if (yt) {
-          const vid = yt.source.trim();
-          links.push({
-            name: "Trailer (YouTube)",
-            category: "trailers",
-            url: `https://www.youtube.com/watch?v=${vid}`
-          });
-        } else {
-          links.push({
-            name: "Trailers / v\xC3\xADdeos (IMDb)",
-            category: "trailers",
-            url: `https://www.imdb.com/title/${imdbIdClean}/videogallery/`
-          });
-        }
-        item.links = links;
-        sanitizeItemYearRelease(item);
-      } catch (e) {
-        const msg = e && e.message || String(e);
-        console.warn(`${LOG_PREFIX2} enrichMetaFromCinemeta ignorado (${item.slug || item.name}): ${msg.slice(0, 120)}`);
-      }
-      return item;
-    }
-    function parseDisplayItems($, items, seenSlugs, contentType) {
-      const pathSeg = contentType === "movie" ? "filme" : "serie";
+    function parseDisplayItems($, contentType) {
+      const seg = contentType === "movie" ? "filme" : "serie";
+      const map = /* @__PURE__ */ new Map();
       $(".display-item .item-box").each((_, box) => {
         const $box = $(box);
-        const a = $box.find("a[href]").first();
-        const href = a.attr("href");
+        const href = $box.find("a[href]").first().attr("href");
         if (!href) return;
-        const abs = absoluteUrl(href);
-        let pathname;
+        let pathname = "";
         try {
-          pathname = new URL(abs).pathname;
+          pathname = new URL(absoluteUrl(href)).pathname;
         } catch (_2) {
           return;
         }
         const parts = pathname.split("/").filter(Boolean);
-        const pi = parts.indexOf(pathSeg);
-        if (pi < 0 || !parts[pi + 1]) return;
-        const slug = parts[pi + 1];
-        if (slug === "page" || slug === "feed") return;
-        const key = `${contentType}_${slug}`;
-        if (seenSlugs.has(key)) return;
-        seenSlugs.add(key);
+        const i = parts.indexOf(seg);
+        if (i < 0 || !parts[i + 1]) return;
+        const slug = normalizeSlug(parts[i + 1]);
+        if (!slug || slug === "page" || slug === "feed") return;
         const img = $box.find("img").first();
-        let poster = img.attr("data-original") || img.attr("data-src") || img.attr("src") || void 0;
-        if (poster && !poster.startsWith("http")) poster = absoluteUrl(poster);
-        let name = (img.attr("alt") || "").trim() || $box.find(".item-desc-title h3, .item-desc-title").first().text().trim() || slug.replace(/-/g, " ");
-        name = toTitleCase(name);
+        const poster = absoluteUrl(
+          img.attr("data-original") || img.attr("data-src") || img.attr("src") || ""
+        );
+        const name = toTitleCase(
+          (img.attr("alt") || "").trim() || $box.find(".item-desc-title h3, .item-desc-title").first().text().trim() || slug.replace(/-/g, " ")
+        );
         const id = contentType === "movie" ? `novelaspt_movie_${slug}` : `novelaspt_series_${slug}`;
-        items.push({
-          id,
-          name,
-          slug,
-          type: contentType,
-          poster: poster || void 0
-        });
+        map.set(`${contentType}:${slug}`, { id, slug, type: contentType, name, poster: poster || void 0 });
       });
+      return [...map.values()];
     }
-    async function hydrateCatalogSynopses(items, wpPathSeg) {
-      const wantSynopsis = CATALOG_SYNOPSIS_ENABLED;
-      const wantRelease = CATALOG_RELEASE_ENABLED;
-      if (!wantSynopsis && !wantRelease || !items.length) {
-        return { synopsisRequests: 0, synopsisOk: 0 };
+    async function poolMap(items, limit, worker) {
+      const out = new Array(items.length);
+      let idx = 0;
+      async function runOne() {
+        for (; ; ) {
+          const i = idx++;
+          if (i >= items.length) return;
+          out[i] = await worker(items[i], i);
+        }
       }
-      const synopsisCap = wantSynopsis && Number.isFinite(CATALOG_SYNOPSIS_MAX) && CATALOG_SYNOPSIS_MAX > 0 ? CATALOG_SYNOPSIS_MAX : Infinity;
-      const contentType = wpPathSeg === "filme" ? "movie" : "series";
-      const needsDetailFetch = (item, indexInAll) => {
-        const needRelease = wantRelease && item.year == null && item.releaseInfo == null;
-        const needSynopsis = wantSynopsis && !item.description && indexInAll < synopsisCap;
-        return needRelease || needSynopsis;
-      };
-      let synopsisRequests = 0;
-      let synopsisOk = 0;
-      const estFetches = items.filter((it, idx) => needsDetailFetch(it, idx)).length;
-      if (estFetches > 80) {
-        console.log(
-          `${LOG_PREFIX2} Cat\xC3\xA1logo (${wpPathSeg}): a consultar ~${estFetches} p\xC3\xA1ginas de detalhe (resumo e/ou ano)\xE2\u20AC\xA6`
-        );
+      await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => runOne()));
+      return out;
+    }
+    async function fetchCatalog(startUrl, contentType) {
+      const firstPath = startUrl.startsWith(BASE_URL) ? startUrl.slice(BASE_URL.length) : startUrl;
+      const first = await safeClientGet(firstPath || "/", 3, HTTP_TIMEOUT_MS);
+      if (!first || first.status !== 200 || typeof first.data !== "string") return [];
+      const items = parseDisplayItems(cheerio.load(first.data), contentType);
+      const maxPage = extractArchiveMaxPage(cheerio.load(first.data), first.data);
+      if (maxPage <= 1) return items;
+      const pages = [];
+      for (let p = 2; p <= maxPage; p++) {
+        pages.push(`${startUrl.replace(/\/$/, "")}/page/${p}/`);
       }
-      for (let i = 0; i < items.length; i += CATALOG_SYNOPSIS_CONCURRENCY) {
-        const batch = items.slice(i, i + CATALOG_SYNOPSIS_CONCURRENCY);
-        await Promise.all(
-          batch.map(async (item, j) => {
-            const idx = i + j;
-            if (!needsDetailFetch(item, idx)) return;
-            try {
-              synopsisRequests += 1;
-              const res = await safeClientGet(`/${wpPathSeg}/${item.slug}/`, 2);
-              if (!res || res.status !== 200 || typeof res.data !== "string") return;
-              synopsisOk += 1;
-              const $ = cheerio.load(res.data);
-              assignReleaseFromDetail($, item, contentType);
-              if (wantSynopsis && !item.description && idx < synopsisCap) {
-                const desc = extractSynopsis($);
-                if (desc) item.description = desc.slice(0, CATALOG_DESC_PREVIEW_LEN);
-              }
-            } catch (_) {
-            }
-          })
-        );
+      const rows = await poolMap(pages, ARCHIVE_CONCURRENCY, async (url) => {
+        const path2 = url.startsWith(BASE_URL) ? url.slice(BASE_URL.length) : url;
+        const res = await safeClientGet(path2, 2, HTTP_TIMEOUT_MS);
+        if (!res || res.status !== 200 || typeof res.data !== "string") return [];
+        return parseDisplayItems(cheerio.load(res.data), contentType);
+      });
+      const dedupe = new Map(items.map((x) => [x.id, x]));
+      for (const arr of rows) {
+        for (const it of arr) dedupe.set(it.id, it);
       }
-      return { synopsisRequests, synopsisOk };
+      return [...dedupe.values()];
+    }
+    function getCacheRow(kind) {
+      if (kind === "movie") return filmesCache;
+      if (kind === "series") return seriesCache;
+      return novelasCache;
+    }
+    function setCacheRow(kind, items) {
+      const row = { time: Date.now(), items };
+      if (kind === "movie") filmesCache = row;
+      else if (kind === "series") seriesCache = row;
+      else novelasCache = row;
     }
     async function getFilmes() {
-      const now = Date.now();
-      if (filmesCache && now - filmesCache.time < CACHE_MS) {
-        logCatalogCacheHit("filmes", filmesCache.items.length, filmesCache.time);
-        sanitizeCatalogItems(filmesCache.items);
-        return filmesCache.items;
-      }
-      const t0 = Date.now();
-      const seen = /* @__PURE__ */ new Set();
-      const items = [];
-      const archivePages = await fetchAllArchivePagesInto(FILMES_ARCHIVE, items, seen, "movie");
-      if (archivePages === 0 && items.length === 0) {
-        console.warn(
-          `${LOG_PREFIX2} REFRESH filmes: rede/site indispon\xC3\xADvel (0 p\xC3\xA1ginas). Mant\xC3\xA9m cache anterior se existir.`
-        );
-        if (filmesCache && filmesCache.items.length) {
-          sanitizeCatalogItems(filmesCache.items);
-          return filmesCache.items;
-        }
-        return [];
-      }
-      const { synopsisRequests, synopsisOk } = await hydrateCatalogSynopses(items, "filme");
-      filmesCache = { time: now, items };
-      logCatalogRefresh("filmes", FILMES_ARCHIVE, {
-        items: items.length,
-        archivePages,
-        synopsisRequests,
-        synopsisOk,
-        ms: Date.now() - t0
-      });
-      sanitizeCatalogItems(items);
-      return items;
-    }
-    function normalizeListPageUrl(absUrl) {
-      if (!absUrl || typeof absUrl !== "string") return absUrl;
-      const u = absoluteUrl(absUrl.trim());
-      return u.endsWith("/") ? u : `${u}/`;
-    }
-    function detectMaxArchivePage($, html) {
-      let max = 1;
-      const lastHref = $('link[rel="last"]').attr("href");
-      if (lastHref) {
-        const abs = absoluteUrl(lastHref);
-        const m = abs.match(/\/page\/(\d+)\/?(?:\?|$)/i) || abs.match(/[?&]paged=(\d+)/i);
-        if (m) max = Math.max(max, parseInt(m[1], 10) || 1);
-      }
-      $("a.page-numbers, a.page-number").each((_, el) => {
-        const t = $(el).text().replace(/\s+/g, "").trim();
-        const n = parseInt(t, 10);
-        if (Number.isFinite(n) && n > max) max = n;
-      });
-      return Number.isFinite(max) && max >= 1 ? max : 1;
-    }
-    function nextListPageHref($, html) {
-      let next = $('link[rel="next"]').attr("href");
-      if (!next) next = $("a.next.page-numbers").attr("href");
-      if (!next) {
-        const m = html.match(/<link[^>]*\srel=["']next["'][^>]*\s+href=["']([^"']+)["']/i);
-        if (m) next = m[1];
-      }
-      return next ? absoluteUrl(next) : null;
-    }
-    function listPageUrlForIndex(baseWithSlash, page) {
-      const base = baseWithSlash.replace(/\/$/, "");
-      if (page <= 1) return `${base}/`;
-      return `${base}/page/${page}/`;
-    }
-    async function fetchArchiveHtmlPaths(paths) {
-      const list = await Promise.all(paths.map((path2) => safeClientGet(path2, 3)));
-      return list.map((res, i) => {
-        if (res && res.status === 200 && typeof res.data === "string") return res;
-        if (paths[i]) {
-          console.warn(`${LOG_PREFIX2} arquivo listagem ignorada (falha/rede): ${paths[i]}`);
-        }
-        return { status: 0, data: "" };
-      });
-    }
-    async function fetchAllArchivePagesInto(startUrl, items, seenSlugs, contentType) {
-      let pagesFetched = 0;
-      const firstUrl = normalizeListPageUrl(startUrl);
-      const visited = /* @__PURE__ */ new Set();
-      const firstPath = firstUrl.startsWith(BASE_URL) ? firstUrl.slice(BASE_URL.length) || "/" : firstUrl;
-      const res = await safeClientGet(firstPath, 4);
-      if (!res || res.status !== 200 || typeof res.data !== "string") {
-        console.warn(
-          `${LOG_PREFIX2} Arquivo: falha na 1.\xC2\xAA p\xC3\xA1gina (${contentType}) ${res ? `status=${res.status}` : "sem resposta"} \xE2\u2020\u2019 ${firstUrl}`
-        );
-        return pagesFetched;
-      }
-      pagesFetched += 1;
-      const $ = cheerio.load(res.data);
-      parseDisplayItems($, items, seenSlugs, contentType);
-      visited.add(firstUrl);
-      const maxPage = Math.min(detectMaxArchivePage($, res.data), ARCHIVE_MAX_PAGES);
-      const baseList = firstUrl.replace(/\/$/, "");
-      if (maxPage > 1) {
-        const extraUrls = [];
-        for (let p = 2; p <= maxPage; p++) {
-          const u = normalizeListPageUrl(listPageUrlForIndex(`${baseList}/`, p));
-          if (!visited.has(u)) extraUrls.push(u);
-        }
-        let parallelOk = 0;
-        for (let i = 0; i < extraUrls.length; i += ARCHIVE_PAGE_CONCURRENCY) {
-          const chunk = extraUrls.slice(i, i + ARCHIVE_PAGE_CONCURRENCY);
-          const paths = chunk.map((u) => u.startsWith(BASE_URL) ? u.slice(BASE_URL.length) || "/" : u);
-          const responses = await fetchArchiveHtmlPaths(paths);
-          chunk.forEach((u, idx) => {
-            const r = responses[idx];
-            if (!r || r.status !== 200 || typeof r.data !== "string") return;
-            parallelOk += 1;
-            pagesFetched += 1;
-            visited.add(u);
-            parseDisplayItems(cheerio.load(r.data), items, seenSlugs, contentType);
-          });
-        }
-        const useSequentialFallback = extraUrls.length > 0 && parallelOk === 0;
-        if (!useSequentialFallback) return pagesFetched;
-      }
-      let url = nextListPageHref($, res.data);
-      while (url) {
-        const abs = normalizeListPageUrl(url);
-        if (visited.has(abs)) break;
-        visited.add(abs);
-        const path2 = abs.startsWith(BASE_URL) ? abs.slice(BASE_URL.length) || "/" : abs;
-        const resN = await safeClientGet(path2, 3);
-        if (!resN || resN.status !== 200 || typeof resN.data !== "string") break;
-        pagesFetched += 1;
-        const $n = cheerio.load(resN.data);
-        parseDisplayItems($n, items, seenSlugs, contentType);
-        url = nextListPageHref($n, resN.data);
-      }
-      return pagesFetched;
-    }
-    async function buildSeriesCatalogFromArchive(startUrl) {
-      const seen = /* @__PURE__ */ new Set();
-      const items = [];
-      const archivePages = await fetchAllArchivePagesInto(startUrl, items, seen, "series");
-      const { synopsisRequests, synopsisOk } = await hydrateCatalogSynopses(items, "serie");
-      return { items, archivePages, synopsisRequests, synopsisOk };
+      const row = getCacheRow("movie");
+      if (row && Date.now() - row.time < CATALOG_CACHE_MS) return row.items;
+      const items = await fetchCatalog(FILMES_ARCHIVE, "movie");
+      if (items.length) setCacheRow("movie", items);
+      return items.length ? items : row?.items || [];
     }
     async function getSeriesPortuguesas() {
-      const now = Date.now();
-      if (seriesPortuguesasCache && now - seriesPortuguesasCache.time < CACHE_MS) {
-        logCatalogCacheHit("s\xC3\xA9ries portuguesas", seriesPortuguesasCache.items.length, seriesPortuguesasCache.time);
-        sanitizeCatalogItems(seriesPortuguesasCache.items);
-        return seriesPortuguesasCache.items;
-      }
-      const t0 = Date.now();
-      const { items, archivePages, synopsisRequests, synopsisOk } = await buildSeriesCatalogFromArchive(
-        SERIES_ARCHIVE
-      );
-      if (archivePages === 0 && items.length === 0) {
-        console.warn(
-          `${LOG_PREFIX2} REFRESH s\xC3\xA9ries: rede/site indispon\xC3\xADvel. Mant\xC3\xA9m cache anterior se existir.`
-        );
-        if (seriesPortuguesasCache && seriesPortuguesasCache.items.length) {
-          sanitizeCatalogItems(seriesPortuguesasCache.items);
-          return seriesPortuguesasCache.items;
-        }
-        return [];
-      }
-      seriesPortuguesasCache = { time: now, items };
-      logCatalogRefresh("s\xC3\xA9ries portuguesas", SERIES_ARCHIVE, {
-        items: items.length,
-        archivePages,
-        synopsisRequests,
-        synopsisOk,
-        ms: Date.now() - t0
-      });
-      sanitizeCatalogItems(items);
-      return items;
+      const row = getCacheRow("series");
+      if (row && Date.now() - row.time < CATALOG_CACHE_MS) return row.items;
+      const items = await fetchCatalog(SERIES_ARCHIVE, "series");
+      if (items.length) setCacheRow("series", items);
+      return items.length ? items : row?.items || [];
     }
     async function getNovelasPortuguesas() {
-      const now = Date.now();
-      if (novelasPortuguesasCache && now - novelasPortuguesasCache.time < CACHE_MS) {
-        logCatalogCacheHit("novelas portuguesas", novelasPortuguesasCache.items.length, novelasPortuguesasCache.time);
-        sanitizeCatalogItems(novelasPortuguesasCache.items);
-        return novelasPortuguesasCache.items;
-      }
-      const t0 = Date.now();
-      const { items, archivePages, synopsisRequests, synopsisOk } = await buildSeriesCatalogFromArchive(
-        NOVELAS_GENRE_ARCHIVE
-      );
-      if (archivePages === 0 && items.length === 0) {
-        console.warn(
-          `${LOG_PREFIX2} REFRESH novelas: rede/site indispon\xC3\xADvel. Mant\xC3\xA9m cache anterior se existir.`
-        );
-        if (novelasPortuguesasCache && novelasPortuguesasCache.items.length) {
-          sanitizeCatalogItems(novelasPortuguesasCache.items);
-          return novelasPortuguesasCache.items;
-        }
-        return [];
-      }
-      novelasPortuguesasCache = { time: now, items };
-      logCatalogRefresh("novelas portuguesas", NOVELAS_GENRE_ARCHIVE, {
-        items: items.length,
-        archivePages,
-        synopsisRequests,
-        synopsisOk,
-        ms: Date.now() - t0
-      });
-      sanitizeCatalogItems(items);
-      return items;
+      const row = getCacheRow("novelas");
+      if (row && Date.now() - row.time < CATALOG_CACHE_MS) return row.items;
+      const items = await fetchCatalog(NOVELAS_ARCHIVE, "series");
+      if (items.length) setCacheRow("novelas", items);
+      return items.length ? items : row?.items || [];
     }
-    function wpPostIdFromHtml(html) {
-      const m = html.match(/[?&]p=(\d+)/);
-      return m ? parseInt(m[1], 10) : null;
+    function yearFromText(text) {
+      const m = String(text || "").match(/\b((?:19|20)\d{2})\b/);
+      if (!m) return void 0;
+      const y = parseInt(m[1], 10);
+      if (!Number.isFinite(y) || y < 1870 || y > 2100) return void 0;
+      return y;
     }
-    function stripDiacritics(str) {
-      return String(str || "").normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "");
+    function extractSynopsis($) {
+      const block = $(".details-desc").first().text().replace(/\s+/g, " ").trim();
+      if (block && block.length > 20) return block.slice(0, 4500);
+      const alt = $(".entry-content, .content, .single-desc, .description").first().text().replace(/\s+/g, " ").trim();
+      return alt ? alt.slice(0, 4500) : void 0;
     }
-    function detailPathsForSlug(wpSegment, slug) {
-      const s = String(slug || "").trim();
-      if (!s) return [];
-      const folded = stripDiacritics(s);
-      const bases = new Set([s, folded, s.toLowerCase(), folded.toLowerCase()].filter((x) => x && x.length > 0));
-      const out = [];
-      for (const b of bases) {
-        out.push(`/${wpSegment}/${b}/`, `/${wpSegment}/${b}`);
-      }
-      return [...new Set(out)];
+    function remapEpisodes(raw) {
+      const ssids = [...new Set(raw.map((e) => e.rawSsid))].sort((a, b) => a - b);
+      const map = new Map(ssids.map((id, i) => [id, i + 1]));
+      return raw.map((e) => ({ season: map.get(e.rawSsid), episode: e.episode, wpPid: e.wpPid, name: e.name })).sort((a, b) => a.season - b.season || a.episode - b.episode);
     }
-    function slugFromWpDetailPath(reqPath, wpSegments) {
-      const parts = String(reqPath || "").split("/").map((p) => {
-        if (!p) return "";
-        try {
-          return decodeURIComponent(p);
-        } catch (_) {
-          return p;
-        }
-      }).filter(Boolean);
-      for (let i = 0; i < parts.length - 1; i++) {
-        if (wpSegments.includes(parts[i])) return parts[i + 1];
+    function detailPaths(slug, preferMovie) {
+      const s = normalizeSlug(slug);
+      const f = [`/filme/${s}/`, `/filme/${s}`];
+      const r = [`/serie/${s}/`, `/serie/${s}`];
+      const arr = preferMovie ? [...f, ...r] : [...r, ...f];
+      return arr.slice(0, Math.max(1, META_MAX_PATHS));
+    }
+    async function fetchDetail(slug, preferMovie) {
+      const paths = detailPaths(slug, preferMovie);
+      for (const p of paths) {
+        const res = await safeClientGet(p, META_RETRIES, META_TIMEOUT_MS);
+        if (res && res.status === 200 && typeof res.data === "string") return { path: p, html: res.data };
       }
       return null;
     }
-    async function fetchFirstOkHtml(pathList, retriesPerPath = 2, timeoutMs = HTTP_TIMEOUT_MS, maxPaths = Infinity) {
-      let tried = 0;
-      for (const path2 of pathList) {
-        if (tried >= maxPaths) break;
-        tried += 1;
-        const res = await safeClientGet(path2, retriesPerPath, timeoutMs);
-        if (res && res.status === 200 && typeof res.data === "string") {
-          return { html: res.data, path: path2 };
-        }
+    async function findCatalogItem(kind, slug) {
+      const s = normalizeSlug(slug);
+      const lists = kind === "movie" ? [await getFilmes()] : [await getSeriesPortuguesas(), await getNovelasPortuguesas()];
+      for (const arr of lists) {
+        const hit = arr.find((x) => normalizeSlug(x.slug) === s);
+        if (hit) return clone(hit);
       }
       return null;
     }
-    function findCatalogItemBySlug(slug, contentType) {
-      const s = String(slug || "").trim();
-      if (!s) return null;
-      const lists = [];
-      if (contentType === "movie") {
-        if (filmesCache?.items) lists.push(filmesCache.items);
-      } else {
-        if (seriesPortuguesasCache?.items) lists.push(seriesPortuguesasCache.items);
-        if (novelasPortuguesasCache?.items) lists.push(novelasPortuguesasCache.items);
-      }
-      const slo = s.toLowerCase();
-      const fold = stripDiacritics(s).toLowerCase();
-      for (const items of lists) {
-        const hit = items.find((i) => i.slug === s) || items.find((i) => String(i.slug || "").toLowerCase() === slo) || items.find((i) => stripDiacritics(String(i.slug || "")).toLowerCase() === fold);
-        if (hit) return { ...hit };
-      }
-      return null;
-    }
-    function minimalMovieMetaFromCatalog(slug) {
-      const c = findCatalogItemBySlug(slug, "movie");
-      if (!c) return null;
-      return {
-        id: c.id,
-        name: c.name && String(c.name).trim() ? c.name : toTitleCase(String(slug).replace(/-/g, " ")),
-        slug: c.slug,
-        type: "movie",
-        poster: c.poster,
-        description: c.description,
-        releaseInfo: c.releaseInfo,
-        year: c.year,
-        wpPostId: void 0
-      };
-    }
-    function minimalSeriesMetaFromCatalog(slug) {
-      const c = findCatalogItemBySlug(slug, "series");
-      if (!c) return null;
-      return {
-        id: c.id,
-        name: c.name && String(c.name).trim() ? c.name : toTitleCase(String(slug).replace(/-/g, " ")),
-        slug: c.slug,
-        type: "series",
-        poster: c.poster,
-        description: c.description,
-        releaseInfo: c.releaseInfo,
-        year: c.year,
-        episodes: [
-          {
-            season: 1,
-            episode: 1,
-            name: "A sincronizar epis\xC3\xB3dios\xE2\u20AC\xA6",
-            wpPid: void 0
-          }
-        ]
-      };
-    }
-    var MOVIE_PREFIX_SCRAPER = "novelaspt_movie_";
-    var SERIES_PREFIX_SCRAPER = "novelaspt_series_";
     function shellMovieMetaFromStremioId(decoded) {
-      const d = String(decoded || "");
-      if (!d.startsWith(MOVIE_PREFIX_SCRAPER)) return null;
-      const rawSlug = d.slice(MOVIE_PREFIX_SCRAPER.length);
-      const slug = stripDiacritics(rawSlug).trim().toLowerCase();
+      const id = String(decoded || "");
+      if (!id.startsWith("novelaspt_movie_")) return null;
+      const slug = normalizeSlug(id.slice("novelaspt_movie_".length));
       if (!slug) return null;
-      const desc = "O site n\xC3\xA3o respondeu ao servidor do addon (bloqueio, WAF ou rede). Em datacenters (ex. Render) \xC3\xA9 comum; experimenta correr o addon no teu PC, VPN residencial ou proxy (STREMIO_NP_PROXY). Os streams s\xC3\xB3 funcionam quando o site e a API Zeta ficam acess\xC3\xADveis a partir do servidor.";
       return {
-        id: d,
-        slug,
+        id,
         type: "movie",
+        slug,
         name: toTitleCase(slug.replace(/-/g, " ")),
-        description: desc.slice(0, 1200)
+        description: "Meta temporaria. O site de origem nao respondeu para este titulo."
       };
-    }
-    function seriesShellBaseId(decoded) {
-      const s = String(decoded || "");
-      if (!s.startsWith(SERIES_PREFIX_SCRAPER)) return s;
-      const m = s.match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
-      if (m) return `${SERIES_PREFIX_SCRAPER}${m[1]}`;
-      return s;
     }
     function shellSeriesMetaFromStremioId(decoded) {
-      const baseId = seriesShellBaseId(decoded);
-      if (!baseId.startsWith(SERIES_PREFIX_SCRAPER)) return null;
-      const rawSlug = baseId.slice(SERIES_PREFIX_SCRAPER.length);
-      const slug = stripDiacritics(rawSlug).trim().toLowerCase();
+      const full = String(decoded || "");
+      if (!full.startsWith("novelaspt_series_")) return null;
+      const m = full.match(/^novelaspt_series_(.+):\d+:\d+$/);
+      const id = m ? `novelaspt_series_${m[1]}` : full;
+      const slug = normalizeSlug(id.slice("novelaspt_series_".length));
       if (!slug) return null;
-      const desc = "O site n\xC3\xA3o respondeu ao servidor do addon (bloqueio, WAF ou rede). Experimenta addon local, VPN ou STREMIO_NP_PROXY. Epis\xC3\xB3dios s\xC3\xB3 aparecem quando a p\xC3\xA1gina da s\xC3\xA9rie carregar.";
       return {
-        id: baseId,
-        slug,
+        id,
         type: "series",
+        slug,
         name: toTitleCase(slug.replace(/-/g, " ")),
-        description: desc.slice(0, 1200),
-        episodes: [
-          {
-            season: 1,
-            episode: 1,
-            name: "A sincronizar com o site\xE2\u20AC\xA6",
-            wpPid: void 0
-          }
-        ]
+        description: "Meta temporaria. O site de origem nao respondeu para esta serie.",
+        episodes: [{ season: 1, episode: 1, name: "A sincronizar...", wpPid: void 0 }]
       };
-    }
-    async function warmCatalogForMetaLookup(isMovie) {
-      try {
-        if (isMovie) {
-          if (!filmesCache?.items?.length) await getFilmes();
-        } else {
-          const tasks = [];
-          if (!seriesPortuguesasCache?.items?.length) tasks.push(getSeriesPortuguesas());
-          if (!novelasPortuguesasCache?.items?.length) tasks.push(getNovelasPortuguesas());
-          if (tasks.length) await Promise.all(tasks);
-        }
-      } catch (e) {
-        console.warn(`${LOG_PREFIX2} warmCatalogForMetaLookup: ${e && e.message || e}`.slice(0, 200));
-      }
     }
     async function getFilmeMeta(slug) {
-      const requested = String(slug || "").trim();
-      if (!requested) return null;
-      const cacheKey = normalizeMetaCacheKey(requested);
-      const cached = getMetaCache(movieMetaCache, cacheKey);
-      if (cached) return cached;
-      let fetched = await fetchFirstOkHtml(
-        detailPathsForSlug("filme", requested),
-        META_DETAIL_RETRIES,
-        META_DETAIL_TIMEOUT_MS,
-        META_DETAIL_MAX_PATHS
-      ) || await fetchFirstOkHtml(
-        detailPathsForSlug("serie", requested),
-        META_DETAIL_RETRIES,
-        META_DETAIL_TIMEOUT_MS,
-        META_DETAIL_MAX_PATHS
-      );
+      const key = normalizeSlug(slug);
+      const c = movieMetaCache.get(key);
+      if (c && Date.now() - c.time < META_CACHE_MS) return clone(c.item);
+      const fetched = await fetchDetail(slug, true);
       if (!fetched) {
-        const stale = getMetaCache(movieMetaCache, cacheKey, true);
-        return stale || null;
+        const fallback = await findCatalogItem("movie", slug) || null;
+        if (fallback) {
+          const item2 = { ...fallback, type: "movie" };
+          movieMetaCache.set(key, { time: Date.now(), item: clone(item2) });
+          return item2;
+        }
+        const stale = c?.item || null;
+        return stale ? clone(stale) : null;
       }
       const { html, path: path2 } = fetched;
-      const fromPath = slugFromWpDetailPath(path2, ["filme", "serie"]);
-      const slugForIds = String(fromPath || stripDiacritics(requested)).trim().toLowerCase();
-      if (!slugForIds) return null;
       const $ = cheerio.load(html);
-      const rawName = $("h1").first().text().trim() || $(".heading-archive, .display-page-heading h1").first().text().trim() || slugForIds.replace(/-/g, " ");
-      const name = toTitleCase(rawName);
-      let year = null;
-      let releaseInfo = null;
-      const rel = extractReleaseInfoFromDetailPage($, "movie");
-      if (rel) {
-        if (rel.year != null) year = rel.year;
-        if (rel.releaseInfo != null) releaseInfo = String(rel.releaseInfo).trim();
-      }
-      if (year == null) {
-        const h1y = $("h1").first().text().match(/\((\d{4})\)/);
-        const bodyOneLine = $("body").text().replace(/\s+/g, " ");
-        const bodyAno = bodyOneLine.match(/\bAno do\s+Filme:\s*((?:19|20)\d{2})(?!\d)/i);
-        const yMatch = h1y || bodyAno;
-        if (yMatch) year = parseInt(yMatch[1], 10);
-      }
-      if (!releaseInfo && year != null) releaseInfo = String(year);
-      let imdbId = null;
-      const bodyText = $("body").text();
-      const bodyHtml = $.html();
-      const imdbMatch = bodyText.match(/IMDb[:\s]*(tt\d{7,9})/i) || bodyText.match(/(tt\d{7,9})/) || bodyHtml.match(/imdb\.com\/title\/(tt\d{7,9})/i);
-      if (imdbMatch) imdbId = imdbMatch[1] || imdbMatch[0];
-      const itemPre = { year, releaseInfo };
-      sanitizeItemYearRelease(itemPre);
-      year = itemPre.year ?? null;
-      releaseInfo = itemPre.releaseInfo ?? null;
-      let poster = $('meta[property="og:image"]').attr("content") || $(".display-item img.thumb, .item-box img").first().attr("src") || $("img.thumb, .poster img").first().attr("data-original");
-      if (poster && !poster.startsWith("http")) poster = absoluteUrl(poster);
-      if (poster) poster = poster.trim();
-      const backdrop = extractSiteBackdropUrl($, poster);
-      let background = backdrop || (poster ? upgradeTmdbToOriginalForBackdrop(poster) : void 0);
-      if (background) background = background.trim();
-      let description = extractSynopsis($);
-      if (!description) {
-        description = $(".plot, .description, .entry-content, .content, .single-desc").first().text().trim().slice(0, DESC_MAX) || void 0;
-      } else if (description.length > DESC_MAX) description = description.slice(0, DESC_MAX);
-      const wpPostId = wpPostIdFromHtml(html) || parseInt($(".zetaflix_player_option").first().attr("data-post") || "", 10) || null;
+      const slugFromPath = normalizeSlug(path2.split("/").filter(Boolean).pop());
+      const canonicalSlug = slugFromPath || key;
+      const name = toTitleCase(
+        $("h1").first().text().trim() || $(".display-page-heading h1").first().text().trim() || canonicalSlug.replace(/-/g, " ")
+      );
+      const desc = extractSynopsis($);
+      const year = yearFromText($(".details-desc").first().text() || $("body").text()) || yearFromText($("h1").first().text());
+      const releaseInfo = year ? String(year) : void 0;
+      const poster = absoluteUrl($('meta[property="og:image"]').attr("content") || $("img").first().attr("src") || "");
+      const imdbM = $.html().match(/imdb\.com\/title\/(tt\d{7,9})/i) || $("body").text().match(/(tt\d{7,9})/i);
+      const imdbId = imdbM ? String(imdbM[1] || imdbM[0]).toLowerCase() : void 0;
+      const wpPostId = parseInt($.html().match(/[?&]p=(\d+)/)?.[1] || "", 10) || parseInt($(".zetaflix_player_option").first().attr("data-post") || "", 10) || void 0;
       const item = {
-        id: `novelaspt_movie_${slugForIds}`,
-        name,
-        slug: slugForIds,
+        id: `novelaspt_movie_${canonicalSlug}`,
         type: "movie",
-        year: year || void 0,
-        releaseInfo: releaseInfo || void 0,
+        slug: canonicalSlug,
+        name,
+        description: desc,
+        year,
+        releaseInfo,
         poster: poster || void 0,
-        background: background || void 0,
-        description,
-        imdbId: imdbId || void 0,
-        wpPostId: Number.isFinite(wpPostId) && wpPostId > 0 ? wpPostId : void 0
+        imdbId,
+        wpPostId: Number.isFinite(wpPostId) ? wpPostId : void 0
       };
-      if (!item.imdbId) {
-        const resolved = await findImdbIdByTitle("movie", item.name, item.year ?? null);
-        if (resolved) item.imdbId = resolved;
-      }
-      await enrichMetaFromCinemeta(item, "movie");
-      sanitizeItemYearRelease(item);
-      setMetaCache(movieMetaCache, cacheKey, item);
-      setMetaCache(movieMetaCache, slugForIds, item);
-      return clonePlain(item);
+      movieMetaCache.set(key, { time: Date.now(), item: clone(item) });
+      movieMetaCache.set(canonicalSlug, { time: Date.now(), item: clone(item) });
+      return clone(item);
     }
     async function getSeriesMeta(slug) {
-      const requested = String(slug || "").trim();
-      if (!requested) return null;
-      const cacheKey = normalizeMetaCacheKey(requested);
-      const cached = getMetaCache(seriesMetaCache, cacheKey);
-      if (cached) return cached;
-      let fetched = await fetchFirstOkHtml(
-        detailPathsForSlug("serie", requested),
-        META_DETAIL_RETRIES,
-        META_DETAIL_TIMEOUT_MS,
-        META_DETAIL_MAX_PATHS
-      ) || await fetchFirstOkHtml(
-        detailPathsForSlug("filme", requested),
-        META_DETAIL_RETRIES,
-        META_DETAIL_TIMEOUT_MS,
-        META_DETAIL_MAX_PATHS
-      );
+      const key = normalizeSlug(slug);
+      const c = seriesMetaCache.get(key);
+      if (c && Date.now() - c.time < META_CACHE_MS) return clone(c.item);
+      const fetched = await fetchDetail(slug, false);
       if (!fetched) {
-        const stale = getMetaCache(seriesMetaCache, cacheKey, true);
-        return stale || null;
+        const fallback = await findCatalogItem("series", slug) || null;
+        if (fallback) {
+          const item2 = {
+            ...fallback,
+            type: "series",
+            episodes: [{ season: 1, episode: 1, name: "A sincronizar...", wpPid: void 0 }]
+          };
+          seriesMetaCache.set(key, { time: Date.now(), item: clone(item2) });
+          return item2;
+        }
+        const stale = c?.item || null;
+        return stale ? clone(stale) : null;
       }
       const { html, path: path2 } = fetched;
-      const fromPath = slugFromWpDetailPath(path2, ["filme", "serie"]);
-      const slugForIds = String(fromPath || stripDiacritics(requested)).trim().toLowerCase();
-      if (!slugForIds) return null;
       const $ = cheerio.load(html);
-      const rawName = $("h1").first().text().trim() || $(".display-page-heading h1").first().text().trim() || slugForIds.replace(/-/g, " ");
-      const name = toTitleCase(rawName);
-      let year = null;
-      let releaseInfo = null;
-      const relS = extractReleaseInfoFromDetailPage($, "series");
-      if (relS) {
-        if (relS.year != null) year = relS.year;
-        if (relS.releaseInfo != null) releaseInfo = String(relS.releaseInfo).trim();
-      }
-      if (year == null) {
-        const h1y = $("h1").first().text().match(/\((\d{4})\)/);
-        const bodyOneLine = $("body").text().replace(/\s+/g, " ");
-        const bodyAno = bodyOneLine.match(/\bAno do\s+SÃ©rie:\s*((?:19|20)\d{2})(?!\d)/i) || bodyOneLine.match(/\bAno da\s+SÃ©rie:\s*((?:19|20)\d{2})(?!\d)/i);
-        const yMatch = h1y || bodyAno;
-        if (yMatch) year = parseInt(yMatch[1], 10);
-      }
-      if (!releaseInfo && year != null) releaseInfo = String(year);
-      let imdbId = null;
-      const bodyText = $("body").text();
-      const bodyHtml = $.html();
-      const imdbMatch = bodyText.match(/IMDb[:\s]*(tt\d{7,9})/i) || bodyText.match(/(tt\d{7,9})/) || bodyHtml.match(/imdb\.com\/title\/(tt\d{7,9})/i);
-      if (imdbMatch) imdbId = imdbMatch[1] || imdbMatch[0];
-      const itemPreS = { year, releaseInfo };
-      sanitizeItemYearRelease(itemPreS);
-      year = itemPreS.year ?? null;
-      releaseInfo = itemPreS.releaseInfo ?? null;
-      let poster = $('meta[property="og:image"]').attr("content");
-      if (poster && !poster.startsWith("http")) poster = absoluteUrl(poster);
-      if (poster) poster = poster.trim();
-      const backdrop = extractSiteBackdropUrl($, poster);
-      let background = backdrop || (poster ? upgradeTmdbToOriginalForBackdrop(poster) : void 0);
-      if (background) background = background.trim();
-      let description = extractSynopsis($);
-      if (!description) {
-        description = $(".plot, .description, .entry-content, .single-desc").first().text().trim().slice(0, DESC_MAX) || void 0;
-      } else if (description.length > DESC_MAX) description = description.slice(0, DESC_MAX);
+      const slugFromPath = normalizeSlug(path2.split("/").filter(Boolean).pop());
+      const canonicalSlug = slugFromPath || key;
+      const name = toTitleCase(
+        $("h1").first().text().trim() || $(".display-page-heading h1").first().text().trim() || canonicalSlug.replace(/-/g, " ")
+      );
+      const desc = extractSynopsis($);
+      const year = yearFromText($(".details-desc").first().text() || $("body").text()) || yearFromText($("h1").first().text());
+      const releaseInfo = year ? String(year) : void 0;
+      const poster = absoluteUrl($('meta[property="og:image"]').attr("content") || $("img").first().attr("src") || "");
+      const imdbM = $.html().match(/imdb\.com\/title\/(tt\d{7,9})/i) || $("body").text().match(/(tt\d{7,9})/i);
+      const imdbId = imdbM ? String(imdbM[1] || imdbM[0]).toLowerCase() : void 0;
       const rawEpisodes = [];
       $(".play-ep").each((_, el) => {
         const $el = $(el);
         const wpPid = parseInt($el.attr("data-pid") || "", 10);
-        const episode = parseInt($el.attr("data-epid") || "", 10);
-        const rawSsid = parseInt($el.attr("data-ssid") || "", 10);
+        const ep = parseInt($el.attr("data-epid") || "", 10);
+        const ssid = parseInt($el.attr("data-ssid") || "", 10);
         if (!Number.isFinite(wpPid) || wpPid <= 0) return;
-        if (!Number.isFinite(episode) || episode < 1) return;
-        if (!Number.isFinite(rawSsid) || rawSsid < 1) return;
-        const epTitle = $el.find(".ep-title").first().text().trim();
-        const epName = epTitle || `Epis\xC3\xB3dio ${episode}`;
-        if (!rawEpisodes.some((e) => e.rawSsid === rawSsid && e.episode === episode)) {
-          rawEpisodes.push({
-            rawSsid,
-            episode,
-            wpPid,
-            name: epName
-          });
+        if (!Number.isFinite(ep) || ep <= 0) return;
+        if (!Number.isFinite(ssid) || ssid <= 0) return;
+        const title = $el.find(".ep-title").first().text().trim() || `Episodio ${ep}`;
+        if (!rawEpisodes.some((e) => e.rawSsid === ssid && e.episode === ep)) {
+          rawEpisodes.push({ rawSsid: ssid, episode: ep, wpPid, name: title });
         }
       });
-      const episodes = remapEpisodeSeasons(rawEpisodes);
-      episodes.sort((a, b) => a.season - b.season || a.episode - b.episode);
+      let episodes = remapEpisodes(rawEpisodes);
       if (!episodes.length) {
-        episodes.push({
-          season: 1,
-          episode: 1,
-          name: "Epis\xC3\xB3dios em atualiza\xC3\xA7\xC3\xA3o",
-          wpPid: void 0
-        });
+        episodes = [{ season: 1, episode: 1, name: "A sincronizar...", wpPid: void 0 }];
       }
       const item = {
-        id: `novelaspt_series_${slugForIds}`,
-        name,
-        slug: slugForIds,
+        id: `novelaspt_series_${canonicalSlug}`,
         type: "series",
-        year: year || void 0,
-        releaseInfo: releaseInfo || void 0,
+        slug: canonicalSlug,
+        name,
+        description: desc,
+        year,
+        releaseInfo,
         poster: poster || void 0,
-        background: background || void 0,
-        description,
-        imdbId: imdbId || void 0,
+        imdbId,
         episodes
       };
-      if (!item.imdbId) {
-        const resolved = await findImdbIdByTitle("series", item.name, item.year ?? null);
-        if (resolved) item.imdbId = resolved;
-      }
-      await enrichMetaFromCinemeta(item, "series");
-      sanitizeItemYearRelease(item);
-      setMetaCache(seriesMetaCache, cacheKey, item);
-      setMetaCache(seriesMetaCache, slugForIds, item);
-      return clonePlain(item);
-    }
-    function normalizeStreamUrlKey(u) {
-      if (!u || typeof u !== "string") return "";
-      try {
-        const x = new URL(u.trim());
-        return `${x.origin}${x.pathname}${x.search}`.toLowerCase();
-      } catch (_) {
-        return u.trim().toLowerCase();
-      }
+      seriesMetaCache.set(key, { time: Date.now(), item: clone(item) });
+      seriesMetaCache.set(canonicalSlug, { time: Date.now(), item: clone(item) });
+      return clone(item);
     }
     async function getMovieStreamSources(wpPostId) {
       if (!wpPostId) return [];
@@ -62481,25 +61631,21 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         let res;
         try {
           res = await zetaClient.get(`/${wpPostId}/mv/${n}`);
-        } catch (e) {
-          logScrapeNetworkError("zeta", `/${wpPostId}/mv/${n}`, e);
+        } catch (_) {
           break;
         }
         if (res.status !== 200 || !res.data) break;
-        const d = res.data;
-        if (d.type === false && !d.embed_url) break;
-        if (!d.embed_url || typeof d.embed_url !== "string") continue;
-        let u = d.embed_url.trim();
-        if (u.startsWith("//")) u = "https:" + u;
-        if (u.startsWith("http://")) u = u.replace(/^http:\/\//i, "https://");
-        const key = normalizeStreamUrlKey(u);
-        if (!key || seen.has(key)) continue;
+        const u0 = String(res.data.embed_url || "").trim();
+        if (!u0) {
+          if (res.data.type === false) break;
+          continue;
+        }
+        let u = u0.startsWith("//") ? `https:${u0}` : u0;
+        u = u.replace(/^http:\/\//i, "https://");
+        const key = u.toLowerCase();
+        if (seen.has(key)) continue;
         seen.add(key);
-        out.push({
-          type: "url",
-          title: `Op\xC3\xA7\xC3\xA3o ${out.length + 1}`,
-          url: u
-        });
+        out.push({ type: "url", title: `Opcao ${out.length + 1}`, url: u });
       }
       return out;
     }
@@ -62508,39 +61654,25 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       let res;
       try {
         res = await zetaClient.get(`/tvep/${wpEpisodePid}`);
-      } catch (e) {
-        logScrapeNetworkError("zeta", `/tvep/${wpEpisodePid}`, e);
+      } catch (_) {
         return [];
       }
-      if (res.status !== 200 || !res.data) return [];
-      const embed = res.data.embed;
-      if (!Array.isArray(embed) || embed.length === 0) return [];
+      if (res.status !== 200 || !res.data || !Array.isArray(res.data.embed)) return [];
+      const out = [];
       const seen = /* @__PURE__ */ new Set();
-      const rows = [];
-      for (let i = 0; i < embed.length; i++) {
-        const item = embed[i];
-        let u = (item.code || "").trim();
-        if (u.startsWith("//")) u = "https:" + u;
-        if (u.startsWith("http://")) u = u.replace(/^http:\/\//i, "https://");
-        if (!u) continue;
-        const key = normalizeStreamUrlKey(u);
-        if (!key || seen.has(key)) continue;
+      for (const row of res.data.embed) {
+        const u0 = String(row.code || "").trim();
+        if (!u0) continue;
+        let u = u0.startsWith("//") ? `https:${u0}` : u0;
+        u = u.replace(/^http:\/\//i, "https://");
+        const key = u.toLowerCase();
+        if (seen.has(key)) continue;
         seen.add(key);
-        const title = item.name || item.title || `Op\xC3\xA7\xC3\xA3o ${rows.length + 1}`;
-        rows.push({ type: "url", title, url: u });
+        out.push({ type: "url", title: row.name || row.title || `Opcao ${out.length + 1}`, url: u });
       }
-      return rows;
-    }
-    async function getSeriesEpisodes(seriesSlug) {
-      const meta = await getSeriesMeta(seriesSlug);
-      if (!meta || !meta.episodes) return [];
-      return meta.episodes;
+      return out;
     }
     function sanitizeCatalogItems(items) {
-      if (!Array.isArray(items) || !items.length) return items;
-      for (const it of items) {
-        sanitizeItemYearRelease(it);
-      }
       return items;
     }
     module2.exports = {
@@ -62551,46 +61683,47 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       sanitizeCatalogItems,
       getFilmeMeta,
       getSeriesMeta,
-      minimalMovieMetaFromCatalog,
-      minimalSeriesMetaFromCatalog,
-      shellMovieMetaFromStremioId,
-      shellSeriesMetaFromStremioId,
-      warmCatalogForMetaLookup,
       getMovieStreamSources,
       getTvEpisodeStreamSources,
-      getSeriesEpisodes
+      shellMovieMetaFromStremioId,
+      shellSeriesMetaFromStremioId
     };
   }
 });
 
 // index.js
 var http = require("http");
-var crypto = require("crypto");
 var fs = require("fs");
-var os = require("os");
 var path = require("path");
+var crypto = require("crypto");
 var scraper = require_scraper();
-var PORT = process.env.PORT || 7e3;
+var PORT = Number(process.env.PORT) || 7e3;
+var HOST = "0.0.0.0";
 var LOG_PREFIX = "[NovelasPT]";
-var EXPOSE_IMDB_ID_TO_CLIENT = process.env.STREMIO_NP_EXPOSE_IMDB_ID === "1";
 var MOVIE_PREFIX = "novelaspt_movie_";
 var SERIES_PREFIX = "novelaspt_series_";
-var ADDON_DISPLAY_NAME = "Filmes, Series e Novelas Portuguesas Addon Stremio";
+var ADDON_NAME = "Filmes, Series e Novelas Portuguesas Addon Stremio";
+var VERSION = "2.0.0";
+var CATALOG_PAGE_SIZE = 100;
+var CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type"
+};
 function manifestOriginFromRequest(req) {
   const host = req.headers.host || `127.0.0.1:${PORT}`;
-  const raw = (req.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
-  const proto = raw === "https" || raw === "http" ? raw : "http";
+  const protoRaw = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
+  const proto = protoRaw === "https" ? "https" : "http";
   return `${proto}://${host}`;
 }
-function getManifest(config, originBase) {
+function getManifest(originBase) {
   const base = { configurable: false, configurationRequired: false };
-  const origin = originBase && String(originBase).replace(/\/$/, "");
-  const logo = origin ? `${origin}/addon-logo.png` : void 0;
+  const logo = originBase ? `${originBase.replace(/\/$/, "")}/addon-logo.svg` : void 0;
   return {
     id: "pt.filmes-series-portuguesas",
-    name: ADDON_DISPLAY_NAME,
-    description: "Filmes, s\xC3\xA9ries e novelas portugueses. Cat\xC3\xA1logos separados: filmes, s\xC3\xA9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
-    version: "1.0.22",
+    version: VERSION,
+    name: ADDON_NAME,
+    description: "Filmes, series e novelas portuguesas com streams externos.",
     resources: ["catalog", "meta", "stream"],
     types: ["movie", "series"],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -62600,404 +61733,25 @@ function getManifest(config, originBase) {
         type: "movie",
         id: "novelaspt_filmes",
         name: "Filmes Portugueses",
-        extra: [
-          { name: "search", isRequired: false },
-          { name: "skip", isRequired: false }
-        ]
+        extra: [{ name: "search", isRequired: false }, { name: "skip", isRequired: false }]
       },
       {
         type: "series",
         id: "novelaspt_series",
-        name: "S\xC3\xA9ries Portuguesas",
-        extra: [
-          { name: "search", isRequired: false },
-          { name: "skip", isRequired: false }
-        ]
+        name: "Series Portuguesas",
+        extra: [{ name: "search", isRequired: false }, { name: "skip", isRequired: false }]
       },
       {
         type: "series",
         id: "novelaspt_novelas",
         name: "Novelas Portuguesas",
-        extra: [
-          { name: "search", isRequired: false },
-          { name: "skip", isRequired: false }
-        ]
+        extra: [{ name: "search", isRequired: false }, { name: "skip", isRequired: false }]
       }
     ],
-    behaviorHints: base,
-    stremioAddonsConfig: {
-      issuer: "https://stremio-addons.net",
-      signature: "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..CvmszUdKMfeHbghC9AHUrg.yH5koKZYZegsGzt5niT80p9iegzINGvYKaBGqboGYbCaomKmUBr_FWYB7xH3cmXNT8qf2xFNxBsMMmWEUt-vzY2N_daIh1uLIMihzvN6aygGHV5AAjyrJmqG4anQYQ5U.u3_ityrxIwgFlCZg2n7DHg"
-    }
+    behaviorHints: base
   };
 }
-var STREMIO_YEAR_MIN = 1870;
-var STREMIO_YEAR_MAX = 2100;
-function plausibleStremioYear(y) {
-  if (y == null) return null;
-  const n = typeof y === "number" ? y : parseInt(String(y), 10);
-  if (!Number.isFinite(n) || n < STREMIO_YEAR_MIN || n > STREMIO_YEAR_MAX) return null;
-  return n;
-}
-function stremioReleaseInfoFromItem(item) {
-  const ri = item.releaseInfo != null ? String(item.releaseInfo).trim() : "";
-  if (ri) {
-    if (/^\d{1,3}$/.test(ri)) return void 0;
-    return ri;
-  }
-  const y = plausibleStremioYear(item.year);
-  return y != null ? String(y) : void 0;
-}
-function seriesBaseYearForVideos(item) {
-  const y = plausibleStremioYear(item.year);
-  if (y != null) return y;
-  const ri = item.releaseInfo != null ? String(item.releaseInfo).trim() : "";
-  const m = ri.match(/((?:19|20)\d{2})/);
-  if (m) {
-    const n = parseInt(m[1], 10);
-    if (n >= STREMIO_YEAR_MIN && n <= STREMIO_YEAR_MAX) return n;
-  }
-  return null;
-}
-function metaPreviewFromItem(item) {
-  const releaseInfo = stremioReleaseInfoFromItem(item);
-  return {
-    id: item.id,
-    type: item.type,
-    name: item.name,
-    poster: item.poster,
-    posterShape: "poster",
-    description: item.description,
-    ...releaseInfo != null && { releaseInfo },
-    ...EXPOSE_IMDB_ID_TO_CLIENT && item.imdbId != null && { imdbId: item.imdbId, imdb_id: item.imdbId },
-    ...item.imdbRating != null && item.imdbRating !== "" && { imdbRating: String(item.imdbRating) }
-  };
-}
-function metaFullFromItem(item) {
-  const releaseInfo = stremioReleaseInfoFromItem(item);
-  const base = {
-    id: item.id,
-    type: item.type,
-    name: item.name,
-    posterShape: "poster",
-    ...item.poster != null && { poster: item.poster },
-    ...item.description != null && item.description !== "" && { description: item.description },
-    ...releaseInfo != null && { releaseInfo },
-    ...EXPOSE_IMDB_ID_TO_CLIENT && item.imdbId != null && { imdbId: item.imdbId, imdb_id: item.imdbId },
-    ...item.background != null && { background: item.background },
-    ...item.genres != null && item.genres.length > 0 && { genres: item.genres },
-    ...item.cast != null && { cast: item.cast },
-    ...item.director != null && { director: item.director },
-    ...item.imdbRating != null && item.imdbRating !== "" && { imdbRating: String(item.imdbRating) },
-    ...item.runtime != null && { runtime: item.runtime },
-    ...item.trailers != null && Array.isArray(item.trailers) && item.trailers.length > 0 && { trailers: item.trailers },
-    ...item.links != null && Array.isArray(item.links) && item.links.length > 0 && { links: item.links }
-  };
-  if (item.type === "series" && item.episodes && item.episodes.length) {
-    const y0 = seriesBaseYearForVideos(item) ?? 2020;
-    base.videos = item.episodes.map((ep, idx) => {
-      const season = Math.max(1, Number(ep.season) || 1);
-      const episode = Math.max(1, Number(ep.episode) || 1);
-      const day = 1 + idx % 28;
-      const mon = 1 + (idx + season * 31 + episode) % 12;
-      const released = `${y0}-${String(mon).padStart(2, "0")}-${String(day).padStart(2, "0")}T12:00:00.000Z`;
-      return {
-        id: `${item.id}:${season}:${episode}`,
-        title: ep.name || `Epis\xC3\xB3dio ${episode}`,
-        episode,
-        season,
-        released
-      };
-    });
-  }
-  if (item.type === "movie") {
-    const yFromRi = (() => {
-      const ri = item.releaseInfo != null ? String(item.releaseInfo).trim() : "";
-      const m = ri.match(/((?:19|20)\d{2})/);
-      return m ? parseInt(m[1], 10) : null;
-    })();
-    const y = plausibleStremioYear(item.year) ?? yFromRi;
-    const safeY = y != null && y >= STREMIO_YEAR_MIN && y <= STREMIO_YEAR_MAX ? y : 2020;
-    const nm = item.name && String(item.name).trim() ? String(item.name).trim() : "Filme";
-    base.videos = [
-      {
-        id: item.id,
-        title: nm,
-        released: `${safeY}-06-15T12:00:00.000Z`
-      }
-    ];
-  }
-  return base;
-}
-function dedupeStreamSourcesByUrl(sources) {
-  const seen = /* @__PURE__ */ new Set();
-  const out = [];
-  for (const s of sources) {
-    const u = s && s.url;
-    if (!u || typeof u !== "string") continue;
-    let key;
-    try {
-      const x = new URL(u.trim());
-      key = `${x.origin}${x.pathname}${x.search}`.toLowerCase();
-    } catch (_) {
-      key = u.trim().toLowerCase();
-    }
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    out.push(s);
-  }
-  return out;
-}
-function streamIdFromUrl(url) {
-  return crypto.createHash("sha256").update(String(url)).digest("hex").slice(0, 24);
-}
-async function handleCatalog(type, id, extra, config) {
-  let items = [];
-  if (type === "movie") {
-    items = await scraper.getFilmes();
-  } else if (type === "series") {
-    if (id === "novelaspt_novelas") {
-      items = await scraper.getNovelasPortuguesas();
-    } else if (id === "novelaspt_series") {
-      items = await scraper.getSeriesPortuguesas();
-    } else {
-      console.warn(`${LOG_PREFIX} HTTP catalog: id desconhecido type=series id=${id} \xE2\u2020\u2019 0 metas`);
-    }
-  } else {
-    console.warn(`${LOG_PREFIX} HTTP catalog: tipo desconhecido type=${type} id=${id}`);
-  }
-  const search = extra?.search;
-  const beforeSearch = items.length;
-  if (search && typeof search === "string" && search.trim() !== "") {
-    const q = normalizeForCatalogSearch(search);
-    items = items.filter((i) => {
-      if (!q) return true;
-      const name = normalizeForCatalogSearch(i.name || "");
-      if (name.includes(q)) return true;
-      const slugAsText = normalizeForCatalogSearch(String(i.slug || "").replace(/-/g, " "));
-      if (slugAsText.includes(q)) return true;
-      return false;
-    });
-    console.log(
-      `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \xE2\u2020\u2019 ${items.length} metas ap\xC3\xB3s pesquisa "${search}" (${beforeSearch} \xE2\u2020\u2019 ${items.length})`
-    );
-  } else {
-    console.log(`${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \xE2\u2020\u2019 ${items.length} metas (total antes da pagina\xC3\xA7\xC3\xA3o)`);
-  }
-  const skip = catalogSkipFromExtra(extra);
-  const page = items.slice(skip, skip + STREMIO_CATALOG_PAGE_SIZE);
-  console.log(
-    `${LOG_PREFIX} HTTP catalog p\xC3\xA1gina: skip=${skip} \xE2\u2020\u2019 ${page.length} metas (p\xC3\xA1gina ${STREMIO_CATALOG_PAGE_SIZE})`
-  );
-  return { metas: page.map(metaPreviewFromItem) };
-}
-function stripStreamEpisodeSuffix(seriesId) {
-  const m = String(seriesId).match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
-  if (m) return m[1];
-  return String(seriesId).replace(SERIES_PREFIX, "");
-}
-function seriesMetaBaseIdFromDecoded(decoded) {
-  const s = String(decoded);
-  if (!s.startsWith(SERIES_PREFIX)) return s;
-  const m = s.match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
-  if (m) return `${SERIES_PREFIX}${m[1]}`;
-  return s;
-}
-function fallbackTitleFromSlug(slug) {
-  const raw = String(slug || "").trim();
-  if (!raw) return "Sem t\xC3\xADtulo";
-  return raw.split(/[-_]+/).filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-}
-async function handleMeta(type, id, config) {
-  const decoded = safeDecodeStremioId(id);
-  if (!decoded.startsWith(MOVIE_PREFIX) && !decoded.startsWith(SERIES_PREFIX)) {
-    return { meta: null };
-  }
-  const slug = decoded.startsWith(MOVIE_PREFIX) ? decoded.replace(MOVIE_PREFIX, "") : stripStreamEpisodeSuffix(decoded);
-  let item = null;
-  let metaFromCatalogOnly = false;
-  let metaShell = false;
-  if (decoded.startsWith(MOVIE_PREFIX)) {
-    item = await scraper.getFilmeMeta(slug);
-    if (!item) {
-      item = scraper.minimalMovieMetaFromCatalog(slug);
-      metaFromCatalogOnly = !!item;
-    }
-    if (!item) {
-      item = scraper.shellMovieMetaFromStremioId(decoded);
-      metaFromCatalogOnly = true;
-      metaShell = !!item;
-    }
-  } else {
-    item = await scraper.getSeriesMeta(slug);
-    if (!item) {
-      item = scraper.minimalSeriesMetaFromCatalog(slug);
-      metaFromCatalogOnly = !!item;
-    }
-    if (!item) {
-      item = scraper.shellSeriesMetaFromStremioId(decoded);
-      metaFromCatalogOnly = true;
-      metaShell = !!item;
-    }
-  }
-  if (!item) return { meta: null };
-  const metaResponseId = decoded.startsWith(MOVIE_PREFIX) ? decoded : seriesMetaBaseIdFromDecoded(decoded);
-  if (item.id !== metaResponseId) {
-    item.id = metaResponseId;
-  }
-  if (!item.name || !String(item.name).trim()) {
-    item.name = fallbackTitleFromSlug(slug);
-  }
-  if (metaShell) {
-    console.warn(
-      `${LOG_PREFIX} meta SHELL (site inacess\xC3\xADvel ao servidor \xE2\u20AC\u201D bloqueio/WAF/rede). Streams podem falhar. Op\xC3\xA7\xC3\xB5es: addon em PC local, STREMIO_NP_PROXY, ou VPN residencial. id=${decoded.slice(0, 100)}`
-    );
-  } else if (metaFromCatalogOnly) {
-    console.warn(
-      `${LOG_PREFIX} meta s\xC3\xB3 a partir do cat\xC3\xA1logo (detalhe HTTP falhou) slug=${slug} type=${decoded.startsWith(MOVIE_PREFIX) ? "movie" : "series"}`
-    );
-  }
-  scraper.sanitizeCatalogItems([item]);
-  const metaOut = metaFullFromItem(item);
-  metaOut.type = decoded.startsWith(MOVIE_PREFIX) ? "movie" : "series";
-  if (!metaOut.name || !String(metaOut.name).trim()) {
-    metaOut.name = fallbackTitleFromSlug(slug);
-  }
-  const kind = decoded.startsWith(MOVIE_PREFIX) ? "filme" : "s\xC3\xA9rie ou novela (mesmo tipo no Stremio)";
-  const ri = metaOut.releaseInfo ?? "-";
-  const yr = item.year != null ? String(item.year) : "-";
-  const imdbInternal = item.imdbId ?? "-";
-  const imdbClient = EXPOSE_IMDB_ID_TO_CLIENT ? "sim" : "n\xC3\xA3o (evita fus\xC3\xA3o Cinemeta)";
-  const note = item.imdbRating != null ? String(item.imdbRating) : "-";
-  console.log(
-    `${LOG_PREFIX} meta stremio=${type} | ${kind} | t\xC3\xADtulo="${item.name}" | slug=${slug} | releaseInfo=${ri} | year=${yr} | imdbId_interno=${imdbInternal} | imdb_id\xE2\u2020\u2019cliente=${imdbClient} | imdbRating=${note}`
-  );
-  return { meta: metaOut };
-}
-async function handleStream(type, id, extra, _config) {
-  const decoded = safeDecodeStremioId(id);
-  if (!decoded.startsWith(MOVIE_PREFIX) && !decoded.startsWith(SERIES_PREFIX)) {
-    return { streams: [] };
-  }
-  const itemNameBase = "Novelas Portuguesas";
-  let itemName = itemNameBase;
-  let sources = [];
-  let slugForLog = "";
-  let kindLog = "";
-  let epLog = "";
-  if (type === "movie") {
-    kindLog = "filme";
-    const slug = decoded.replace(MOVIE_PREFIX, "");
-    slugForLog = slug;
-    const meta = await scraper.getFilmeMeta(slug);
-    if (!meta?.wpPostId) {
-      console.log(
-        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xC3\xADtulo="${meta?.name || "?"}" | slug=${slug} | sem wpPostId \xE2\u2020\u2019 0 op\xC3\xA7\xC3\xB5es`
-      );
-      return { streams: [] };
-    }
-    itemName = meta.name || itemNameBase;
-    sources = await scraper.getMovieStreamSources(meta.wpPostId);
-  } else if (type === "series") {
-    kindLog = "s\xC3\xA9rie/novela";
-    const epMatch = decoded.match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
-    let slug;
-    let season;
-    let episode;
-    if (epMatch) {
-      slug = epMatch[1];
-      season = Math.max(1, parseInt(epMatch[2], 10) || 1);
-      episode = Math.max(1, parseInt(epMatch[3], 10) || 1);
-    } else {
-      slug = decoded.replace(SERIES_PREFIX, "");
-      season = Math.max(1, parseInt(String(extra?.season ?? 1), 10) || 1);
-      episode = Math.max(1, parseInt(String(extra?.episode ?? 1), 10) || 1);
-    }
-    slugForLog = slug;
-    const meta = await scraper.getSeriesMeta(slug);
-    if (!meta) {
-      console.log(
-        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | slug=${slug} | meta inexistente \xE2\u2020\u2019 0 op\xC3\xA7\xC3\xB5es`
-      );
-      return { streams: [] };
-    }
-    itemName = meta.name || itemNameBase;
-    const ep = meta.episodes?.find((e) => e.season === season && e.episode === episode);
-    const epLabel = `S${String(season).padStart(2, "0")}E${String(episode).padStart(2, "0")}`;
-    const epTitle = ep?.name ? ` "${ep.name}"` : "";
-    epLog = ` | epis\xC3\xB3dio=${epLabel}${epTitle}`;
-    if (!ep?.wpPid) {
-      console.log(
-        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xC3\xADtulo="${itemName}" | slug=${slug}${epLog} | sem wpPid \xE2\u2020\u2019 0 op\xC3\xA7\xC3\xB5es`
-      );
-      return { streams: [] };
-    }
-    sources = await scraper.getTvEpisodeStreamSources(ep.wpPid);
-  }
-  sources = dedupeStreamSourcesByUrl(sources);
-  const opts = sources.map((s, i) => `${i + 1}) ${s.title || "Player"}`).join(" | ");
-  if (!sources.length) {
-    console.log(
-      `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xC3\xADtulo="${itemName}" | slug=${slugForLog}${epLog} | 0 op\xC3\xA7\xC3\xB5es (Zeta/embed vazio)`
-    );
-    return { streams: [] };
-  }
-  console.log(
-    `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xC3\xADtulo="${itemName}" | slug=${slugForLog}${epLog} | ${sources.length} op\xC3\xA7\xC3\xA3o(\xC3\xB5es): ${opts}`
-  );
-  return {
-    streams: sources.map((s) => ({
-      id: `novelaspt-${streamIdFromUrl(s.url)}`,
-      name: itemName,
-      title: s.title || "Player",
-      externalUrl: s.url,
-      source: "Novelas Portuguesas"
-    }))
-  };
-}
-function parsePath(pathname) {
-  const parts = pathname.replace(/^\//, "").split("/").filter(Boolean);
-  if (parts.length >= 2 && parts[0] && parts[1] && !parts[0].startsWith("catalog") && !parts[0].startsWith("meta") && !parts[0].startsWith("stream") && parts[0] !== "configure" && parts[0] !== "manifest.json") {
-    const provider = decodeURIComponent(parts[0]);
-    const apiKey = decodeURIComponent(parts[1]);
-    const rest = parts.slice(2);
-    return { config: { provider, apiKey }, pathRest: rest };
-  }
-  return { config: null, pathRest: parts };
-}
-function parseRequestUrl(req) {
-  const host = req.headers.host || "localhost";
-  const u = new URL(req.url || "/", `http://${host}`);
-  const query = Object.fromEntries(u.searchParams);
-  return { pathname: u.pathname, query };
-}
-function parseCatalogPathExtras(pathRest) {
-  const extra = {};
-  if (!pathRest || pathRest.length <= 3) return extra;
-  for (let i = 3; i < pathRest.length; i++) {
-    let seg = decodeURIComponent(String(pathRest[i]));
-    seg = seg.replace(/\.json$/i, "");
-    if (!seg) continue;
-    for (const pair of seg.split("&")) {
-      const eq = pair.indexOf("=");
-      if (eq <= 0) continue;
-      const k = pair.slice(0, eq).trim();
-      let v = pair.slice(eq + 1);
-      try {
-        v = decodeURIComponent(v.replace(/\+/g, " "));
-      } catch (_) {
-      }
-      if (k) extra[k] = v;
-    }
-  }
-  return extra;
-}
-function normalizeForCatalogSearch(s) {
-  if (!s || typeof s !== "string") return "";
-  return s.toLowerCase().normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "").replace(/\s+/g, " ").trim();
-}
-var STREMIO_CATALOG_PAGE_SIZE = 100;
-function safeDecodeStremioId(raw) {
+function safeDecode(raw) {
   let s = String(raw || "");
   for (let i = 0; i < 3; i++) {
     try {
@@ -63010,219 +61764,254 @@ function safeDecodeStremioId(raw) {
   }
   return s;
 }
-function catalogSkipFromExtra(extra) {
-  const v = extra && extra.skip;
-  if (v == null) return 0;
-  const n = parseInt(String(v).trim(), 10);
-  if (!Number.isFinite(n) || n < 0) return 0;
-  return n;
+function normalizeSearch(s) {
+  return String(s || "").toLowerCase().normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "").replace(/\s+/g, " ").trim();
 }
-function localIPv4Addresses() {
-  const nets = os.networkInterfaces();
-  const out = [];
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name] || []) {
-      const v4 = net.family === "IPv4" || net.family === 4;
-      if (v4 && !net.internal) out.push(net.address);
+function parsePath(pathname) {
+  return String(pathname || "").replace(/^\//, "").split("/").filter(Boolean);
+}
+function parseReqUrl(req) {
+  const host = req.headers.host || "localhost";
+  const url = new URL(req.url || "/", `http://${host}`);
+  return { pathname: url.pathname, query: Object.fromEntries(url.searchParams.entries()) };
+}
+function parseCatalogExtras(pathParts) {
+  const out = {};
+  if (pathParts.length <= 3) return out;
+  for (let i = 3; i < pathParts.length; i++) {
+    const seg = decodeURIComponent(pathParts[i]).replace(/\.json$/i, "");
+    for (const pair of seg.split("&")) {
+      const k = pair.split("=")[0];
+      const v = pair.includes("=") ? pair.slice(pair.indexOf("=") + 1) : "";
+      if (k) out[k] = decodeURIComponent(v.replace(/\+/g, " "));
     }
   }
   return out;
 }
-function sendJson(res, status, bodyObj, method, headersBase = {}) {
-  const body = JSON.stringify(bodyObj);
-  const headers = {
-    ...headersBase,
-    "Content-Type": "application/json",
+function sendJson(res, method, status, payload, extra = {}) {
+  const body = JSON.stringify(payload);
+  res.writeHead(status, {
+    ...CORS,
+    ...extra,
+    "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(body, "utf8")
-  };
-  res.writeHead(status, headers);
-  if (method === "HEAD") res.end();
-  else res.end(body);
+  });
+  if (method === "HEAD") return res.end();
+  res.end(body);
 }
-function sendPublicBinary(res, method, filename, contentType) {
-  const filePath = path.join(__dirname, "public", filename);
-  if (!fs.existsSync(filePath)) {
-    res.writeHead(404, { ...CORS, "Content-Type": "text/plain" });
-    res.end("Not found");
-    return;
+function sendText(res, method, status, text) {
+  const body = String(text || "");
+  res.writeHead(status, {
+    ...CORS,
+    "Content-Type": "text/plain; charset=utf-8",
+    "Content-Length": Buffer.byteLength(body, "utf8")
+  });
+  if (method === "HEAD") return res.end();
+  res.end(body);
+}
+function seriesBaseId(decodedSeriesId) {
+  const m = String(decodedSeriesId).match(/^novelaspt_series_(.+):\d+:\d+$/);
+  return m ? `${SERIES_PREFIX}${m[1]}` : String(decodedSeriesId);
+}
+function releaseInfoFromItem(item) {
+  const ri = String(item.releaseInfo || "").trim();
+  if (ri && !/^\d{1,3}$/.test(ri)) return ri;
+  const y = Number(item.year);
+  if (Number.isFinite(y) && y >= 1870 && y <= 2100) return String(y);
+  return void 0;
+}
+function metaPreview(item) {
+  return {
+    id: item.id,
+    type: item.type,
+    name: item.name,
+    poster: item.poster,
+    posterShape: "poster",
+    ...item.description ? { description: item.description } : {},
+    ...releaseInfoFromItem(item) ? { releaseInfo: releaseInfoFromItem(item) } : {}
+  };
+}
+function fullMeta(item, responseId, forceType) {
+  const id = responseId || item.id;
+  const type = forceType || item.type;
+  const out = {
+    id,
+    type,
+    name: item.name || "Sem titulo",
+    posterShape: "poster",
+    ...item.poster ? { poster: item.poster } : {},
+    ...item.background ? { background: item.background } : {},
+    ...item.description ? { description: item.description } : {},
+    ...releaseInfoFromItem(item) ? { releaseInfo: releaseInfoFromItem(item) } : {}
+  };
+  if (type === "movie") {
+    const y = Number(item.year);
+    const safeY = Number.isFinite(y) && y >= 1870 && y <= 2100 ? y : 2020;
+    out.videos = [{ id, title: out.name, released: `${safeY}-06-15T12:00:00.000Z` }];
+  } else {
+    const eps = Array.isArray(item.episodes) && item.episodes.length ? item.episodes : [{ season: 1, episode: 1, name: "A sincronizar..." }];
+    const y = Number(item.year);
+    const safeY = Number.isFinite(y) && y >= 1870 && y <= 2100 ? y : 2020;
+    out.videos = eps.map((ep, i) => {
+      const s = Math.max(1, Number(ep.season) || 1);
+      const e = Math.max(1, Number(ep.episode) || 1);
+      const m = 1 + (i + s * 31 + e) % 12;
+      const d = 1 + i % 28;
+      return {
+        id: `${id}:${s}:${e}`,
+        title: ep.name || `Episodio ${e}`,
+        season: s,
+        episode: e,
+        released: `${safeY}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}T12:00:00.000Z`
+      };
+    });
   }
-  const body = fs.readFileSync(filePath);
-  const headers = {
+  return out;
+}
+function streamIdFromUrl(u) {
+  return crypto.createHash("sha256").update(String(u || "")).digest("hex").slice(0, 24);
+}
+async function handleCatalog(type, id, extra) {
+  let items = [];
+  if (type === "movie" && id === "novelaspt_filmes") items = await scraper.getFilmes();
+  else if (type === "series" && id === "novelaspt_series") items = await scraper.getSeriesPortuguesas();
+  else if (type === "series" && id === "novelaspt_novelas") items = await scraper.getNovelasPortuguesas();
+  const search = String(extra.search || "").trim();
+  if (search) {
+    const q = normalizeSearch(search);
+    items = items.filter((it) => {
+      const n = normalizeSearch(it.name || "");
+      const s = normalizeSearch(String(it.slug || "").replace(/-/g, " "));
+      return n.includes(q) || s.includes(q);
+    });
+  }
+  const skip = Math.max(0, Number.parseInt(String(extra.skip || "0"), 10) || 0);
+  const page = items.slice(skip, skip + CATALOG_PAGE_SIZE);
+  return { metas: page.map(metaPreview) };
+}
+async function handleMeta(type, id) {
+  const decoded = safeDecode(id);
+  if (!decoded.startsWith(MOVIE_PREFIX) && !decoded.startsWith(SERIES_PREFIX)) return { meta: null };
+  if (decoded.startsWith(MOVIE_PREFIX)) {
+    const slug2 = decoded.slice(MOVIE_PREFIX.length);
+    let item2 = await scraper.getFilmeMeta(slug2);
+    if (!item2) item2 = scraper.shellMovieMetaFromStremioId(decoded);
+    if (!item2) return { meta: null };
+    return { meta: fullMeta(item2, decoded, "movie") };
+  }
+  const base = seriesBaseId(decoded);
+  const slug = base.slice(SERIES_PREFIX.length);
+  let item = await scraper.getSeriesMeta(slug);
+  if (!item) item = scraper.shellSeriesMetaFromStremioId(base);
+  if (!item) return { meta: null };
+  return { meta: fullMeta(item, base, "series") };
+}
+async function handleStream(type, id, extra) {
+  const decoded = safeDecode(id);
+  if (!decoded.startsWith(MOVIE_PREFIX) && !decoded.startsWith(SERIES_PREFIX)) return { streams: [] };
+  if (type === "movie" && decoded.startsWith(MOVIE_PREFIX)) {
+    const slug2 = decoded.slice(MOVIE_PREFIX.length);
+    const meta2 = await scraper.getFilmeMeta(slug2);
+    if (!meta2 || !meta2.wpPostId) return { streams: [] };
+    const src2 = await scraper.getMovieStreamSources(meta2.wpPostId);
+    return {
+      streams: src2.map((s) => ({
+        id: `novelaspt-${streamIdFromUrl(s.url)}`,
+        name: meta2.name || "NovelasPT",
+        title: s.title || "Player",
+        externalUrl: s.url
+      }))
+    };
+  }
+  if (type !== "series") return { streams: [] };
+  let slug;
+  let season;
+  let episode;
+  const m = decoded.match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
+  if (m) {
+    slug = m[1];
+    season = Math.max(1, parseInt(m[2], 10) || 1);
+    episode = Math.max(1, parseInt(m[3], 10) || 1);
+  } else {
+    slug = decoded.slice(SERIES_PREFIX.length);
+    season = Math.max(1, parseInt(String(extra.season || "1"), 10) || 1);
+    episode = Math.max(1, parseInt(String(extra.episode || "1"), 10) || 1);
+  }
+  const meta = await scraper.getSeriesMeta(slug);
+  if (!meta || !Array.isArray(meta.episodes)) return { streams: [] };
+  const ep = meta.episodes.find((x) => Number(x.season) === season && Number(x.episode) === episode);
+  if (!ep || !ep.wpPid) return { streams: [] };
+  const src = await scraper.getTvEpisodeStreamSources(ep.wpPid);
+  return {
+    streams: src.map((s) => ({
+      id: `novelaspt-${streamIdFromUrl(s.url)}`,
+      name: meta.name || "NovelasPT",
+      title: s.title || "Player",
+      externalUrl: s.url
+    }))
+  };
+}
+function sendPublic(res, method, filename, contentType) {
+  const p = path.join(__dirname, "public", filename);
+  if (!fs.existsSync(p)) return sendText(res, method, 404, "Not found");
+  const body = fs.readFileSync(p);
+  res.writeHead(200, {
     ...CORS,
     "Content-Type": contentType,
     "Cache-Control": "public, max-age=86400",
     "Content-Length": body.length
-  };
-  res.writeHead(200, headers);
-  if (method === "HEAD") res.end();
-  else res.end(body);
+  });
+  if (method === "HEAD") return res.end();
+  res.end(body);
 }
-var CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type"
-};
 var server = http.createServer(async (req, res) => {
   const method = req.method || "GET";
-  const { pathname, query } = parseRequestUrl(req);
   if (method === "OPTIONS") {
     res.writeHead(204, CORS);
-    res.end();
-    return;
+    return res.end();
   }
-  if (method !== "GET" && method !== "HEAD") {
-    res.writeHead(405, { ...CORS, Allow: "GET, HEAD, OPTIONS", "Content-Type": "text/plain" });
-    res.end("Method Not Allowed");
-    return;
-  }
-  const htmlHeaders = { ...CORS, "Content-Type": "text/html; charset=utf-8" };
-  const textHeaders = { ...CORS, "Content-Type": "text/plain" };
+  if (method !== "GET" && method !== "HEAD") return sendText(res, method, 405, "Method Not Allowed");
+  const { pathname, query } = parseReqUrl(req);
+  const parts = parsePath(pathname);
   try {
     if (pathname === "/manifest.json") {
-      sendJson(res, 200, getManifest(null, manifestOriginFromRequest(req)), method, { ...CORS });
-      return;
+      return sendJson(res, method, 200, getManifest(manifestOriginFromRequest(req)));
     }
-    if (pathname === "/addon-logo.png") {
-      sendPublicBinary(res, method, "addon-logo.png", "image/png");
-      return;
+    if (pathname === "/addon-logo.svg") return sendPublic(res, method, "addon-logo.svg", "image/svg+xml; charset=utf-8");
+    if (pathname === "/configure" || pathname === "/configure/") return sendPublic(res, method, "configure.html", "text/html; charset=utf-8");
+    if (parts[0] === "catalog" && parts.length >= 3) {
+      const type = parts[1];
+      const id = decodeURIComponent(String(parts[2]).replace(/\.json$/i, ""));
+      const extra = { ...query, ...parseCatalogExtras(parts) };
+      const out = await handleCatalog(type, id, extra);
+      return sendJson(res, method, 200, out);
     }
-    if (pathname === "/addon-logo.svg") {
-      sendPublicBinary(res, method, "addon-logo.svg", "image/svg+xml; charset=utf-8");
-      return;
+    if (parts[0] === "meta" && parts.length >= 3) {
+      const type = parts[1];
+      const id = decodeURIComponent(String(parts[2]).replace(/\.json$/i, ""));
+      const out = await handleMeta(type, id);
+      return sendJson(res, method, 200, out);
     }
-    if (pathname === "/configure" || pathname === "/configure/") {
-      const htmlPath = path.join(__dirname, "public", "configure.html");
-      const html = fs.existsSync(htmlPath) ? fs.readFileSync(htmlPath, "utf8") : getConfigureHtml();
-      const len = Buffer.byteLength(html, "utf8");
-      res.writeHead(200, { ...htmlHeaders, "Content-Length": len });
-      if (method === "HEAD") res.end();
-      else res.end(html);
-      return;
+    if (parts[0] === "stream" && parts.length >= 3) {
+      const type = parts[1];
+      const id = decodeURIComponent(String(parts[2]).replace(/\.json$/i, ""));
+      const out = await handleStream(type, id, { season: query.season, episode: query.episode });
+      return sendJson(res, method, 200, out);
     }
-    const { config, pathRest } = parsePath(pathname);
-    if (pathRest[0] === "manifest.json" && pathRest.length === 1) {
-      sendJson(res, 200, getManifest(config, manifestOriginFromRequest(req)), method, { ...CORS });
-      return;
-    }
-    if (pathRest[0] === "catalog" && pathRest.length >= 3) {
-      const type = pathRest[1];
-      const id = decodeURIComponent(String(pathRest[2]).replace(/\.json$/i, ""));
-      const extra = { ...query, ...parseCatalogPathExtras(pathRest) };
-      const result = await handleCatalog(type, id, extra, config);
-      sendJson(res, 200, result, method, { ...CORS });
-      return;
-    }
-    if (pathRest[0] === "meta" && pathRest.length >= 3) {
-      const type = pathRest[1];
-      const id = decodeURIComponent(pathRest[2].replace(/\.json$/, ""));
-      const result = await handleMeta(type, id, config);
-      sendJson(res, 200, result, method, { ...CORS });
-      return;
-    }
-    if (pathRest[0] === "stream" && pathRest.length >= 3) {
-      const type = pathRest[1];
-      const id = decodeURIComponent(pathRest[2].replace(/\.json$/, ""));
-      const extra = { season: query.season, episode: query.episode };
-      const result = await handleStream(type, id, extra, config);
-      sendJson(res, 200, result, method, { ...CORS });
-      return;
-    }
-    const msg = "Not found";
-    res.writeHead(404, { ...textHeaders, "Content-Length": Buffer.byteLength(msg) });
-    if (method === "HEAD") res.end();
-    else res.end(msg);
+    return sendText(res, method, 404, "Not found");
   } catch (err) {
-    const code = err && (err.code || err.cause?.code);
     const msg = err && err.message || String(err);
-    console.error(`${LOG_PREFIX} Erro HTTP${code ? ` [${code}]` : ""}: ${msg}`);
-    sendJson(res, 500, { error: msg }, method, { ...CORS });
+    console.error(`${LOG_PREFIX} HTTP error: ${msg}`);
+    return sendJson(res, method, 500, { error: msg });
   }
 });
-function getConfigureHtml() {
-  return `<!DOCTYPE html>
-<html lang="pt">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Configurar Addon \xE2\u20AC\u201D Filmes, Series e Novelas Portuguesas</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 20px; }
-    h1 { font-size: 1.4rem; }
-    label { display: block; margin-top: 12px; font-weight: 500; }
-    select, input { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
-    button { margin-top: 20px; padding: 12px 24px; background: #2e7d32; color: #fff; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; width: 100%; }
-    button:hover { background: #1b5e20; }
-    .hint { font-size: 0.85rem; color: #444; margin-top: 12px; line-height: 1.45; }
-    .link { margin-top: 16px; word-break: break-all; font-size: 0.95rem; padding: 12px; background: #f5f5f5; border-radius: 6px; }
-    a { color: #1565c0; }
-    code { font-size: 0.88em; background: #eee; padding: 2px 6px; border-radius: 4px; }
-  </style>
-</head>
-<body>
-  <h1>Filmes, Series e Novelas Portuguesas Addon Stremio</h1>
-  <p>Conte\xC3\xBAdo de <a href="https://novelasportuguesas.com/" target="_blank" rel="noopener">novelasportuguesas.com</a>. Os v\xC3\xADdeos abrem no browser (external player).</p>
-  <p class="link"><strong>URL do manifest (copiar para o Stremio):</strong><br><code id="manifestUrl"></code></p>
-  <p class="hint"><strong>Stremio Desktop no mesmo PC:</strong> usa <code>http://127.0.0.1:PORT/manifest.json</code> (substitui PORT) ou o URL acima se abriste esta p\xC3\xA1gina pelo servidor local. HTTP s\xC3\xB3 \xC3\xA9 aceite em <code>localhost</code> / <code>127.0.0.1</code>.</p>
-  <p class="hint"><strong>Stremio Web, telem\xC3\xB3vel ou TV:</strong> o Stremio costuma exigir <strong>HTTPS</strong>. Um endere\xC3\xA7o <code>http://192.168.x.x/...</code> na rede local pode ser recusado. Solu\xC3\xA7\xC3\xA3o: expor o addon com t\xC3\xBAnel HTTPS (por exemplo <a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> ou <a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/" target="_blank" rel="noopener">Cloudflare Tunnel</a>) e colar o <code>https://\xE2\u20AC\xA6/manifest.json</code> no Stremio.</p>
-  <p class="hint">No Stremio: \xC3\xADcone de puzzle / Addons \xE2\u2020\u2019 <em>Addon catalog</em> (ou campo para colar URL do manifest) \xE2\u2020\u2019 cola o link e instala.</p>
-  <script>
-    var m = location.origin + '/manifest.json';
-    document.getElementById('manifestUrl').textContent = m;
-  </script>
-</body>
-</html>`;
-}
-var publicDir = path.join(__dirname, "public");
-if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
-var configurePath = path.join(publicDir, "configure.html");
-if (!fs.existsSync(configurePath)) {
-  fs.writeFileSync(configurePath, getConfigureHtml(), "utf8");
-}
-var HOST = "0.0.0.0";
 server.on("error", (err) => {
-  if (err.code === "EADDRINUSE") {
-    console.error(`
-${LOG_PREFIX} A porta ${PORT} j\xC3\xA1 est\xC3\xA1 em uso (outra inst\xC3\xA2ncia do addon ou outro programa).`);
-    console.error("  \xE2\u20AC\xA2 Fecha a outra janela onde correste npm start / node dist/bundle.cjs.");
-    console.error("  \xE2\u20AC\xA2 PowerShell \xE2\u20AC\u201D outra porta:  $env:PORT=7001; npm start");
-    console.error("  \xE2\u20AC\xA2 CMD \xE2\u20AC\u201D outra porta:          set PORT=7001 && npm start");
-    console.error(
-      `  \xE2\u20AC\xA2 Ver quem usa a porta:     Get-NetTCPConnection -LocalPort ${PORT} | Select-Object OwningProcess
-`
-    );
-  } else {
-    console.error(`${LOG_PREFIX} Erro ao arrancar o servidor:`, err.message);
-  }
+  console.error(`${LOG_PREFIX} Server error: ${err.message}`);
   process.exit(1);
 });
 server.listen(PORT, HOST, () => {
-  console.log(`Addon a correr em http://127.0.0.1:${PORT} (todas as interfaces: porta ${PORT})`);
-  console.log(`Configura\xC3\xA7\xC3\xA3o / ajuda: http://127.0.0.1:${PORT}/configure`);
-  console.log("");
-  console.log(
-    `${LOG_PREFIX} Registo de cat\xC3\xA1logos: REFRESH = constru\xC3\xA7\xC3\xA3o desde o site (t\xC3\xADtulos, p\xC3\xA1ginas de arquivo, resumos se ativos, ms). CACHE = dados em mem\xC3\xB3ria (TTL configur\xC3\xA1vel por STREMIO_NP_CACHE_MS).`
-  );
-  console.log(
-    `${LOG_PREFIX} Endpoints Stremio: movie/novelaspt_filmes | series/novelaspt_series | series/novelaspt_novelas`
-  );
-  console.log(
-    `${LOG_PREFIX} Meta JSON: imdb_id ao cliente = ${EXPOSE_IMDB_ID_TO_CLIENT ? "SIM (STREMIO_NP_EXPOSE_IMDB_ID=1)" : "N\xC3\u0192O (recomendado: evita fus\xC3\xA3o com Cinemeta e o efeito \xE2\u20AC\u0153ano 20 / IMDb a desaparecer\xE2\u20AC\x9D). imdbRating + link IMDb mant\xC3\xAAm-se."}`
-  );
-  console.log(
-    `${LOG_PREFIX} Rede: DNS IPv4 preferencial no Node | HTTP 403/429/503 com reintentos | proxy opcional STREMIO_NP_PROXY ou HTTPS_PROXY (\xC3\xBAtil se o site bloquear datacenters).`
-  );
-  console.log("");
-  console.log("Stremio \xE2\u20AC\u201D instalar o addon:");
-  console.log(`  \xE2\u20AC\xA2 Neste PC (app Stremio Desktop): cola em "Addon catalog" \xE2\u2020\u2019 http://127.0.0.1:${PORT}/manifest.json`);
-  console.log("    (usa 127.0.0.1 ou localhost; HTTP s\xC3\xB3 funciona a\xC3\xAD, n\xC3\xA3o em IP da rede.)");
-  const lan = localIPv4Addresses();
-  if (lan.length) {
-    console.log("  \xE2\u20AC\xA2 Noutro dispositivo (TV, telem\xC3\xB3vel, Stremio Web): HTTP em IP local costuma ser recusado.");
-    console.log("    Usa um t\xC3\xBAnel HTTPS (ex.: ngrok, Cloudflare Tunnel) e cola o https://\xE2\u20AC\xA6/manifest.json");
-    console.log(`    IP(s) na tua LAN (para refer\xC3\xAAncia): ${lan.join(", ")}`);
-  }
-  console.log("");
+  console.log(`${LOG_PREFIX} Addon running on http://127.0.0.1:${PORT}`);
+  console.log(`${LOG_PREFIX} Manifest: http://127.0.0.1:${PORT}/manifest.json`);
 });
 /*! Bundled license information:
 
