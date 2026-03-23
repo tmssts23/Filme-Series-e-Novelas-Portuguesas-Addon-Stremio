@@ -61683,8 +61683,8 @@ var require_scraper = __commonJS({
       const name = ratingStr != null && String(ratingStr).trim() !== "" ? `IMDb ${String(ratingStr).trim()}/10` : "IMDb";
       return {
         name,
-        category: "info",
-        url: `https://www.imdb.com/title/${imdbIdClean}`
+        category: "imdb",
+        url: imdbIdClean
       };
     }
     async function enrichMetaFromCinemeta(item, stremioType) {
