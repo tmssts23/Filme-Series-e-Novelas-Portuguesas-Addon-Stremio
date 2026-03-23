@@ -62024,20 +62024,40 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const m = html.match(/[?&]p=(\d+)/);
       return m ? parseInt(m[1], 10) : null;
     }
+    function stripDiacritics(str) {
+      return String(str || "").normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "");
+    }
     function detailPathsForSlug(wpSegment, slug) {
       const s = String(slug || "").trim();
       if (!s) return [];
-      const out = [`/${wpSegment}/${s}/`, `/${wpSegment}/${s}`];
-      if (s !== s.toLowerCase()) {
-        const lo = s.toLowerCase();
-        out.push(`/${wpSegment}/${lo}/`, `/${wpSegment}/${lo}`);
+      const folded = stripDiacritics(s);
+      const bases = new Set([s, folded, s.toLowerCase(), folded.toLowerCase()].filter((x) => x && x.length > 0));
+      const out = [];
+      for (const b of bases) {
+        out.push(`/${wpSegment}/${b}/`, `/${wpSegment}/${b}`);
       }
       return [...new Set(out)];
+    }
+    function slugFromWpDetailPath(reqPath, wpSegments) {
+      const parts = String(reqPath || "").split("/").map((p) => {
+        if (!p) return "";
+        try {
+          return decodeURIComponent(p);
+        } catch (_) {
+          return p;
+        }
+      }).filter(Boolean);
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (wpSegments.includes(parts[i])) return parts[i + 1];
+      }
+      return null;
     }
     async function fetchFirstOkHtml(pathList, retriesPerPath = 2) {
       for (const path2 of pathList) {
         const res = await safeClientGet(path2, retriesPerPath);
-        if (res && res.status === 200 && typeof res.data === "string") return res.data;
+        if (res && res.status === 200 && typeof res.data === "string") {
+          return { html: res.data, path: path2 };
+        }
       }
       return null;
     }
@@ -62052,8 +62072,9 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         if (novelasPortuguesasCache?.items) lists.push(novelasPortuguesasCache.items);
       }
       const slo = s.toLowerCase();
+      const fold = stripDiacritics(s).toLowerCase();
       for (const items of lists) {
-        const hit = items.find((i) => i.slug === s) || items.find((i) => String(i.slug || "").toLowerCase() === slo);
+        const hit = items.find((i) => i.slug === s) || items.find((i) => String(i.slug || "").toLowerCase() === slo) || items.find((i) => stripDiacritics(String(i.slug || "")).toLowerCase() === fold);
         if (hit) return { ...hit };
       }
       return null;
@@ -62096,11 +62117,14 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       };
     }
     async function getFilmeMeta(slug) {
-      const slugForIds = String(slug || "").trim();
+      const requested = String(slug || "").trim();
+      if (!requested) return null;
+      let fetched = await fetchFirstOkHtml(detailPathsForSlug("filme", requested), 2) || await fetchFirstOkHtml(detailPathsForSlug("serie", requested), 2);
+      if (!fetched) return null;
+      const { html, path: path2 } = fetched;
+      const fromPath = slugFromWpDetailPath(path2, ["filme", "serie"]);
+      const slugForIds = String(fromPath || stripDiacritics(requested)).trim().toLowerCase();
       if (!slugForIds) return null;
-      let html = await fetchFirstOkHtml(detailPathsForSlug("filme", slugForIds), 2);
-      if (!html) html = await fetchFirstOkHtml(detailPathsForSlug("serie", slugForIds), 2);
-      if (!html) return null;
       const $ = cheerio.load(html);
       const rawName = $("h1").first().text().trim() || $(".heading-archive, .display-page-heading h1").first().text().trim() || slugForIds.replace(/-/g, " ");
       const name = toTitleCase(rawName);
@@ -62161,11 +62185,14 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       return item;
     }
     async function getSeriesMeta(slug) {
-      const slugForIds = String(slug || "").trim();
+      const requested = String(slug || "").trim();
+      if (!requested) return null;
+      let fetched = await fetchFirstOkHtml(detailPathsForSlug("serie", requested), 2) || await fetchFirstOkHtml(detailPathsForSlug("filme", requested), 2);
+      if (!fetched) return null;
+      const { html, path: path2 } = fetched;
+      const fromPath = slugFromWpDetailPath(path2, ["filme", "serie"]);
+      const slugForIds = String(fromPath || stripDiacritics(requested)).trim().toLowerCase();
       if (!slugForIds) return null;
-      let html = await fetchFirstOkHtml(detailPathsForSlug("serie", slugForIds), 2);
-      if (!html) html = await fetchFirstOkHtml(detailPathsForSlug("filme", slugForIds), 2);
-      if (!html) return null;
       const $ = cheerio.load(html);
       const rawName = $("h1").first().text().trim() || $(".display-page-heading h1").first().text().trim() || slugForIds.replace(/-/g, " ");
       const name = toTitleCase(rawName);
@@ -62377,7 +62404,7 @@ function getManifest(config, originBase) {
     id: "pt.filmes-series-portuguesas",
     name: ADDON_DISPLAY_NAME,
     description: "Filmes, s\xE9ries e novelas portugueses. Cat\xE1logos separados: filmes, s\xE9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
-    version: "1.0.16",
+    version: "1.0.17",
     resources: ["catalog", "meta", "stream"],
     types: ["movie", "series"],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
