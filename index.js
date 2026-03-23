@@ -1,6 +1,6 @@
 /**
- * Addon Stremio — Filmes, Series e Novelas Portuguesas (novelasportuguesas.com)
- * Reprodução: externalUrl (players iframe do site).
+ * Addon Stremio â€” Filmes, Series e Novelas Portuguesas (novelasportuguesas.com)
+ * ReproduÃ§Ã£o: externalUrl (players iframe do site).
  */
 
 const http = require('http');
@@ -14,8 +14,8 @@ const scraper = require('./lib/scraper');
 const PORT = process.env.PORT || 7000;
 const LOG_PREFIX = '[NovelasPT]';
 /**
- * Por defeito NÃO enviamos imdbId/imdb_id no JSON do meta: o Stremio costuma fundir com o Cinemeta
- * pelo mesmo tt e substituir ano/nota (efeito “pisca certo e fica 20 / sem IMDb”).
+ * Por defeito NÃƒO enviamos imdbId/imdb_id no JSON do meta: o Stremio costuma fundir com o Cinemeta
+ * pelo mesmo tt e substituir ano/nota (efeito â€œpisca certo e fica 20 / sem IMDbâ€).
  * Para expor: STREMIO_NP_EXPOSE_IMDB_ID=1
  */
 const EXPOSE_IMDB_ID_TO_CLIENT = process.env.STREMIO_NP_EXPOSE_IMDB_ID === '1';
@@ -24,10 +24,10 @@ const EXPOSE_IMDB_ID_TO_CLIENT = process.env.STREMIO_NP_EXPOSE_IMDB_ID === '1';
 const MOVIE_PREFIX = 'novelaspt_movie_';
 const SERIES_PREFIX = 'novelaspt_series_';
 
-/** Nome apresentado no Stremio (pedido: “Filmes, Series e Novelas … Addon Stremio”). */
+/** Nome apresentado no Stremio (pedido: â€œFilmes, Series e Novelas â€¦ Addon Stremioâ€). */
 const ADDON_DISPLAY_NAME = 'Filmes, Series e Novelas Portuguesas Addon Stremio';
 
-/** Base URL pública (ex.: https://teu-túnel.ngrok.app) para o campo `logo` do manifest. */
+/** Base URL pÃºblica (ex.: https://teu-tÃºnel.ngrok.app) para o campo `logo` do manifest. */
 function manifestOriginFromRequest(req) {
   const host = req.headers.host || `127.0.0.1:${PORT}`;
   const raw = (req.headers['x-forwarded-proto'] || '').split(',')[0].trim().toLowerCase();
@@ -38,14 +38,14 @@ function manifestOriginFromRequest(req) {
 function getManifest(config, originBase) {
   const base = { configurable: false, configurationRequired: false };
   const origin = originBase && String(originBase).replace(/\/$/, '');
-  /* Stremio: campo logo = URL para PNG (SVG costuma ser ignorado → ícone puzzle). */
+  /* Stremio: campo logo = URL para PNG (SVG costuma ser ignorado â†’ Ã­cone puzzle). */
   const logo = origin ? `${origin}/addon-logo.png` : undefined;
   return {
     id: 'pt.filmes-series-portuguesas',
     name: ADDON_DISPLAY_NAME,
     description:
-      'Filmes, séries e novelas portugueses. Catálogos separados: filmes, séries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).',
-    version: '1.0.19',
+      'Filmes, sÃ©ries e novelas portugueses. CatÃ¡logos separados: filmes, sÃ©ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).',
+    version: '1.0.21',
     resources: ['catalog', 'meta', 'stream'],
     types: ['movie', 'series'],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -63,7 +63,7 @@ function getManifest(config, originBase) {
       {
         type: 'series',
         id: 'novelaspt_series',
-        name: 'Séries Portuguesas',
+        name: 'SÃ©ries Portuguesas',
         extra: [
           { name: 'search', isRequired: false },
           { name: 'skip', isRequired: false },
@@ -99,8 +99,8 @@ function plausibleStremioYear(y) {
 }
 
 /**
- * Só `releaseInfo` (string) para o ano no meta Stremio — não enviamos `year` numérico nem `released` no
- * objeto meta (evita clientes a mostrarem fragmentos tipo “20”).
+ * SÃ³ `releaseInfo` (string) para o ano no meta Stremio â€” nÃ£o enviamos `year` numÃ©rico nem `released` no
+ * objeto meta (evita clientes a mostrarem fragmentos tipo â€œ20â€).
  */
 function stremioReleaseInfoFromItem(item) {
   const ri = item.releaseInfo != null ? String(item.releaseInfo).trim() : '';
@@ -112,7 +112,7 @@ function stremioReleaseInfoFromItem(item) {
   return y != null ? String(y) : undefined;
 }
 
-/** Ano base (número) para datas sintéticas em `videos` de séries. */
+/** Ano base (nÃºmero) para datas sintÃ©ticas em `videos` de sÃ©ries. */
 function seriesBaseYearForVideos(item) {
   const y = plausibleStremioYear(item.year);
   if (y != null) return y;
@@ -174,14 +174,14 @@ function metaFullFromItem(item) {
       const released = `${y0}-${String(mon).padStart(2, '0')}-${String(day).padStart(2, '0')}T12:00:00.000Z`;
       return {
         id: `${item.id}:${season}:${episode}`,
-        title: ep.name || `Episódio ${episode}`,
+        title: ep.name || `EpisÃ³dio ${episode}`,
         episode,
         season,
         released,
       };
     });
   }
-  /* Filme: um vídeo explícito evita UI estranha (ex. Season 0) em alguns clientes. */
+  /* Filme: um vÃ­deo explÃ­cito evita UI estranha (ex. Season 0) em alguns clientes. */
   if (item.type === 'movie') {
     const yFromRi = (() => {
       const ri = item.releaseInfo != null ? String(item.releaseInfo).trim() : '';
@@ -237,7 +237,7 @@ async function handleCatalog(type, id, extra, config) {
     } else if (id === 'novelaspt_series') {
       items = await scraper.getSeriesPortuguesas();
     } else {
-      console.warn(`${LOG_PREFIX} HTTP catalog: id desconhecido type=series id=${id} → 0 metas`);
+      console.warn(`${LOG_PREFIX} HTTP catalog: id desconhecido type=series id=${id} â†’ 0 metas`);
     }
   } else {
     console.warn(`${LOG_PREFIX} HTTP catalog: tipo desconhecido type=${type} id=${id}`);
@@ -255,15 +255,15 @@ async function handleCatalog(type, id, extra, config) {
       return false;
     });
     console.log(
-      `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} → ${items.length} metas após pesquisa "${search}" (${beforeSearch} → ${items.length})`,
+      `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} â†’ ${items.length} metas apÃ³s pesquisa "${search}" (${beforeSearch} â†’ ${items.length})`,
     );
   } else {
-    console.log(`${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} → ${items.length} metas (total antes da paginação)`);
+    console.log(`${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} â†’ ${items.length} metas (total antes da paginaÃ§Ã£o)`);
   }
   const skip = catalogSkipFromExtra(extra);
   const page = items.slice(skip, skip + STREMIO_CATALOG_PAGE_SIZE);
   console.log(
-    `${LOG_PREFIX} HTTP catalog página: skip=${skip} → ${page.length} metas (página ${STREMIO_CATALOG_PAGE_SIZE})`,
+    `${LOG_PREFIX} HTTP catalog pÃ¡gina: skip=${skip} â†’ ${page.length} metas (pÃ¡gina ${STREMIO_CATALOG_PAGE_SIZE})`,
   );
   return { metas: page.map(metaPreviewFromItem) };
 }
@@ -275,9 +275,9 @@ function stripStreamEpisodeSuffix(seriesId) {
 }
 
 /**
- * Resposta meta: o `id` tem de coincidir com o que o cliente pediu (incl. acentos); senão alguns
- * builds do Stremio tratam como erro → “No metadata was found”.
- * Se o pedido vier com :season:episode no id (raro), devolve só o id base da série.
+ * Resposta meta: o `id` tem de coincidir com o que o cliente pediu (incl. acentos); senÃ£o alguns
+ * builds do Stremio tratam como erro â†’ â€œNo metadata was foundâ€.
+ * Se o pedido vier com :season:episode no id (raro), devolve sÃ³ o id base da sÃ©rie.
  */
 function seriesMetaBaseIdFromDecoded(decoded) {
   const s = String(decoded);
@@ -289,7 +289,7 @@ function seriesMetaBaseIdFromDecoded(decoded) {
 
 function fallbackTitleFromSlug(slug) {
   const raw = String(slug || '').trim();
-  if (!raw) return 'Sem título';
+  if (!raw) return 'Sem tÃ­tulo';
   return raw
     .split(/[-_]+/)
     .filter(Boolean)
@@ -311,7 +311,6 @@ async function handleMeta(type, id, config) {
   if (decoded.startsWith(MOVIE_PREFIX)) {
     item = await scraper.getFilmeMeta(slug);
     if (!item) {
-      await scraper.warmCatalogForMetaLookup(true);
       item = scraper.minimalMovieMetaFromCatalog(slug);
       metaFromCatalogOnly = !!item;
     }
@@ -323,7 +322,6 @@ async function handleMeta(type, id, config) {
   } else {
     item = await scraper.getSeriesMeta(slug);
     if (!item) {
-      await scraper.warmCatalogForMetaLookup(false);
       item = scraper.minimalSeriesMetaFromCatalog(slug);
       metaFromCatalogOnly = !!item;
     }
@@ -347,11 +345,11 @@ async function handleMeta(type, id, config) {
 
   if (metaShell) {
     console.warn(
-      `${LOG_PREFIX} meta SHELL (site inacessível ao servidor — bloqueio/WAF/rede). Streams podem falhar. Opções: addon em PC local, STREMIO_NP_PROXY, ou VPN residencial. id=${decoded.slice(0, 100)}`,
+      `${LOG_PREFIX} meta SHELL (site inacessÃ­vel ao servidor â€” bloqueio/WAF/rede). Streams podem falhar. OpÃ§Ãµes: addon em PC local, STREMIO_NP_PROXY, ou VPN residencial. id=${decoded.slice(0, 100)}`,
     );
   } else if (metaFromCatalogOnly) {
     console.warn(
-      `${LOG_PREFIX} meta só a partir do catálogo (detalhe HTTP falhou) slug=${slug} type=${decoded.startsWith(MOVIE_PREFIX) ? 'movie' : 'series'}`,
+      `${LOG_PREFIX} meta sÃ³ a partir do catÃ¡logo (detalhe HTTP falhou) slug=${slug} type=${decoded.startsWith(MOVIE_PREFIX) ? 'movie' : 'series'}`,
     );
   }
   scraper.sanitizeCatalogItems([item]);
@@ -360,14 +358,14 @@ async function handleMeta(type, id, config) {
   if (!metaOut.name || !String(metaOut.name).trim()) {
     metaOut.name = fallbackTitleFromSlug(slug);
   }
-  const kind = decoded.startsWith(MOVIE_PREFIX) ? 'filme' : 'série ou novela (mesmo tipo no Stremio)';
+  const kind = decoded.startsWith(MOVIE_PREFIX) ? 'filme' : 'sÃ©rie ou novela (mesmo tipo no Stremio)';
   const ri = metaOut.releaseInfo ?? '-';
   const yr = item.year != null ? String(item.year) : '-';
   const imdbInternal = item.imdbId ?? '-';
-  const imdbClient = EXPOSE_IMDB_ID_TO_CLIENT ? 'sim' : 'não (evita fusão Cinemeta)';
+  const imdbClient = EXPOSE_IMDB_ID_TO_CLIENT ? 'sim' : 'nÃ£o (evita fusÃ£o Cinemeta)';
   const note = item.imdbRating != null ? String(item.imdbRating) : '-';
   console.log(
-    `${LOG_PREFIX} meta stremio=${type} | ${kind} | título="${item.name}" | slug=${slug} | releaseInfo=${ri} | year=${yr} | imdbId_interno=${imdbInternal} | imdb_id→cliente=${imdbClient} | imdbRating=${note}`,
+    `${LOG_PREFIX} meta stremio=${type} | ${kind} | tÃ­tulo="${item.name}" | slug=${slug} | releaseInfo=${ri} | year=${yr} | imdbId_interno=${imdbInternal} | imdb_idâ†’cliente=${imdbClient} | imdbRating=${note}`,
   );
   return { meta: metaOut };
 }
@@ -391,14 +389,14 @@ async function handleStream(type, id, extra, _config) {
     const meta = await scraper.getFilmeMeta(slug);
     if (!meta?.wpPostId) {
       console.log(
-        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | título="${meta?.name || '?'}" | slug=${slug} | sem wpPostId → 0 opções`,
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | tÃ­tulo="${meta?.name || '?'}" | slug=${slug} | sem wpPostId â†’ 0 opÃ§Ãµes`,
       );
       return { streams: [] };
     }
     itemName = meta.name || itemNameBase;
     sources = await scraper.getMovieStreamSources(meta.wpPostId);
   } else if (type === 'series') {
-    kindLog = 'série/novela';
+    kindLog = 'sÃ©rie/novela';
     const epMatch = decoded.match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
     let slug;
     let season;
@@ -416,7 +414,7 @@ async function handleStream(type, id, extra, _config) {
     const meta = await scraper.getSeriesMeta(slug);
     if (!meta) {
       console.log(
-        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | slug=${slug} | meta inexistente → 0 opções`,
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | slug=${slug} | meta inexistente â†’ 0 opÃ§Ãµes`,
       );
       return { streams: [] };
     }
@@ -424,10 +422,10 @@ async function handleStream(type, id, extra, _config) {
     const ep = meta.episodes?.find((e) => e.season === season && e.episode === episode);
     const epLabel = `S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`;
     const epTitle = ep?.name ? ` "${ep.name}"` : '';
-    epLog = ` | episódio=${epLabel}${epTitle}`;
+    epLog = ` | episÃ³dio=${epLabel}${epTitle}`;
     if (!ep?.wpPid) {
       console.log(
-        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | título="${itemName}" | slug=${slug}${epLog} | sem wpPid → 0 opções`,
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | tÃ­tulo="${itemName}" | slug=${slug}${epLog} | sem wpPid â†’ 0 opÃ§Ãµes`,
       );
       return { streams: [] };
     }
@@ -438,12 +436,12 @@ async function handleStream(type, id, extra, _config) {
   const opts = sources.map((s, i) => `${i + 1}) ${s.title || 'Player'}`).join(' | ');
   if (!sources.length) {
     console.log(
-      `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | título="${itemName}" | slug=${slugForLog}${epLog} | 0 opções (Zeta/embed vazio)`,
+      `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | tÃ­tulo="${itemName}" | slug=${slugForLog}${epLog} | 0 opÃ§Ãµes (Zeta/embed vazio)`,
     );
     return { streams: [] };
   }
   console.log(
-    `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | título="${itemName}" | slug=${slugForLog}${epLog} | ${sources.length} opção(ões): ${opts}`,
+    `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | tÃ­tulo="${itemName}" | slug=${slugForLog}${epLog} | ${sources.length} opÃ§Ã£o(Ãµes): ${opts}`,
   );
 
   return {
@@ -477,7 +475,7 @@ function parseRequestUrl(req) {
 }
 
 /**
- * Stremio pede extras do catálogo no path, não só em ?search=
+ * Stremio pede extras do catÃ¡logo no path, nÃ£o sÃ³ em ?search=
  * Ex.: /catalog/movie/novelaspt_filmes/search=lulu.json
  *     /catalog/series/novelaspt_series/search=amor%20perfeito&skip=0.json
  */
@@ -496,7 +494,7 @@ function parseCatalogPathExtras(pathRest) {
       try {
         v = decodeURIComponent(v.replace(/\+/g, ' '));
       } catch (_) {
-        /* mantém v */
+        /* mantÃ©m v */
       }
       if (k) extra[k] = v;
     }
@@ -514,10 +512,10 @@ function normalizeForCatalogSearch(s) {
     .trim();
 }
 
-/** Stremio usa páginas de 100 metas; sem slice o cliente pede skip=100,200,… e nós devolvíamos sempre do início. */
+/** Stremio usa pÃ¡ginas de 100 metas; sem slice o cliente pede skip=100,200,â€¦ e nÃ³s devolvÃ­amos sempre do inÃ­cio. */
 const STREMIO_CATALOG_PAGE_SIZE = 100;
 
-/** IDs no path do Stremio vêm codificados; % inválidos lançavam e o handler respondia 500 → “No metadata was found”. */
+/** IDs no path do Stremio vÃªm codificados; % invÃ¡lidos lanÃ§avam e o handler respondia 500 â†’ â€œNo metadata was foundâ€. */
 function safeDecodeStremioId(raw) {
   let s = String(raw || '');
   for (let i = 0; i < 3; i++) {
@@ -685,7 +683,7 @@ function getConfigureHtml() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Configurar Addon — Filmes, Series e Novelas Portuguesas</title>
+  <title>Configurar Addon â€” Filmes, Series e Novelas Portuguesas</title>
   <style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 20px; }
@@ -702,11 +700,11 @@ function getConfigureHtml() {
 </head>
 <body>
   <h1>Filmes, Series e Novelas Portuguesas Addon Stremio</h1>
-  <p>Conteúdo de <a href="https://novelasportuguesas.com/" target="_blank" rel="noopener">novelasportuguesas.com</a>. Os vídeos abrem no browser (external player).</p>
+  <p>ConteÃºdo de <a href="https://novelasportuguesas.com/" target="_blank" rel="noopener">novelasportuguesas.com</a>. Os vÃ­deos abrem no browser (external player).</p>
   <p class="link"><strong>URL do manifest (copiar para o Stremio):</strong><br><code id="manifestUrl"></code></p>
-  <p class="hint"><strong>Stremio Desktop no mesmo PC:</strong> usa <code>http://127.0.0.1:PORT/manifest.json</code> (substitui PORT) ou o URL acima se abriste esta página pelo servidor local. HTTP só é aceite em <code>localhost</code> / <code>127.0.0.1</code>.</p>
-  <p class="hint"><strong>Stremio Web, telemóvel ou TV:</strong> o Stremio costuma exigir <strong>HTTPS</strong>. Um endereço <code>http://192.168.x.x/...</code> na rede local pode ser recusado. Solução: expor o addon com túnel HTTPS (por exemplo <a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> ou <a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/" target="_blank" rel="noopener">Cloudflare Tunnel</a>) e colar o <code>https://…/manifest.json</code> no Stremio.</p>
-  <p class="hint">No Stremio: ícone de puzzle / Addons → <em>Addon catalog</em> (ou campo para colar URL do manifest) → cola o link e instala.</p>
+  <p class="hint"><strong>Stremio Desktop no mesmo PC:</strong> usa <code>http://127.0.0.1:PORT/manifest.json</code> (substitui PORT) ou o URL acima se abriste esta pÃ¡gina pelo servidor local. HTTP sÃ³ Ã© aceite em <code>localhost</code> / <code>127.0.0.1</code>.</p>
+  <p class="hint"><strong>Stremio Web, telemÃ³vel ou TV:</strong> o Stremio costuma exigir <strong>HTTPS</strong>. Um endereÃ§o <code>http://192.168.x.x/...</code> na rede local pode ser recusado. SoluÃ§Ã£o: expor o addon com tÃºnel HTTPS (por exemplo <a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> ou <a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/" target="_blank" rel="noopener">Cloudflare Tunnel</a>) e colar o <code>https://â€¦/manifest.json</code> no Stremio.</p>
+  <p class="hint">No Stremio: Ã­cone de puzzle / Addons â†’ <em>Addon catalog</em> (ou campo para colar URL do manifest) â†’ cola o link e instala.</p>
   <script>
     var m = location.origin + '/manifest.json';
     document.getElementById('manifestUrl').textContent = m;
@@ -727,12 +725,12 @@ const HOST = '0.0.0.0';
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.error(`\n${LOG_PREFIX} A porta ${PORT} já está em uso (outra instância do addon ou outro programa).`);
-    console.error('  • Fecha a outra janela onde correste npm start / node dist/bundle.cjs.');
-    console.error('  • PowerShell — outra porta:  $env:PORT=7001; npm start');
-    console.error('  • CMD — outra porta:          set PORT=7001 && npm start');
+    console.error(`\n${LOG_PREFIX} A porta ${PORT} jÃ¡ estÃ¡ em uso (outra instÃ¢ncia do addon ou outro programa).`);
+    console.error('  â€¢ Fecha a outra janela onde correste npm start / node dist/bundle.cjs.');
+    console.error('  â€¢ PowerShell â€” outra porta:  $env:PORT=7001; npm start');
+    console.error('  â€¢ CMD â€” outra porta:          set PORT=7001 && npm start');
     console.error(
-      `  • Ver quem usa a porta:     Get-NetTCPConnection -LocalPort ${PORT} | Select-Object OwningProcess\n`,
+      `  â€¢ Ver quem usa a porta:     Get-NetTCPConnection -LocalPort ${PORT} | Select-Object OwningProcess\n`,
     );
   } else {
     console.error(`${LOG_PREFIX} Erro ao arrancar o servidor:`, err.message);
@@ -742,29 +740,31 @@ server.on('error', (err) => {
 
 server.listen(PORT, HOST, () => {
   console.log(`Addon a correr em http://127.0.0.1:${PORT} (todas as interfaces: porta ${PORT})`);
-  console.log(`Configuração / ajuda: http://127.0.0.1:${PORT}/configure`);
+  console.log(`ConfiguraÃ§Ã£o / ajuda: http://127.0.0.1:${PORT}/configure`);
   console.log('');
   console.log(
-    `${LOG_PREFIX} Registo de catálogos: REFRESH = construção desde o site (títulos, páginas de arquivo, resumos se ativos, ms). CACHE = dados em memória (TTL configurável por STREMIO_NP_CACHE_MS).`,
+    `${LOG_PREFIX} Registo de catÃ¡logos: REFRESH = construÃ§Ã£o desde o site (tÃ­tulos, pÃ¡ginas de arquivo, resumos se ativos, ms). CACHE = dados em memÃ³ria (TTL configurÃ¡vel por STREMIO_NP_CACHE_MS).`,
   );
   console.log(
     `${LOG_PREFIX} Endpoints Stremio: movie/novelaspt_filmes | series/novelaspt_series | series/novelaspt_novelas`,
   );
   console.log(
-    `${LOG_PREFIX} Meta JSON: imdb_id ao cliente = ${EXPOSE_IMDB_ID_TO_CLIENT ? 'SIM (STREMIO_NP_EXPOSE_IMDB_ID=1)' : 'NÃO (recomendado: evita fusão com Cinemeta e o efeito “ano 20 / IMDb a desaparecer”). imdbRating + link IMDb mantêm-se.'}`,
+    `${LOG_PREFIX} Meta JSON: imdb_id ao cliente = ${EXPOSE_IMDB_ID_TO_CLIENT ? 'SIM (STREMIO_NP_EXPOSE_IMDB_ID=1)' : 'NÃƒO (recomendado: evita fusÃ£o com Cinemeta e o efeito â€œano 20 / IMDb a desaparecerâ€). imdbRating + link IMDb mantÃªm-se.'}`,
   );
   console.log(
-    `${LOG_PREFIX} Rede: DNS IPv4 preferencial no Node | HTTP 403/429/503 com reintentos | proxy opcional STREMIO_NP_PROXY ou HTTPS_PROXY (útil se o site bloquear datacenters).`,
+    `${LOG_PREFIX} Rede: DNS IPv4 preferencial no Node | HTTP 403/429/503 com reintentos | proxy opcional STREMIO_NP_PROXY ou HTTPS_PROXY (Ãºtil se o site bloquear datacenters).`,
   );
   console.log('');
-  console.log('Stremio — instalar o addon:');
-  console.log(`  • Neste PC (app Stremio Desktop): cola em "Addon catalog" → http://127.0.0.1:${PORT}/manifest.json`);
-  console.log('    (usa 127.0.0.1 ou localhost; HTTP só funciona aí, não em IP da rede.)');
+  console.log('Stremio â€” instalar o addon:');
+  console.log(`  â€¢ Neste PC (app Stremio Desktop): cola em "Addon catalog" â†’ http://127.0.0.1:${PORT}/manifest.json`);
+  console.log('    (usa 127.0.0.1 ou localhost; HTTP sÃ³ funciona aÃ­, nÃ£o em IP da rede.)');
   const lan = localIPv4Addresses();
   if (lan.length) {
-    console.log('  • Noutro dispositivo (TV, telemóvel, Stremio Web): HTTP em IP local costuma ser recusado.');
-    console.log('    Usa um túnel HTTPS (ex.: ngrok, Cloudflare Tunnel) e cola o https://…/manifest.json');
-    console.log(`    IP(s) na tua LAN (para referência): ${lan.join(', ')}`);
+    console.log('  â€¢ Noutro dispositivo (TV, telemÃ³vel, Stremio Web): HTTP em IP local costuma ser recusado.');
+    console.log('    Usa um tÃºnel HTTPS (ex.: ngrok, Cloudflare Tunnel) e cola o https://â€¦/manifest.json');
+    console.log(`    IP(s) na tua LAN (para referÃªncia): ${lan.join(', ')}`);
   }
   console.log('');
 });
+
+

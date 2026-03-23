@@ -1,13 +1,12 @@
 {
   "name": "filmes-series-portuguesas-addon",
-  "version": "1.0.19",
+  "version": "1.0.21",
   "description": "Filmes, Series e Novelas Portuguesas Addon Stremio",
   "main": "dist/bundle.cjs",
   "scripts": {
     "build": "node build.js",
     "start": "node dist/bundle.cjs",
-    "dev": "node index.js",
-    "verify-streams": "node scripts/verify-all-streams.js"
+    "dev": "node index.js"
   },
   "devDependencies": {
     "axios": "^1.6.0",

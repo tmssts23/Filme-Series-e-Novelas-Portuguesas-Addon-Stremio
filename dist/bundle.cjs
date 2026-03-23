@@ -61455,14 +61455,14 @@ var require_scraper = __commonJS({
       const ageMin = Math.round((Date.now() - cachedAtMs) / 6e4);
       const ttlMin = Math.max(0, Math.round((cachedAtMs + CACHE_MS - Date.now()) / 6e4));
       console.log(
-        `${LOG_PREFIX2} CACHE cat\xE1logo [${label}] ${count} t\xEDtulos | carregado h\xE1 ~${ageMin} min | TTL restante ~${ttlMin} min`
+        `${LOG_PREFIX2} CACHE cat\xC3\xA1logo [${label}] ${count} t\xC3\xADtulos | carregado h\xC3\xA1 ~${ageMin} min | TTL restante ~${ttlMin} min`
       );
     }
     function logCatalogRefresh(label, startUrl, stats) {
       const { items, archivePages, ms, synopsisRequests, synopsisOk } = stats;
-      const synPart = CATALOG_SYNOPSIS_ENABLED || CATALOG_RELEASE_ENABLED ? ` | p\xE1ginas de detalhe (resumo/ano): ${synopsisRequests} pedidos, ${synopsisOk} OK` : IS_CLOUD_HOST ? " | grelha r\xE1pida: sem resumo/ano extra (defeito na cloud; STREMIO_NP_CATALOG_SYNOPSIS=1 ou STREMIO_NP_CATALOG_RELEASE=1 para ativar)" : " | p\xE1ginas de detalhe: desativadas (STREMIO_NP_CATALOG_SYNOPSIS=0 e STREMIO_NP_CATALOG_RELEASE=0)";
+      const synPart = CATALOG_SYNOPSIS_ENABLED || CATALOG_RELEASE_ENABLED ? ` | p\xC3\xA1ginas de detalhe (resumo/ano): ${synopsisRequests} pedidos, ${synopsisOk} OK` : IS_CLOUD_HOST ? " | grelha r\xC3\xA1pida: sem resumo/ano extra (defeito na cloud; STREMIO_NP_CATALOG_SYNOPSIS=1 ou STREMIO_NP_CATALOG_RELEASE=1 para ativar)" : " | p\xC3\xA1ginas de detalhe: desativadas (STREMIO_NP_CATALOG_SYNOPSIS=0 e STREMIO_NP_CATALOG_RELEASE=0)";
       console.log(
-        `${LOG_PREFIX2} REFRESH cat\xE1logo [${label}] ${items} t\xEDtulos | p\xE1ginas de arquivo (listagem): ${archivePages}${synPart} | ${ms} ms | fonte: ${startUrl}`
+        `${LOG_PREFIX2} REFRESH cat\xC3\xA1logo [${label}] ${items} t\xC3\xADtulos | p\xC3\xA1ginas de arquivo (listagem): ${archivePages}${synPart} | ${ms} ms | fonte: ${startUrl}`
       );
     }
     var CATALOG_SYNOPSIS_ENABLED = IS_CLOUD_HOST ? process.env.STREMIO_NP_CATALOG_SYNOPSIS === "1" : process.env.STREMIO_NP_CATALOG_SYNOPSIS !== "0";
@@ -61479,14 +61479,14 @@ var require_scraper = __commonJS({
     );
     var ARCHIVE_MAX_PAGES = Math.max(1, Number(process.env.STREMIO_NP_MAX_ARCHIVE_PAGES) || 500);
     if (IS_CLOUD_HOST) {
-      const hyd = CATALOG_SYNOPSIS_ENABLED || CATALOG_RELEASE_ENABLED ? `grelha+detalhe ON (\xD7${CATALOG_SYNOPSIS_CONCURRENCY}; pode demorar com muitos t\xEDtulos)` : "grelha+detalhe OFF (s\xF3 listagens; ano/resumo ao abrir o t\xEDtulo)";
+      const hyd = CATALOG_SYNOPSIS_ENABLED || CATALOG_RELEASE_ENABLED ? `grelha+detalhe ON (\xC3\u2014${CATALOG_SYNOPSIS_CONCURRENCY}; pode demorar com muitos t\xC3\xADtulos)` : "grelha+detalhe OFF (s\xC3\xB3 listagens; ano/resumo ao abrir o t\xC3\xADtulo)";
       console.log(
-        `${LOG_PREFIX2} Cloud: ${HTTP_TIMEOUT_MS}ms | sockets ${HTTPS_MAX_SOCKETS} | arquivo\xD7${ARCHIVE_PAGE_CONCURRENCY} | ${hyd}`
+        `${LOG_PREFIX2} Cloud: ${HTTP_TIMEOUT_MS}ms | sockets ${HTTPS_MAX_SOCKETS} | arquivo\xC3\u2014${ARCHIVE_PAGE_CONCURRENCY} | ${hyd}`
       );
     }
     if (AXIOS_PROXY) {
       console.log(
-        `${LOG_PREFIX2} Proxy HTTP ativo (${AXIOS_PROXY.protocol}://${AXIOS_PROXY.host}:${AXIOS_PROXY.port}) \u2014 STREMIO_NP_PROXY/HTTPS_PROXY`
+        `${LOG_PREFIX2} Proxy HTTP ativo (${AXIOS_PROXY.protocol}://${AXIOS_PROXY.host}:${AXIOS_PROXY.port}) \xE2\u20AC\u201D STREMIO_NP_PROXY/HTTPS_PROXY`
       );
     }
     var RETRYABLE_NET_CODES = /* @__PURE__ */ new Set([
@@ -61501,15 +61501,18 @@ var require_scraper = __commonJS({
       const code = err && (err.code || err.cause?.code);
       const msg = err && err.message || String(err);
       const line = `${code ? `[${code}] ` : ""}${msg}`.slice(0, 200);
-      console.warn(`${LOG_PREFIX2} ${ctx}: ${path2} \u2192 ${line}`);
+      console.warn(`${LOG_PREFIX2} ${ctx}: ${path2} \xE2\u2020\u2019 ${line}`);
     }
     var RETRYABLE_HTTP_STATUS = /* @__PURE__ */ new Set([403, 429, 502, 503, 504]);
-    async function safeClientGet(path2, retries = 3) {
+    var META_DETAIL_TIMEOUT_MS = Math.max(2500, Number(process.env.STREMIO_NP_META_TIMEOUT_MS) || 4500);
+    var META_DETAIL_RETRIES = Math.max(1, Number(process.env.STREMIO_NP_META_RETRIES) || 1);
+    var META_DETAIL_MAX_PATHS = Math.max(1, Number(process.env.STREMIO_NP_META_MAX_PATHS) || 2);
+    async function safeClientGet(path2, retries = 3, timeoutMs = HTTP_TIMEOUT_MS) {
       const n = Math.max(1, retries);
       let last = null;
       for (let attempt = 1; attempt <= n; attempt++) {
         try {
-          const res = await client.get(path2);
+          const res = await client.get(path2, { timeout: timeoutMs });
           last = res;
           if (res && res.status === 200) return res;
           const st = res && res.status;
@@ -61517,13 +61520,13 @@ var require_scraper = __commonJS({
             const snippet = typeof res.data === "string" ? res.data.slice(0, 200).replace(/\s+/g, " ") : "";
             const cf = /cloudflare|cf-ray|attention required|blocked/i.test(snippet);
             console.warn(
-              `${LOG_PREFIX2} GET ${path2} \u2192 HTTP ${st}${cf ? " (poss\xEDvel Cloudflare/bloqueio)" : ""} | tentativa ${attempt + 1}/${n}`
+              `${LOG_PREFIX2} GET ${path2} \xE2\u2020\u2019 HTTP ${st}${cf ? " (poss\xC3\xADvel Cloudflare/bloqueio)" : ""} | tentativa ${attempt + 1}/${n}`
             );
             await new Promise((r) => setTimeout(r, 900 * attempt));
             continue;
           }
           if (st && st !== 200) {
-            console.warn(`${LOG_PREFIX2} GET ${path2} \u2192 HTTP ${st} (sem mais reintentos neste pedido)`);
+            console.warn(`${LOG_PREFIX2} GET ${path2} \xE2\u2020\u2019 HTTP ${st} (sem mais reintentos neste pedido)`);
           }
           return res;
         } catch (e) {
@@ -61532,7 +61535,7 @@ var require_scraper = __commonJS({
           if (canRetry) {
             const wait = 500 * attempt;
             console.warn(
-              `${LOG_PREFIX2} GET ${path2} ${code || "erro"} (${attempt}/${n}) \u2192 nova tentativa em ${wait}ms`
+              `${LOG_PREFIX2} GET ${path2} ${code || "erro"} (${attempt}/${n}) \xE2\u2020\u2019 nova tentativa em ${wait}ms`
             );
             await new Promise((r) => setTimeout(r, wait));
             continue;
@@ -61628,7 +61631,7 @@ var require_scraper = __commonJS({
       }
       const splitters = [
         /Resumo do Filme:\s*(.+)/i,
-        /Resumo da [Ss]érie:\s*(.+)/i,
+        /Resumo da [Ss]Ã©rie:\s*(.+)/i,
         /Resumo:\s*(.+)/i,
         /Sinopse:\s*(.+)/i
       ];
@@ -61653,14 +61656,14 @@ var require_scraper = __commonJS({
           if (y >= 1870 && y <= 2100) return { year: y, releaseInfo: String(y) };
         }
       } else {
-        const m = raw.match(/Ano da\s+Série:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+Série:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano da\s+Serie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+Serie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano da\s+[Ss][ée]rie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+[Ss][ée]rie:\s*((?:19|20)\d{2})(?!\d)/i);
+        const m = raw.match(/Ano da\s+SÃ©rie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+SÃ©rie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano da\s+Serie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+Serie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano da\s+[Ss][Ã©e]rie:\s*((?:19|20)\d{2})(?!\d)/i) || raw.match(/Ano do\s+[Ss][Ã©e]rie:\s*((?:19|20)\d{2})(?!\d)/i);
         if (m) {
           const y = parseInt(m[1], 10);
           if (y >= 1870 && y <= 2100) return { year: y, releaseInfo: String(y) };
         }
       }
       const periodMatch = raw.match(
-        /Per[ií]odo(?:\s+de exibi[cç][aã]o)?\s*:\s*(.+?)(?=(?:Nome do|Nome da|Ano do|Ano da|Resumo)|$)/i
+        /Per[iÃ­]odo(?:\s+de exibi[cÃ§][aÃ£]o)?\s*:\s*(.+?)(?=(?:Nome do|Nome da|Ano do|Ano da|Resumo)|$)/i
       );
       if (periodMatch) {
         const slice = periodMatch[1].trim().replace(/\s*-\s*/g, "-");
@@ -61773,7 +61776,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
           });
         } else {
           links.push({
-            name: "Trailers / v\xEDdeos (IMDb)",
+            name: "Trailers / v\xC3\xADdeos (IMDb)",
             category: "trailers",
             url: `https://www.imdb.com/title/${imdbIdClean}/videogallery/`
           });
@@ -61841,7 +61844,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const estFetches = items.filter((it, idx) => needsDetailFetch(it, idx)).length;
       if (estFetches > 80) {
         console.log(
-          `${LOG_PREFIX2} Cat\xE1logo (${wpPathSeg}): a consultar ~${estFetches} p\xE1ginas de detalhe (resumo e/ou ano)\u2026`
+          `${LOG_PREFIX2} Cat\xC3\xA1logo (${wpPathSeg}): a consultar ~${estFetches} p\xC3\xA1ginas de detalhe (resumo e/ou ano)\xE2\u20AC\xA6`
         );
       }
       for (let i = 0; i < items.length; i += CATALOG_SYNOPSIS_CONCURRENCY) {
@@ -61881,7 +61884,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const archivePages = await fetchAllArchivePagesInto(FILMES_ARCHIVE, items, seen, "movie");
       if (archivePages === 0 && items.length === 0) {
         console.warn(
-          `${LOG_PREFIX2} REFRESH filmes: rede/site indispon\xEDvel (0 p\xE1ginas). Mant\xE9m cache anterior se existir.`
+          `${LOG_PREFIX2} REFRESH filmes: rede/site indispon\xC3\xADvel (0 p\xC3\xA1ginas). Mant\xC3\xA9m cache anterior se existir.`
         );
         if (filmesCache && filmesCache.items.length) {
           sanitizeCatalogItems(filmesCache.items);
@@ -61953,7 +61956,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const res = await safeClientGet(firstPath, 4);
       if (!res || res.status !== 200 || typeof res.data !== "string") {
         console.warn(
-          `${LOG_PREFIX2} Arquivo: falha na 1.\xAA p\xE1gina (${contentType}) ${res ? `status=${res.status}` : "sem resposta"} \u2192 ${firstUrl}`
+          `${LOG_PREFIX2} Arquivo: falha na 1.\xC2\xAA p\xC3\xA1gina (${contentType}) ${res ? `status=${res.status}` : "sem resposta"} \xE2\u2020\u2019 ${firstUrl}`
         );
         return pagesFetched;
       }
@@ -62011,7 +62014,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
     async function getSeriesPortuguesas() {
       const now = Date.now();
       if (seriesPortuguesasCache && now - seriesPortuguesasCache.time < CACHE_MS) {
-        logCatalogCacheHit("s\xE9ries portuguesas", seriesPortuguesasCache.items.length, seriesPortuguesasCache.time);
+        logCatalogCacheHit("s\xC3\xA9ries portuguesas", seriesPortuguesasCache.items.length, seriesPortuguesasCache.time);
         sanitizeCatalogItems(seriesPortuguesasCache.items);
         return seriesPortuguesasCache.items;
       }
@@ -62021,7 +62024,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       );
       if (archivePages === 0 && items.length === 0) {
         console.warn(
-          `${LOG_PREFIX2} REFRESH s\xE9ries: rede/site indispon\xEDvel. Mant\xE9m cache anterior se existir.`
+          `${LOG_PREFIX2} REFRESH s\xC3\xA9ries: rede/site indispon\xC3\xADvel. Mant\xC3\xA9m cache anterior se existir.`
         );
         if (seriesPortuguesasCache && seriesPortuguesasCache.items.length) {
           sanitizeCatalogItems(seriesPortuguesasCache.items);
@@ -62030,7 +62033,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         return [];
       }
       seriesPortuguesasCache = { time: now, items };
-      logCatalogRefresh("s\xE9ries portuguesas", SERIES_ARCHIVE, {
+      logCatalogRefresh("s\xC3\xA9ries portuguesas", SERIES_ARCHIVE, {
         items: items.length,
         archivePages,
         synopsisRequests,
@@ -62053,7 +62056,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       );
       if (archivePages === 0 && items.length === 0) {
         console.warn(
-          `${LOG_PREFIX2} REFRESH novelas: rede/site indispon\xEDvel. Mant\xE9m cache anterior se existir.`
+          `${LOG_PREFIX2} REFRESH novelas: rede/site indispon\xC3\xADvel. Mant\xC3\xA9m cache anterior se existir.`
         );
         if (novelasPortuguesasCache && novelasPortuguesasCache.items.length) {
           sanitizeCatalogItems(novelasPortuguesasCache.items);
@@ -62104,9 +62107,12 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       }
       return null;
     }
-    async function fetchFirstOkHtml(pathList, retriesPerPath = 2) {
+    async function fetchFirstOkHtml(pathList, retriesPerPath = 2, timeoutMs = HTTP_TIMEOUT_MS, maxPaths = Infinity) {
+      let tried = 0;
       for (const path2 of pathList) {
-        const res = await safeClientGet(path2, retriesPerPath);
+        if (tried >= maxPaths) break;
+        tried += 1;
+        const res = await safeClientGet(path2, retriesPerPath, timeoutMs);
         if (res && res.status === 200 && typeof res.data === "string") {
           return { html: res.data, path: path2 };
         }
@@ -62162,7 +62168,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
           {
             season: 1,
             episode: 1,
-            name: "A sincronizar epis\xF3dios\u2026",
+            name: "A sincronizar epis\xC3\xB3dios\xE2\u20AC\xA6",
             wpPid: void 0
           }
         ]
@@ -62176,7 +62182,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const rawSlug = d.slice(MOVIE_PREFIX_SCRAPER.length);
       const slug = stripDiacritics(rawSlug).trim().toLowerCase();
       if (!slug) return null;
-      const desc = "O site n\xE3o respondeu ao servidor do addon (bloqueio, WAF ou rede). Em datacenters (ex. Render) \xE9 comum; experimenta correr o addon no teu PC, VPN residencial ou proxy (STREMIO_NP_PROXY). Os streams s\xF3 funcionam quando o site e a API Zeta ficam acess\xEDveis a partir do servidor.";
+      const desc = "O site n\xC3\xA3o respondeu ao servidor do addon (bloqueio, WAF ou rede). Em datacenters (ex. Render) \xC3\xA9 comum; experimenta correr o addon no teu PC, VPN residencial ou proxy (STREMIO_NP_PROXY). Os streams s\xC3\xB3 funcionam quando o site e a API Zeta ficam acess\xC3\xADveis a partir do servidor.";
       return {
         id: d,
         slug,
@@ -62198,7 +62204,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const rawSlug = baseId.slice(SERIES_PREFIX_SCRAPER.length);
       const slug = stripDiacritics(rawSlug).trim().toLowerCase();
       if (!slug) return null;
-      const desc = "O site n\xE3o respondeu ao servidor do addon (bloqueio, WAF ou rede). Experimenta addon local, VPN ou STREMIO_NP_PROXY. Epis\xF3dios s\xF3 aparecem quando a p\xE1gina da s\xE9rie carregar.";
+      const desc = "O site n\xC3\xA3o respondeu ao servidor do addon (bloqueio, WAF ou rede). Experimenta addon local, VPN ou STREMIO_NP_PROXY. Epis\xC3\xB3dios s\xC3\xB3 aparecem quando a p\xC3\xA1gina da s\xC3\xA9rie carregar.";
       return {
         id: baseId,
         slug,
@@ -62209,7 +62215,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
           {
             season: 1,
             episode: 1,
-            name: "A sincronizar com o site\u2026",
+            name: "A sincronizar com o site\xE2\u20AC\xA6",
             wpPid: void 0
           }
         ]
@@ -62232,7 +62238,17 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
     async function getFilmeMeta(slug) {
       const requested = String(slug || "").trim();
       if (!requested) return null;
-      let fetched = await fetchFirstOkHtml(detailPathsForSlug("filme", requested), 2) || await fetchFirstOkHtml(detailPathsForSlug("serie", requested), 2);
+      let fetched = await fetchFirstOkHtml(
+        detailPathsForSlug("filme", requested),
+        META_DETAIL_RETRIES,
+        META_DETAIL_TIMEOUT_MS,
+        META_DETAIL_MAX_PATHS
+      ) || await fetchFirstOkHtml(
+        detailPathsForSlug("serie", requested),
+        META_DETAIL_RETRIES,
+        META_DETAIL_TIMEOUT_MS,
+        META_DETAIL_MAX_PATHS
+      );
       if (!fetched) return null;
       const { html, path: path2 } = fetched;
       const fromPath = slugFromWpDetailPath(path2, ["filme", "serie"]);
@@ -62300,7 +62316,17 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
     async function getSeriesMeta(slug) {
       const requested = String(slug || "").trim();
       if (!requested) return null;
-      let fetched = await fetchFirstOkHtml(detailPathsForSlug("serie", requested), 2) || await fetchFirstOkHtml(detailPathsForSlug("filme", requested), 2);
+      let fetched = await fetchFirstOkHtml(
+        detailPathsForSlug("serie", requested),
+        META_DETAIL_RETRIES,
+        META_DETAIL_TIMEOUT_MS,
+        META_DETAIL_MAX_PATHS
+      ) || await fetchFirstOkHtml(
+        detailPathsForSlug("filme", requested),
+        META_DETAIL_RETRIES,
+        META_DETAIL_TIMEOUT_MS,
+        META_DETAIL_MAX_PATHS
+      );
       if (!fetched) return null;
       const { html, path: path2 } = fetched;
       const fromPath = slugFromWpDetailPath(path2, ["filme", "serie"]);
@@ -62319,7 +62345,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       if (year == null) {
         const h1y = $("h1").first().text().match(/\((\d{4})\)/);
         const bodyOneLine = $("body").text().replace(/\s+/g, " ");
-        const bodyAno = bodyOneLine.match(/\bAno do\s+Série:\s*((?:19|20)\d{2})(?!\d)/i) || bodyOneLine.match(/\bAno da\s+Série:\s*((?:19|20)\d{2})(?!\d)/i);
+        const bodyAno = bodyOneLine.match(/\bAno do\s+SÃ©rie:\s*((?:19|20)\d{2})(?!\d)/i) || bodyOneLine.match(/\bAno da\s+SÃ©rie:\s*((?:19|20)\d{2})(?!\d)/i);
         const yMatch = h1y || bodyAno;
         if (yMatch) year = parseInt(yMatch[1], 10);
       }
@@ -62353,7 +62379,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         if (!Number.isFinite(episode) || episode < 1) return;
         if (!Number.isFinite(rawSsid) || rawSsid < 1) return;
         const epTitle = $el.find(".ep-title").first().text().trim();
-        const epName = epTitle || `Epis\xF3dio ${episode}`;
+        const epName = epTitle || `Epis\xC3\xB3dio ${episode}`;
         if (!rawEpisodes.some((e) => e.rawSsid === rawSsid && e.episode === episode)) {
           rawEpisodes.push({
             rawSsid,
@@ -62369,7 +62395,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         episodes.push({
           season: 1,
           episode: 1,
-          name: "Epis\xF3dios em atualiza\xE7\xE3o",
+          name: "Epis\xC3\xB3dios em atualiza\xC3\xA7\xC3\xA3o",
           wpPid: void 0
         });
       }
@@ -62427,7 +62453,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         seen.add(key);
         out.push({
           type: "url",
-          title: `Op\xE7\xE3o ${out.length + 1}`,
+          title: `Op\xC3\xA7\xC3\xA3o ${out.length + 1}`,
           url: u
         });
       }
@@ -62456,7 +62482,7 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         const key = normalizeStreamUrlKey(u);
         if (!key || seen.has(key)) continue;
         seen.add(key);
-        const title = item.name || item.title || `Op\xE7\xE3o ${rows.length + 1}`;
+        const title = item.name || item.title || `Op\xC3\xA7\xC3\xA3o ${rows.length + 1}`;
         rows.push({ type: "url", title, url: u });
       }
       return rows;
@@ -62519,8 +62545,8 @@ function getManifest(config, originBase) {
   return {
     id: "pt.filmes-series-portuguesas",
     name: ADDON_DISPLAY_NAME,
-    description: "Filmes, s\xE9ries e novelas portugueses. Cat\xE1logos separados: filmes, s\xE9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
-    version: "1.0.19",
+    description: "Filmes, s\xC3\xA9ries e novelas portugueses. Cat\xC3\xA1logos separados: filmes, s\xC3\xA9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
+    version: "1.0.21",
     resources: ["catalog", "meta", "stream"],
     types: ["movie", "series"],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -62538,7 +62564,7 @@ function getManifest(config, originBase) {
       {
         type: "series",
         id: "novelaspt_series",
-        name: "S\xE9ries Portuguesas",
+        name: "S\xC3\xA9ries Portuguesas",
         extra: [
           { name: "search", isRequired: false },
           { name: "skip", isRequired: false }
@@ -62633,7 +62659,7 @@ function metaFullFromItem(item) {
       const released = `${y0}-${String(mon).padStart(2, "0")}-${String(day).padStart(2, "0")}T12:00:00.000Z`;
       return {
         id: `${item.id}:${season}:${episode}`,
-        title: ep.name || `Epis\xF3dio ${episode}`,
+        title: ep.name || `Epis\xC3\xB3dio ${episode}`,
         episode,
         season,
         released
@@ -62691,7 +62717,7 @@ async function handleCatalog(type, id, extra, config) {
     } else if (id === "novelaspt_series") {
       items = await scraper.getSeriesPortuguesas();
     } else {
-      console.warn(`${LOG_PREFIX} HTTP catalog: id desconhecido type=series id=${id} \u2192 0 metas`);
+      console.warn(`${LOG_PREFIX} HTTP catalog: id desconhecido type=series id=${id} \xE2\u2020\u2019 0 metas`);
     }
   } else {
     console.warn(`${LOG_PREFIX} HTTP catalog: tipo desconhecido type=${type} id=${id}`);
@@ -62709,15 +62735,15 @@ async function handleCatalog(type, id, extra, config) {
       return false;
     });
     console.log(
-      `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \u2192 ${items.length} metas ap\xF3s pesquisa "${search}" (${beforeSearch} \u2192 ${items.length})`
+      `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \xE2\u2020\u2019 ${items.length} metas ap\xC3\xB3s pesquisa "${search}" (${beforeSearch} \xE2\u2020\u2019 ${items.length})`
     );
   } else {
-    console.log(`${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \u2192 ${items.length} metas (total antes da pagina\xE7\xE3o)`);
+    console.log(`${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \xE2\u2020\u2019 ${items.length} metas (total antes da pagina\xC3\xA7\xC3\xA3o)`);
   }
   const skip = catalogSkipFromExtra(extra);
   const page = items.slice(skip, skip + STREMIO_CATALOG_PAGE_SIZE);
   console.log(
-    `${LOG_PREFIX} HTTP catalog p\xE1gina: skip=${skip} \u2192 ${page.length} metas (p\xE1gina ${STREMIO_CATALOG_PAGE_SIZE})`
+    `${LOG_PREFIX} HTTP catalog p\xC3\xA1gina: skip=${skip} \xE2\u2020\u2019 ${page.length} metas (p\xC3\xA1gina ${STREMIO_CATALOG_PAGE_SIZE})`
   );
   return { metas: page.map(metaPreviewFromItem) };
 }
@@ -62735,7 +62761,7 @@ function seriesMetaBaseIdFromDecoded(decoded) {
 }
 function fallbackTitleFromSlug(slug) {
   const raw = String(slug || "").trim();
-  if (!raw) return "Sem t\xEDtulo";
+  if (!raw) return "Sem t\xC3\xADtulo";
   return raw.split(/[-_]+/).filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
 }
 async function handleMeta(type, id, config) {
@@ -62750,7 +62776,6 @@ async function handleMeta(type, id, config) {
   if (decoded.startsWith(MOVIE_PREFIX)) {
     item = await scraper.getFilmeMeta(slug);
     if (!item) {
-      await scraper.warmCatalogForMetaLookup(true);
       item = scraper.minimalMovieMetaFromCatalog(slug);
       metaFromCatalogOnly = !!item;
     }
@@ -62762,7 +62787,6 @@ async function handleMeta(type, id, config) {
   } else {
     item = await scraper.getSeriesMeta(slug);
     if (!item) {
-      await scraper.warmCatalogForMetaLookup(false);
       item = scraper.minimalSeriesMetaFromCatalog(slug);
       metaFromCatalogOnly = !!item;
     }
@@ -62782,11 +62806,11 @@ async function handleMeta(type, id, config) {
   }
   if (metaShell) {
     console.warn(
-      `${LOG_PREFIX} meta SHELL (site inacess\xEDvel ao servidor \u2014 bloqueio/WAF/rede). Streams podem falhar. Op\xE7\xF5es: addon em PC local, STREMIO_NP_PROXY, ou VPN residencial. id=${decoded.slice(0, 100)}`
+      `${LOG_PREFIX} meta SHELL (site inacess\xC3\xADvel ao servidor \xE2\u20AC\u201D bloqueio/WAF/rede). Streams podem falhar. Op\xC3\xA7\xC3\xB5es: addon em PC local, STREMIO_NP_PROXY, ou VPN residencial. id=${decoded.slice(0, 100)}`
     );
   } else if (metaFromCatalogOnly) {
     console.warn(
-      `${LOG_PREFIX} meta s\xF3 a partir do cat\xE1logo (detalhe HTTP falhou) slug=${slug} type=${decoded.startsWith(MOVIE_PREFIX) ? "movie" : "series"}`
+      `${LOG_PREFIX} meta s\xC3\xB3 a partir do cat\xC3\xA1logo (detalhe HTTP falhou) slug=${slug} type=${decoded.startsWith(MOVIE_PREFIX) ? "movie" : "series"}`
     );
   }
   scraper.sanitizeCatalogItems([item]);
@@ -62795,14 +62819,14 @@ async function handleMeta(type, id, config) {
   if (!metaOut.name || !String(metaOut.name).trim()) {
     metaOut.name = fallbackTitleFromSlug(slug);
   }
-  const kind = decoded.startsWith(MOVIE_PREFIX) ? "filme" : "s\xE9rie ou novela (mesmo tipo no Stremio)";
+  const kind = decoded.startsWith(MOVIE_PREFIX) ? "filme" : "s\xC3\xA9rie ou novela (mesmo tipo no Stremio)";
   const ri = metaOut.releaseInfo ?? "-";
   const yr = item.year != null ? String(item.year) : "-";
   const imdbInternal = item.imdbId ?? "-";
-  const imdbClient = EXPOSE_IMDB_ID_TO_CLIENT ? "sim" : "n\xE3o (evita fus\xE3o Cinemeta)";
+  const imdbClient = EXPOSE_IMDB_ID_TO_CLIENT ? "sim" : "n\xC3\xA3o (evita fus\xC3\xA3o Cinemeta)";
   const note = item.imdbRating != null ? String(item.imdbRating) : "-";
   console.log(
-    `${LOG_PREFIX} meta stremio=${type} | ${kind} | t\xEDtulo="${item.name}" | slug=${slug} | releaseInfo=${ri} | year=${yr} | imdbId_interno=${imdbInternal} | imdb_id\u2192cliente=${imdbClient} | imdbRating=${note}`
+    `${LOG_PREFIX} meta stremio=${type} | ${kind} | t\xC3\xADtulo="${item.name}" | slug=${slug} | releaseInfo=${ri} | year=${yr} | imdbId_interno=${imdbInternal} | imdb_id\xE2\u2020\u2019cliente=${imdbClient} | imdbRating=${note}`
   );
   return { meta: metaOut };
 }
@@ -62824,14 +62848,14 @@ async function handleStream(type, id, extra, _config) {
     const meta = await scraper.getFilmeMeta(slug);
     if (!meta?.wpPostId) {
       console.log(
-        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xEDtulo="${meta?.name || "?"}" | slug=${slug} | sem wpPostId \u2192 0 op\xE7\xF5es`
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xC3\xADtulo="${meta?.name || "?"}" | slug=${slug} | sem wpPostId \xE2\u2020\u2019 0 op\xC3\xA7\xC3\xB5es`
       );
       return { streams: [] };
     }
     itemName = meta.name || itemNameBase;
     sources = await scraper.getMovieStreamSources(meta.wpPostId);
   } else if (type === "series") {
-    kindLog = "s\xE9rie/novela";
+    kindLog = "s\xC3\xA9rie/novela";
     const epMatch = decoded.match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
     let slug;
     let season;
@@ -62849,7 +62873,7 @@ async function handleStream(type, id, extra, _config) {
     const meta = await scraper.getSeriesMeta(slug);
     if (!meta) {
       console.log(
-        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | slug=${slug} | meta inexistente \u2192 0 op\xE7\xF5es`
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | slug=${slug} | meta inexistente \xE2\u2020\u2019 0 op\xC3\xA7\xC3\xB5es`
       );
       return { streams: [] };
     }
@@ -62857,10 +62881,10 @@ async function handleStream(type, id, extra, _config) {
     const ep = meta.episodes?.find((e) => e.season === season && e.episode === episode);
     const epLabel = `S${String(season).padStart(2, "0")}E${String(episode).padStart(2, "0")}`;
     const epTitle = ep?.name ? ` "${ep.name}"` : "";
-    epLog = ` | epis\xF3dio=${epLabel}${epTitle}`;
+    epLog = ` | epis\xC3\xB3dio=${epLabel}${epTitle}`;
     if (!ep?.wpPid) {
       console.log(
-        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xEDtulo="${itemName}" | slug=${slug}${epLog} | sem wpPid \u2192 0 op\xE7\xF5es`
+        `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xC3\xADtulo="${itemName}" | slug=${slug}${epLog} | sem wpPid \xE2\u2020\u2019 0 op\xC3\xA7\xC3\xB5es`
       );
       return { streams: [] };
     }
@@ -62870,12 +62894,12 @@ async function handleStream(type, id, extra, _config) {
   const opts = sources.map((s, i) => `${i + 1}) ${s.title || "Player"}`).join(" | ");
   if (!sources.length) {
     console.log(
-      `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xEDtulo="${itemName}" | slug=${slugForLog}${epLog} | 0 op\xE7\xF5es (Zeta/embed vazio)`
+      `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xC3\xADtulo="${itemName}" | slug=${slugForLog}${epLog} | 0 op\xC3\xA7\xC3\xB5es (Zeta/embed vazio)`
     );
     return { streams: [] };
   }
   console.log(
-    `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xEDtulo="${itemName}" | slug=${slugForLog}${epLog} | ${sources.length} op\xE7\xE3o(\xF5es): ${opts}`
+    `${LOG_PREFIX} stream stremio=${type} | ${kindLog} | t\xC3\xADtulo="${itemName}" | slug=${slugForLog}${epLog} | ${sources.length} op\xC3\xA7\xC3\xA3o(\xC3\xB5es): ${opts}`
   );
   return {
     streams: sources.map((s) => ({
@@ -63076,7 +63100,7 @@ function getConfigureHtml() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Configurar Addon \u2014 Filmes, Series e Novelas Portuguesas</title>
+  <title>Configurar Addon \xE2\u20AC\u201D Filmes, Series e Novelas Portuguesas</title>
   <style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 20px; }
@@ -63093,11 +63117,11 @@ function getConfigureHtml() {
 </head>
 <body>
   <h1>Filmes, Series e Novelas Portuguesas Addon Stremio</h1>
-  <p>Conte\xFAdo de <a href="https://novelasportuguesas.com/" target="_blank" rel="noopener">novelasportuguesas.com</a>. Os v\xEDdeos abrem no browser (external player).</p>
+  <p>Conte\xC3\xBAdo de <a href="https://novelasportuguesas.com/" target="_blank" rel="noopener">novelasportuguesas.com</a>. Os v\xC3\xADdeos abrem no browser (external player).</p>
   <p class="link"><strong>URL do manifest (copiar para o Stremio):</strong><br><code id="manifestUrl"></code></p>
-  <p class="hint"><strong>Stremio Desktop no mesmo PC:</strong> usa <code>http://127.0.0.1:PORT/manifest.json</code> (substitui PORT) ou o URL acima se abriste esta p\xE1gina pelo servidor local. HTTP s\xF3 \xE9 aceite em <code>localhost</code> / <code>127.0.0.1</code>.</p>
-  <p class="hint"><strong>Stremio Web, telem\xF3vel ou TV:</strong> o Stremio costuma exigir <strong>HTTPS</strong>. Um endere\xE7o <code>http://192.168.x.x/...</code> na rede local pode ser recusado. Solu\xE7\xE3o: expor o addon com t\xFAnel HTTPS (por exemplo <a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> ou <a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/" target="_blank" rel="noopener">Cloudflare Tunnel</a>) e colar o <code>https://\u2026/manifest.json</code> no Stremio.</p>
-  <p class="hint">No Stremio: \xEDcone de puzzle / Addons \u2192 <em>Addon catalog</em> (ou campo para colar URL do manifest) \u2192 cola o link e instala.</p>
+  <p class="hint"><strong>Stremio Desktop no mesmo PC:</strong> usa <code>http://127.0.0.1:PORT/manifest.json</code> (substitui PORT) ou o URL acima se abriste esta p\xC3\xA1gina pelo servidor local. HTTP s\xC3\xB3 \xC3\xA9 aceite em <code>localhost</code> / <code>127.0.0.1</code>.</p>
+  <p class="hint"><strong>Stremio Web, telem\xC3\xB3vel ou TV:</strong> o Stremio costuma exigir <strong>HTTPS</strong>. Um endere\xC3\xA7o <code>http://192.168.x.x/...</code> na rede local pode ser recusado. Solu\xC3\xA7\xC3\xA3o: expor o addon com t\xC3\xBAnel HTTPS (por exemplo <a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> ou <a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/" target="_blank" rel="noopener">Cloudflare Tunnel</a>) e colar o <code>https://\xE2\u20AC\xA6/manifest.json</code> no Stremio.</p>
+  <p class="hint">No Stremio: \xC3\xADcone de puzzle / Addons \xE2\u2020\u2019 <em>Addon catalog</em> (ou campo para colar URL do manifest) \xE2\u2020\u2019 cola o link e instala.</p>
   <script>
     var m = location.origin + '/manifest.json';
     document.getElementById('manifestUrl').textContent = m;
@@ -63115,12 +63139,12 @@ var HOST = "0.0.0.0";
 server.on("error", (err) => {
   if (err.code === "EADDRINUSE") {
     console.error(`
-${LOG_PREFIX} A porta ${PORT} j\xE1 est\xE1 em uso (outra inst\xE2ncia do addon ou outro programa).`);
-    console.error("  \u2022 Fecha a outra janela onde correste npm start / node dist/bundle.cjs.");
-    console.error("  \u2022 PowerShell \u2014 outra porta:  $env:PORT=7001; npm start");
-    console.error("  \u2022 CMD \u2014 outra porta:          set PORT=7001 && npm start");
+${LOG_PREFIX} A porta ${PORT} j\xC3\xA1 est\xC3\xA1 em uso (outra inst\xC3\xA2ncia do addon ou outro programa).`);
+    console.error("  \xE2\u20AC\xA2 Fecha a outra janela onde correste npm start / node dist/bundle.cjs.");
+    console.error("  \xE2\u20AC\xA2 PowerShell \xE2\u20AC\u201D outra porta:  $env:PORT=7001; npm start");
+    console.error("  \xE2\u20AC\xA2 CMD \xE2\u20AC\u201D outra porta:          set PORT=7001 && npm start");
     console.error(
-      `  \u2022 Ver quem usa a porta:     Get-NetTCPConnection -LocalPort ${PORT} | Select-Object OwningProcess
+      `  \xE2\u20AC\xA2 Ver quem usa a porta:     Get-NetTCPConnection -LocalPort ${PORT} | Select-Object OwningProcess
 `
     );
   } else {
@@ -63130,29 +63154,29 @@ ${LOG_PREFIX} A porta ${PORT} j\xE1 est\xE1 em uso (outra inst\xE2ncia do addon 
 });
 server.listen(PORT, HOST, () => {
   console.log(`Addon a correr em http://127.0.0.1:${PORT} (todas as interfaces: porta ${PORT})`);
-  console.log(`Configura\xE7\xE3o / ajuda: http://127.0.0.1:${PORT}/configure`);
+  console.log(`Configura\xC3\xA7\xC3\xA3o / ajuda: http://127.0.0.1:${PORT}/configure`);
   console.log("");
   console.log(
-    `${LOG_PREFIX} Registo de cat\xE1logos: REFRESH = constru\xE7\xE3o desde o site (t\xEDtulos, p\xE1ginas de arquivo, resumos se ativos, ms). CACHE = dados em mem\xF3ria (TTL configur\xE1vel por STREMIO_NP_CACHE_MS).`
+    `${LOG_PREFIX} Registo de cat\xC3\xA1logos: REFRESH = constru\xC3\xA7\xC3\xA3o desde o site (t\xC3\xADtulos, p\xC3\xA1ginas de arquivo, resumos se ativos, ms). CACHE = dados em mem\xC3\xB3ria (TTL configur\xC3\xA1vel por STREMIO_NP_CACHE_MS).`
   );
   console.log(
     `${LOG_PREFIX} Endpoints Stremio: movie/novelaspt_filmes | series/novelaspt_series | series/novelaspt_novelas`
   );
   console.log(
-    `${LOG_PREFIX} Meta JSON: imdb_id ao cliente = ${EXPOSE_IMDB_ID_TO_CLIENT ? "SIM (STREMIO_NP_EXPOSE_IMDB_ID=1)" : "N\xC3O (recomendado: evita fus\xE3o com Cinemeta e o efeito \u201Cano 20 / IMDb a desaparecer\u201D). imdbRating + link IMDb mant\xEAm-se."}`
+    `${LOG_PREFIX} Meta JSON: imdb_id ao cliente = ${EXPOSE_IMDB_ID_TO_CLIENT ? "SIM (STREMIO_NP_EXPOSE_IMDB_ID=1)" : "N\xC3\u0192O (recomendado: evita fus\xC3\xA3o com Cinemeta e o efeito \xE2\u20AC\u0153ano 20 / IMDb a desaparecer\xE2\u20AC\x9D). imdbRating + link IMDb mant\xC3\xAAm-se."}`
   );
   console.log(
-    `${LOG_PREFIX} Rede: DNS IPv4 preferencial no Node | HTTP 403/429/503 com reintentos | proxy opcional STREMIO_NP_PROXY ou HTTPS_PROXY (\xFAtil se o site bloquear datacenters).`
+    `${LOG_PREFIX} Rede: DNS IPv4 preferencial no Node | HTTP 403/429/503 com reintentos | proxy opcional STREMIO_NP_PROXY ou HTTPS_PROXY (\xC3\xBAtil se o site bloquear datacenters).`
   );
   console.log("");
-  console.log("Stremio \u2014 instalar o addon:");
-  console.log(`  \u2022 Neste PC (app Stremio Desktop): cola em "Addon catalog" \u2192 http://127.0.0.1:${PORT}/manifest.json`);
-  console.log("    (usa 127.0.0.1 ou localhost; HTTP s\xF3 funciona a\xED, n\xE3o em IP da rede.)");
+  console.log("Stremio \xE2\u20AC\u201D instalar o addon:");
+  console.log(`  \xE2\u20AC\xA2 Neste PC (app Stremio Desktop): cola em "Addon catalog" \xE2\u2020\u2019 http://127.0.0.1:${PORT}/manifest.json`);
+  console.log("    (usa 127.0.0.1 ou localhost; HTTP s\xC3\xB3 funciona a\xC3\xAD, n\xC3\xA3o em IP da rede.)");
   const lan = localIPv4Addresses();
   if (lan.length) {
-    console.log("  \u2022 Noutro dispositivo (TV, telem\xF3vel, Stremio Web): HTTP em IP local costuma ser recusado.");
-    console.log("    Usa um t\xFAnel HTTPS (ex.: ngrok, Cloudflare Tunnel) e cola o https://\u2026/manifest.json");
-    console.log(`    IP(s) na tua LAN (para refer\xEAncia): ${lan.join(", ")}`);
+    console.log("  \xE2\u20AC\xA2 Noutro dispositivo (TV, telem\xC3\xB3vel, Stremio Web): HTTP em IP local costuma ser recusado.");
+    console.log("    Usa um t\xC3\xBAnel HTTPS (ex.: ngrok, Cloudflare Tunnel) e cola o https://\xE2\u20AC\xA6/manifest.json");
+    console.log(`    IP(s) na tua LAN (para refer\xC3\xAAncia): ${lan.join(", ")}`);
   }
   console.log("");
 });
