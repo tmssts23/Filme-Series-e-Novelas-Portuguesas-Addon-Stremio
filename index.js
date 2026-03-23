@@ -45,15 +45,39 @@ function getManifest(config, originBase) {
     name: ADDON_DISPLAY_NAME,
     description:
       'Filmes, séries e novelas portugueses. Catálogos separados: filmes, séries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).',
-    version: '1.0.14',
+    version: '1.0.15',
     resources: ['catalog', 'meta', 'stream'],
     types: ['movie', 'series'],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
     ...(logo ? { logo } : {}),
     catalogs: [
-      { type: 'movie', id: 'novelaspt_filmes', name: 'Filmes Portugueses', extra: [{ name: 'search', isRequired: false }] },
-      { type: 'series', id: 'novelaspt_series', name: 'Séries Portuguesas', extra: [{ name: 'search', isRequired: false }] },
-      { type: 'series', id: 'novelaspt_novelas', name: 'Novelas Portuguesas', extra: [{ name: 'search', isRequired: false }] },
+      {
+        type: 'movie',
+        id: 'novelaspt_filmes',
+        name: 'Filmes Portugueses',
+        extra: [
+          { name: 'search', isRequired: false },
+          { name: 'skip', isRequired: false },
+        ],
+      },
+      {
+        type: 'series',
+        id: 'novelaspt_series',
+        name: 'Séries Portuguesas',
+        extra: [
+          { name: 'search', isRequired: false },
+          { name: 'skip', isRequired: false },
+        ],
+      },
+      {
+        type: 'series',
+        id: 'novelaspt_novelas',
+        name: 'Novelas Portuguesas',
+        extra: [
+          { name: 'search', isRequired: false },
+          { name: 'skip', isRequired: false },
+        ],
+      },
     ],
     behaviorHints: base,
     stremioAddonsConfig: {
@@ -210,12 +234,17 @@ async function handleCatalog(type, id, extra, config) {
       return false;
     });
     console.log(
-      `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} → ${items.length} metas (pesquisa "${search}" filtrou ${beforeSearch} → ${items.length})`,
+      `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} → ${items.length} metas após pesquisa "${search}" (${beforeSearch} → ${items.length})`,
     );
   } else {
-    console.log(`${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} → ${items.length} metas`);
+    console.log(`${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} → ${items.length} metas (total antes da paginação)`);
   }
-  return { metas: items.map(metaPreviewFromItem) };
+  const skip = catalogSkipFromExtra(extra);
+  const page = items.slice(skip, skip + STREMIO_CATALOG_PAGE_SIZE);
+  console.log(
+    `${LOG_PREFIX} HTTP catalog página: skip=${skip} → ${page.length} metas (página ${STREMIO_CATALOG_PAGE_SIZE})`,
+  );
+  return { metas: page.map(metaPreviewFromItem) };
 }
 
 function stripStreamEpisodeSuffix(seriesId) {
@@ -393,6 +422,17 @@ function normalizeForCatalogSearch(s) {
     .replace(/\p{M}/gu, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/** Stremio usa páginas de 100 metas; sem slice o cliente pede skip=100,200,… e nós devolvíamos sempre do início. */
+const STREMIO_CATALOG_PAGE_SIZE = 100;
+
+function catalogSkipFromExtra(extra) {
+  const v = extra && extra.skip;
+  if (v == null) return 0;
+  const n = parseInt(String(v).trim(), 10);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return n;
 }
 
 function localIPv4Addresses() {

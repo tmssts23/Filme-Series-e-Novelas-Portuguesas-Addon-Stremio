@@ -61691,41 +61691,47 @@ var require_scraper = __commonJS({
       const rawId = item.imdbId && String(item.imdbId).trim();
       if (!rawId || !rawId.toLowerCase().startsWith("tt")) return item;
       const imdbIdClean = rawId.toLowerCase();
-      const cm = await getMetaByImdbId(stremioType, item.imdbId);
-      const siteDesc = (item.description || "").trim();
-      if (cm) {
-        if (siteDesc.length < 160 && cm.description) {
-          item.description = siteDesc ? `${siteDesc}
+      try {
+        const cm = await getMetaByImdbId(stremioType, item.imdbId);
+        const siteDesc = (item.description || "").trim();
+        if (cm) {
+          if (siteDesc.length < 160 && cm.description) {
+            item.description = siteDesc ? `${siteDesc}
 
 ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX);
+          }
+          if (cm.poster && !item.poster) item.poster = cm.poster;
+          if (cm.background && !item.background) item.background = cm.background;
+          if (cm.genres?.length && !item.genres?.length) item.genres = cm.genres;
+          if (cm.cast && !item.cast) item.cast = cm.cast;
+          if (cm.director && !item.director) item.director = cm.director;
+          if (cm.runtime && !item.runtime) item.runtime = cm.runtime;
+          if (cm.imdbRating != null) item.imdbRating = cm.imdbRating;
+          if (cm.trailers?.length) item.trailers = cm.trailers;
         }
-        if (cm.poster && !item.poster) item.poster = cm.poster;
-        if (cm.background && !item.background) item.background = cm.background;
-        if (cm.genres?.length && !item.genres?.length) item.genres = cm.genres;
-        if (cm.cast && !item.cast) item.cast = cm.cast;
-        if (cm.director && !item.director) item.director = cm.director;
-        if (cm.runtime && !item.runtime) item.runtime = cm.runtime;
-        if (cm.imdbRating != null) item.imdbRating = cm.imdbRating;
-        if (cm.trailers?.length) item.trailers = cm.trailers;
+        const links = [imdbPageLink(imdbIdClean, item.imdbRating)];
+        const tr = item.trailers;
+        const yt = Array.isArray(tr) && tr.find((t) => t && typeof t.source === "string" && t.source.trim());
+        if (yt) {
+          const vid = yt.source.trim();
+          links.push({
+            name: "Trailer (YouTube)",
+            category: "trailers",
+            url: `https://www.youtube.com/watch?v=${vid}`
+          });
+        } else {
+          links.push({
+            name: "Trailers / v\xEDdeos (IMDb)",
+            category: "trailers",
+            url: `https://www.imdb.com/title/${imdbIdClean}/videogallery/`
+          });
+        }
+        item.links = links;
+        sanitizeItemYearRelease(item);
+      } catch (e) {
+        const msg = e && e.message || String(e);
+        console.warn(`${LOG_PREFIX2} enrichMetaFromCinemeta ignorado (${item.slug || item.name}): ${msg.slice(0, 120)}`);
       }
-      const links = [imdbPageLink(imdbIdClean, item.imdbRating)];
-      const yt = item.trailers && item.trailers.find((t) => t && typeof t.source === "string" && t.source.trim());
-      if (yt) {
-        const vid = yt.source.trim();
-        links.push({
-          name: "Trailer (YouTube)",
-          category: "trailers",
-          url: `https://www.youtube.com/watch?v=${vid}`
-        });
-      } else {
-        links.push({
-          name: "Trailers / v\xEDdeos (IMDb)",
-          category: "trailers",
-          url: `https://www.imdb.com/title/${imdbIdClean}/videogallery/`
-        });
-      }
-      item.links = links;
-      sanitizeItemYearRelease(item);
       return item;
     }
     function parseDisplayItems($, items, seenSlugs, contentType) {
@@ -62286,15 +62292,39 @@ function getManifest(config, originBase) {
     id: "pt.filmes-series-portuguesas",
     name: ADDON_DISPLAY_NAME,
     description: "Filmes, s\xE9ries e novelas portugueses. Cat\xE1logos separados: filmes, s\xE9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
-    version: "1.0.14",
+    version: "1.0.15",
     resources: ["catalog", "meta", "stream"],
     types: ["movie", "series"],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
     ...logo ? { logo } : {},
     catalogs: [
-      { type: "movie", id: "novelaspt_filmes", name: "Filmes Portugueses", extra: [{ name: "search", isRequired: false }] },
-      { type: "series", id: "novelaspt_series", name: "S\xE9ries Portuguesas", extra: [{ name: "search", isRequired: false }] },
-      { type: "series", id: "novelaspt_novelas", name: "Novelas Portuguesas", extra: [{ name: "search", isRequired: false }] }
+      {
+        type: "movie",
+        id: "novelaspt_filmes",
+        name: "Filmes Portugueses",
+        extra: [
+          { name: "search", isRequired: false },
+          { name: "skip", isRequired: false }
+        ]
+      },
+      {
+        type: "series",
+        id: "novelaspt_series",
+        name: "S\xE9ries Portuguesas",
+        extra: [
+          { name: "search", isRequired: false },
+          { name: "skip", isRequired: false }
+        ]
+      },
+      {
+        type: "series",
+        id: "novelaspt_novelas",
+        name: "Novelas Portuguesas",
+        extra: [
+          { name: "search", isRequired: false },
+          { name: "skip", isRequired: false }
+        ]
+      }
     ],
     behaviorHints: base,
     stremioAddonsConfig: {
@@ -62432,12 +62462,17 @@ async function handleCatalog(type, id, extra, config) {
       return false;
     });
     console.log(
-      `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \u2192 ${items.length} metas (pesquisa "${search}" filtrou ${beforeSearch} \u2192 ${items.length})`
+      `${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \u2192 ${items.length} metas ap\xF3s pesquisa "${search}" (${beforeSearch} \u2192 ${items.length})`
     );
   } else {
-    console.log(`${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \u2192 ${items.length} metas`);
+    console.log(`${LOG_PREFIX} HTTP catalog resposta: ${type}/${id} \u2192 ${items.length} metas (total antes da pagina\xE7\xE3o)`);
   }
-  return { metas: items.map(metaPreviewFromItem) };
+  const skip = catalogSkipFromExtra(extra);
+  const page = items.slice(skip, skip + STREMIO_CATALOG_PAGE_SIZE);
+  console.log(
+    `${LOG_PREFIX} HTTP catalog p\xE1gina: skip=${skip} \u2192 ${page.length} metas (p\xE1gina ${STREMIO_CATALOG_PAGE_SIZE})`
+  );
+  return { metas: page.map(metaPreviewFromItem) };
 }
 function stripStreamEpisodeSuffix(seriesId) {
   const m = String(seriesId).match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
@@ -62591,6 +62626,14 @@ function parseCatalogPathExtras(pathRest) {
 function normalizeForCatalogSearch(s) {
   if (!s || typeof s !== "string") return "";
   return s.toLowerCase().normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "").replace(/\s+/g, " ").trim();
+}
+var STREMIO_CATALOG_PAGE_SIZE = 100;
+function catalogSkipFromExtra(extra) {
+  const v = extra && extra.skip;
+  if (v == null) return 0;
+  const n = parseInt(String(v).trim(), 10);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return n;
 }
 function localIPv4Addresses() {
   const nets = os.networkInterfaces();
