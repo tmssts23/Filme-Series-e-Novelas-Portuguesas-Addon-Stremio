@@ -45,7 +45,7 @@ function getManifest(config, originBase) {
     name: ADDON_DISPLAY_NAME,
     description:
       'Filmes, séries e novelas portugueses. Catálogos separados: filmes, séries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).',
-    version: '1.0.17',
+    version: '1.0.18',
     resources: ['catalog', 'meta', 'stream'],
     types: ['movie', 'series'],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -167,17 +167,38 @@ function metaFullFromItem(item) {
   if (item.type === 'series' && item.episodes && item.episodes.length) {
     const y0 = seriesBaseYearForVideos(item) ?? 2020;
     base.videos = item.episodes.map((ep, idx) => {
+      const season = Math.max(1, Number(ep.season) || 1);
+      const episode = Math.max(1, Number(ep.episode) || 1);
       const day = 1 + (idx % 28);
-      const mon = 1 + ((idx + ep.season * 31 + ep.episode) % 12);
+      const mon = 1 + ((idx + season * 31 + episode) % 12);
       const released = `${y0}-${String(mon).padStart(2, '0')}-${String(day).padStart(2, '0')}T12:00:00.000Z`;
       return {
-        id: `${item.id}:${ep.season}:${ep.episode}`,
-        title: ep.name || `Episódio ${ep.episode}`,
-        episode: ep.episode,
-        season: ep.season,
+        id: `${item.id}:${season}:${episode}`,
+        title: ep.name || `Episódio ${episode}`,
+        episode,
+        season,
         released,
       };
     });
+  }
+  /* Filme: um vídeo explícito evita UI estranha (ex. Season 0) em alguns clientes. */
+  if (item.type === 'movie') {
+    const yFromRi = (() => {
+      const ri = item.releaseInfo != null ? String(item.releaseInfo).trim() : '';
+      const m = ri.match(/((?:19|20)\d{2})/);
+      return m ? parseInt(m[1], 10) : null;
+    })();
+    const y = plausibleStremioYear(item.year) ?? yFromRi;
+    const safeY =
+      y != null && y >= STREMIO_YEAR_MIN && y <= STREMIO_YEAR_MAX ? y : 2020;
+    const nm = item.name && String(item.name).trim() ? String(item.name).trim() : 'Filme';
+    base.videos = [
+      {
+        id: item.id,
+        title: nm,
+        released: `${safeY}-06-15T12:00:00.000Z`,
+      },
+    ];
   }
   return base;
 }
@@ -253,6 +274,29 @@ function stripStreamEpisodeSuffix(seriesId) {
   return String(seriesId).replace(SERIES_PREFIX, '');
 }
 
+/**
+ * Resposta meta: o `id` tem de coincidir com o que o cliente pediu (incl. acentos); senão alguns
+ * builds do Stremio tratam como erro → “No metadata was found”.
+ * Se o pedido vier com :season:episode no id (raro), devolve só o id base da série.
+ */
+function seriesMetaBaseIdFromDecoded(decoded) {
+  const s = String(decoded);
+  if (!s.startsWith(SERIES_PREFIX)) return s;
+  const m = s.match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
+  if (m) return `${SERIES_PREFIX}${m[1]}`;
+  return s;
+}
+
+function fallbackTitleFromSlug(slug) {
+  const raw = String(slug || '').trim();
+  if (!raw) return 'Sem título';
+  return raw
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
 async function handleMeta(type, id, config) {
   const decoded = safeDecodeStremioId(id);
   if (!decoded.startsWith(MOVIE_PREFIX) && !decoded.startsWith(SERIES_PREFIX)) {
@@ -277,6 +321,17 @@ async function handleMeta(type, id, config) {
     }
   }
   if (!item) return { meta: null };
+
+  const metaResponseId = decoded.startsWith(MOVIE_PREFIX)
+    ? decoded
+    : seriesMetaBaseIdFromDecoded(decoded);
+  if (item.id !== metaResponseId) {
+    item.id = metaResponseId;
+  }
+  if (!item.name || !String(item.name).trim()) {
+    item.name = fallbackTitleFromSlug(slug);
+  }
+
   if (metaFromCatalogOnly) {
     console.warn(
       `${LOG_PREFIX} meta só a partir do catálogo (detalhe HTTP falhou) slug=${slug} type=${decoded.startsWith(MOVIE_PREFIX) ? 'movie' : 'series'}`,
@@ -284,6 +339,10 @@ async function handleMeta(type, id, config) {
   }
   scraper.sanitizeCatalogItems([item]);
   const metaOut = metaFullFromItem(item);
+  metaOut.type = decoded.startsWith(MOVIE_PREFIX) ? 'movie' : 'series';
+  if (!metaOut.name || !String(metaOut.name).trim()) {
+    metaOut.name = fallbackTitleFromSlug(slug);
+  }
   const kind = decoded.startsWith(MOVIE_PREFIX) ? 'filme' : 'série ou novela (mesmo tipo no Stremio)';
   const ri = metaOut.releaseInfo ?? '-';
   const yr = item.year != null ? String(item.year) : '-';
