@@ -61388,7 +61388,7 @@ var require_scraper = __commonJS({
     );
     var HTTPS_MAX_SOCKETS = Math.max(
       4,
-      Number(process.env.STREMIO_NP_MAX_HTTPS_SOCKETS) || (IS_CLOUD_HOST ? 16 : 64)
+      Number(process.env.STREMIO_NP_MAX_HTTPS_SOCKETS) || (IS_CLOUD_HOST ? 40 : 64)
     );
     var httpsKeepAlive = new https.Agent({ keepAlive: true, maxSockets: HTTPS_MAX_SOCKETS });
     var httpKeepAlive = new http2.Agent({ keepAlive: true, maxSockets: HTTPS_MAX_SOCKETS });
@@ -61431,27 +61431,28 @@ var require_scraper = __commonJS({
     }
     function logCatalogRefresh(label, startUrl, stats) {
       const { items, archivePages, ms, synopsisRequests, synopsisOk } = stats;
-      const synPart = CATALOG_SYNOPSIS_ENABLED || CATALOG_RELEASE_ENABLED ? ` | p\xE1ginas de detalhe (resumo/ano): ${synopsisRequests} pedidos, ${synopsisOk} OK` : " | p\xE1ginas de detalhe: desativadas (STREMIO_NP_CATALOG_SYNOPSIS=0 e STREMIO_NP_CATALOG_RELEASE=0)";
+      const synPart = CATALOG_SYNOPSIS_ENABLED || CATALOG_RELEASE_ENABLED ? ` | p\xE1ginas de detalhe (resumo/ano): ${synopsisRequests} pedidos, ${synopsisOk} OK` : IS_CLOUD_HOST ? " | grelha r\xE1pida: sem resumo/ano extra (defeito na cloud; STREMIO_NP_CATALOG_SYNOPSIS=1 ou STREMIO_NP_CATALOG_RELEASE=1 para ativar)" : " | p\xE1ginas de detalhe: desativadas (STREMIO_NP_CATALOG_SYNOPSIS=0 e STREMIO_NP_CATALOG_RELEASE=0)";
       console.log(
         `${LOG_PREFIX2} REFRESH cat\xE1logo [${label}] ${items} t\xEDtulos | p\xE1ginas de arquivo (listagem): ${archivePages}${synPart} | ${ms} ms | fonte: ${startUrl}`
       );
     }
-    var CATALOG_SYNOPSIS_ENABLED = process.env.STREMIO_NP_CATALOG_SYNOPSIS !== "0";
-    var CATALOG_RELEASE_ENABLED = process.env.STREMIO_NP_CATALOG_RELEASE !== "0";
+    var CATALOG_SYNOPSIS_ENABLED = IS_CLOUD_HOST ? process.env.STREMIO_NP_CATALOG_SYNOPSIS === "1" : process.env.STREMIO_NP_CATALOG_SYNOPSIS !== "0";
+    var CATALOG_RELEASE_ENABLED = IS_CLOUD_HOST ? process.env.STREMIO_NP_CATALOG_RELEASE === "1" : process.env.STREMIO_NP_CATALOG_RELEASE !== "0";
     var CATALOG_SYNOPSIS_CONCURRENCY = Math.max(
       1,
-      Number(process.env.STREMIO_NP_SYNOPSIS_CONCURRENCY) || (IS_CLOUD_HOST ? 4 : 8)
+      Number(process.env.STREMIO_NP_SYNOPSIS_CONCURRENCY) || (IS_CLOUD_HOST ? 16 : 10)
     );
     var CATALOG_SYNOPSIS_MAX = Number(process.env.STREMIO_NP_MAX_SYNOPSIS);
     var CATALOG_DESC_PREVIEW_LEN = Math.min(2e3, Number(process.env.STREMIO_NP_CATALOG_DESC_LEN) || 900);
     var ARCHIVE_PAGE_CONCURRENCY = Math.max(
       1,
-      Number(process.env.STREMIO_NP_ARCHIVE_CONCURRENCY) || (IS_CLOUD_HOST ? 3 : 8)
+      Number(process.env.STREMIO_NP_ARCHIVE_CONCURRENCY) || (IS_CLOUD_HOST ? 12 : 10)
     );
     var ARCHIVE_MAX_PAGES = Math.max(1, Number(process.env.STREMIO_NP_MAX_ARCHIVE_PAGES) || 500);
     if (IS_CLOUD_HOST) {
+      const hyd = CATALOG_SYNOPSIS_ENABLED || CATALOG_RELEASE_ENABLED ? `grelha+detalhe ON (\xD7${CATALOG_SYNOPSIS_CONCURRENCY}; pode demorar com muitos t\xEDtulos)` : "grelha+detalhe OFF (s\xF3 listagens; ano/resumo ao abrir o t\xEDtulo)";
       console.log(
-        `${LOG_PREFIX2} Modo cloud (RENDER/FLY ou STREMIO_NP_LOW_CONCURRENCY): HTTP ${HTTP_TIMEOUT_MS}ms | sockets HTTPS ${HTTPS_MAX_SOCKETS} | arquivo ${ARCHIVE_PAGE_CONCURRENCY} paralelo | detalhe ${CATALOG_SYNOPSIS_CONCURRENCY} paralelo`
+        `${LOG_PREFIX2} Cloud: ${HTTP_TIMEOUT_MS}ms | sockets ${HTTPS_MAX_SOCKETS} | arquivo\xD7${ARCHIVE_PAGE_CONCURRENCY} | ${hyd}`
       );
     }
     var RETRYABLE_NET_CODES = /* @__PURE__ */ new Set([
@@ -62285,7 +62286,7 @@ function getManifest(config, originBase) {
     id: "pt.filmes-series-portuguesas",
     name: ADDON_DISPLAY_NAME,
     description: "Filmes, s\xE9ries e novelas portugueses. Cat\xE1logos separados: filmes, s\xE9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
-    version: "1.0.13",
+    version: "1.0.14",
     resources: ["catalog", "meta", "stream"],
     types: ["movie", "series"],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],

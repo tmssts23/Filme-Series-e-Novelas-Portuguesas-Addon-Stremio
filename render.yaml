@@ -10,11 +10,9 @@ services:
     buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /manifest.json
-    # Opcional (Render já define RENDER=true → timeouts mais longos, menos pedidos paralelos):
+    # Catálogo na cloud é rápido por defeito (só listagens). Ano/resumo na grelha = muitos pedidos:
     # envVars:
-    #   - key: STREMIO_NP_HTTP_TIMEOUT_MS
-    #     value: "60000"
-    #   - key: STREMIO_NP_ARCHIVE_CONCURRENCY
-    #     value: "2"
-    #   - key: STREMIO_NP_SYNOPSIS_CONCURRENCY
-    #     value: "3"
+    #   - key: STREMIO_NP_CATALOG_RELEASE
+    #     value: "1"
+    #   - key: STREMIO_NP_CATALOG_SYNOPSIS
+    #     value: "1"
