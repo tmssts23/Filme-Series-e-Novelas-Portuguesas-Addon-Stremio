@@ -45,7 +45,7 @@ function getManifest(config, originBase) {
     name: ADDON_DISPLAY_NAME,
     description:
       'Filmes, séries e novelas portugueses. Catálogos separados: filmes, séries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).',
-    version: '1.0.18',
+    version: '1.0.19',
     resources: ['catalog', 'meta', 'stream'],
     types: ['movie', 'series'],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -307,17 +307,30 @@ async function handleMeta(type, id, config) {
     : stripStreamEpisodeSuffix(decoded);
   let item = null;
   let metaFromCatalogOnly = false;
+  let metaShell = false;
   if (decoded.startsWith(MOVIE_PREFIX)) {
     item = await scraper.getFilmeMeta(slug);
     if (!item) {
+      await scraper.warmCatalogForMetaLookup(true);
       item = scraper.minimalMovieMetaFromCatalog(slug);
       metaFromCatalogOnly = !!item;
+    }
+    if (!item) {
+      item = scraper.shellMovieMetaFromStremioId(decoded);
+      metaFromCatalogOnly = true;
+      metaShell = !!item;
     }
   } else {
     item = await scraper.getSeriesMeta(slug);
     if (!item) {
+      await scraper.warmCatalogForMetaLookup(false);
       item = scraper.minimalSeriesMetaFromCatalog(slug);
       metaFromCatalogOnly = !!item;
+    }
+    if (!item) {
+      item = scraper.shellSeriesMetaFromStremioId(decoded);
+      metaFromCatalogOnly = true;
+      metaShell = !!item;
     }
   }
   if (!item) return { meta: null };
@@ -332,7 +345,11 @@ async function handleMeta(type, id, config) {
     item.name = fallbackTitleFromSlug(slug);
   }
 
-  if (metaFromCatalogOnly) {
+  if (metaShell) {
+    console.warn(
+      `${LOG_PREFIX} meta SHELL (site inacessível ao servidor — bloqueio/WAF/rede). Streams podem falhar. Opções: addon em PC local, STREMIO_NP_PROXY, ou VPN residencial. id=${decoded.slice(0, 100)}`,
+    );
+  } else if (metaFromCatalogOnly) {
     console.warn(
       `${LOG_PREFIX} meta só a partir do catálogo (detalhe HTTP falhou) slug=${slug} type=${decoded.startsWith(MOVIE_PREFIX) ? 'movie' : 'series'}`,
     );
@@ -735,6 +752,9 @@ server.listen(PORT, HOST, () => {
   );
   console.log(
     `${LOG_PREFIX} Meta JSON: imdb_id ao cliente = ${EXPOSE_IMDB_ID_TO_CLIENT ? 'SIM (STREMIO_NP_EXPOSE_IMDB_ID=1)' : 'NÃO (recomendado: evita fusão com Cinemeta e o efeito “ano 20 / IMDb a desaparecer”). imdbRating + link IMDb mantêm-se.'}`,
+  );
+  console.log(
+    `${LOG_PREFIX} Rede: DNS IPv4 preferencial no Node | HTTP 403/429/503 com reintentos | proxy opcional STREMIO_NP_PROXY ou HTTPS_PROXY (útil se o site bloquear datacenters).`,
   );
   console.log('');
   console.log('Stremio — instalar o addon:');

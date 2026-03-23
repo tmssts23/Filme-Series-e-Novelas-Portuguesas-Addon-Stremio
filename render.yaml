@@ -11,7 +11,10 @@ services:
     startCommand: npm start
     healthCheckPath: /manifest.json
     # Catálogo na cloud é rápido por defeito (só listagens). Ano/resumo na grelha = muitos pedidos:
+    # Se o site bloquear o IP da Render (meta “No metadata” / HTTP 403), proxy residencial:
     # envVars:
+    #   - key: STREMIO_NP_PROXY
+    #     value: "http://user:pass@host:port"
     #   - key: STREMIO_NP_CATALOG_RELEASE
     #     value: "1"
     #   - key: STREMIO_NP_CATALOG_SYNOPSIS

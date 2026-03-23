@@ -61370,6 +61370,10 @@ var require_cinemeta = __commonJS({
 // lib/scraper.js
 var require_scraper = __commonJS({
   "lib/scraper.js"(exports2, module2) {
+    try {
+      require("dns").setDefaultResultOrder("ipv4first");
+    } catch (_) {
+    }
     var http2 = require("http");
     var https = require("https");
     var axios = require_axios();
@@ -61381,6 +61385,26 @@ var require_scraper = __commonJS({
     var NOVELAS_GENRE_ARCHIVE = `${BASE_URL}/genero/novelas/`;
     var ZETA_API = `${BASE_URL}/wp-json/zetaplayer/v2`;
     var USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+    function axiosProxyFromEnv() {
+      const raw = process.env.STREMIO_NP_PROXY || process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+      if (!raw || typeof raw !== "string") return void 0;
+      try {
+        const u = new URL(raw.trim());
+        const protocol = (u.protocol || "http:").replace(/:$/, "");
+        const port = u.port ? parseInt(u.port, 10) : protocol === "https" ? 443 : 80;
+        const cfg = { protocol, host: u.hostname, port };
+        if (u.username) {
+          cfg.auth = {
+            username: decodeURIComponent(u.username),
+            password: decodeURIComponent(u.password || "")
+          };
+        }
+        return cfg;
+      } catch (_) {
+        return void 0;
+      }
+    }
+    var AXIOS_PROXY = axiosProxyFromEnv();
     var IS_CLOUD_HOST = process.env.RENDER === "true" || !!process.env.FLY_APP_NAME || process.env.STREMIO_NP_LOW_CONCURRENCY === "1";
     var HTTP_TIMEOUT_MS = Math.max(
       8e3,
@@ -61397,11 +61421,14 @@ var require_scraper = __commonJS({
       timeout: HTTP_TIMEOUT_MS,
       httpAgent: httpKeepAlive,
       httpsAgent: httpsKeepAlive,
+      ...AXIOS_PROXY ? { proxy: AXIOS_PROXY } : {},
       headers: {
         "User-Agent": USER_AGENT,
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "pt-PT,pt;q=0.9,en;q=0.8",
-        Referer: `${BASE_URL}/`
+        "Accept-Encoding": "gzip, deflate, br",
+        Referer: `${BASE_URL}/`,
+        "Cache-Control": "no-cache"
       },
       validateStatus: () => true
     });
@@ -61410,10 +61437,12 @@ var require_scraper = __commonJS({
       timeout: Math.min(12e4, Math.max(12e3, HTTP_TIMEOUT_MS)),
       httpAgent: httpKeepAlive,
       httpsAgent: httpsKeepAlive,
+      ...AXIOS_PROXY ? { proxy: AXIOS_PROXY } : {},
       headers: {
         "User-Agent": USER_AGENT,
         Accept: "application/json",
-        Referer: `${BASE_URL}/`
+        Referer: `${BASE_URL}/`,
+        "Accept-Language": "pt-PT,pt;q=0.9,en;q=0.8"
       },
       validateStatus: () => true
     });
@@ -61455,6 +61484,11 @@ var require_scraper = __commonJS({
         `${LOG_PREFIX2} Cloud: ${HTTP_TIMEOUT_MS}ms | sockets ${HTTPS_MAX_SOCKETS} | arquivo\xD7${ARCHIVE_PAGE_CONCURRENCY} | ${hyd}`
       );
     }
+    if (AXIOS_PROXY) {
+      console.log(
+        `${LOG_PREFIX2} Proxy HTTP ativo (${AXIOS_PROXY.protocol}://${AXIOS_PROXY.host}:${AXIOS_PROXY.port}) \u2014 STREMIO_NP_PROXY/HTTPS_PROXY`
+      );
+    }
     var RETRYABLE_NET_CODES = /* @__PURE__ */ new Set([
       "ETIMEDOUT",
       "ECONNRESET",
@@ -61469,11 +61503,29 @@ var require_scraper = __commonJS({
       const line = `${code ? `[${code}] ` : ""}${msg}`.slice(0, 200);
       console.warn(`${LOG_PREFIX2} ${ctx}: ${path2} \u2192 ${line}`);
     }
+    var RETRYABLE_HTTP_STATUS = /* @__PURE__ */ new Set([403, 429, 502, 503, 504]);
     async function safeClientGet(path2, retries = 3) {
       const n = Math.max(1, retries);
+      let last = null;
       for (let attempt = 1; attempt <= n; attempt++) {
         try {
-          return await client.get(path2);
+          const res = await client.get(path2);
+          last = res;
+          if (res && res.status === 200) return res;
+          const st = res && res.status;
+          if (st && RETRYABLE_HTTP_STATUS.has(st) && attempt < n) {
+            const snippet = typeof res.data === "string" ? res.data.slice(0, 200).replace(/\s+/g, " ") : "";
+            const cf = /cloudflare|cf-ray|attention required|blocked/i.test(snippet);
+            console.warn(
+              `${LOG_PREFIX2} GET ${path2} \u2192 HTTP ${st}${cf ? " (poss\xEDvel Cloudflare/bloqueio)" : ""} | tentativa ${attempt + 1}/${n}`
+            );
+            await new Promise((r) => setTimeout(r, 900 * attempt));
+            continue;
+          }
+          if (st && st !== 200) {
+            console.warn(`${LOG_PREFIX2} GET ${path2} \u2192 HTTP ${st} (sem mais reintentos neste pedido)`);
+          }
+          return res;
         } catch (e) {
           const code = e && (e.code || e.cause?.code);
           const canRetry = attempt < n && RETRYABLE_NET_CODES.has(code);
@@ -61489,7 +61541,7 @@ var require_scraper = __commonJS({
           return null;
         }
       }
-      return null;
+      return last;
     }
     function toTitleCase(str) {
       if (!str) return str;
@@ -62116,6 +62168,67 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         ]
       };
     }
+    var MOVIE_PREFIX_SCRAPER = "novelaspt_movie_";
+    var SERIES_PREFIX_SCRAPER = "novelaspt_series_";
+    function shellMovieMetaFromStremioId(decoded) {
+      const d = String(decoded || "");
+      if (!d.startsWith(MOVIE_PREFIX_SCRAPER)) return null;
+      const rawSlug = d.slice(MOVIE_PREFIX_SCRAPER.length);
+      const slug = stripDiacritics(rawSlug).trim().toLowerCase();
+      if (!slug) return null;
+      const desc = "O site n\xE3o respondeu ao servidor do addon (bloqueio, WAF ou rede). Em datacenters (ex. Render) \xE9 comum; experimenta correr o addon no teu PC, VPN residencial ou proxy (STREMIO_NP_PROXY). Os streams s\xF3 funcionam quando o site e a API Zeta ficam acess\xEDveis a partir do servidor.";
+      return {
+        id: d,
+        slug,
+        type: "movie",
+        name: toTitleCase(slug.replace(/-/g, " ")),
+        description: desc.slice(0, 1200)
+      };
+    }
+    function seriesShellBaseId(decoded) {
+      const s = String(decoded || "");
+      if (!s.startsWith(SERIES_PREFIX_SCRAPER)) return s;
+      const m = s.match(/^novelaspt_series_(.+):(\d+):(\d+)$/);
+      if (m) return `${SERIES_PREFIX_SCRAPER}${m[1]}`;
+      return s;
+    }
+    function shellSeriesMetaFromStremioId(decoded) {
+      const baseId = seriesShellBaseId(decoded);
+      if (!baseId.startsWith(SERIES_PREFIX_SCRAPER)) return null;
+      const rawSlug = baseId.slice(SERIES_PREFIX_SCRAPER.length);
+      const slug = stripDiacritics(rawSlug).trim().toLowerCase();
+      if (!slug) return null;
+      const desc = "O site n\xE3o respondeu ao servidor do addon (bloqueio, WAF ou rede). Experimenta addon local, VPN ou STREMIO_NP_PROXY. Epis\xF3dios s\xF3 aparecem quando a p\xE1gina da s\xE9rie carregar.";
+      return {
+        id: baseId,
+        slug,
+        type: "series",
+        name: toTitleCase(slug.replace(/-/g, " ")),
+        description: desc.slice(0, 1200),
+        episodes: [
+          {
+            season: 1,
+            episode: 1,
+            name: "A sincronizar com o site\u2026",
+            wpPid: void 0
+          }
+        ]
+      };
+    }
+    async function warmCatalogForMetaLookup(isMovie) {
+      try {
+        if (isMovie) {
+          if (!filmesCache?.items?.length) await getFilmes();
+        } else {
+          const tasks = [];
+          if (!seriesPortuguesasCache?.items?.length) tasks.push(getSeriesPortuguesas());
+          if (!novelasPortuguesasCache?.items?.length) tasks.push(getNovelasPortuguesas());
+          if (tasks.length) await Promise.all(tasks);
+        }
+      } catch (e) {
+        console.warn(`${LOG_PREFIX2} warmCatalogForMetaLookup: ${e && e.message || e}`.slice(0, 200));
+      }
+    }
     async function getFilmeMeta(slug) {
       const requested = String(slug || "").trim();
       if (!requested) return null;
@@ -62370,6 +62483,9 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       getSeriesMeta,
       minimalMovieMetaFromCatalog,
       minimalSeriesMetaFromCatalog,
+      shellMovieMetaFromStremioId,
+      shellSeriesMetaFromStremioId,
+      warmCatalogForMetaLookup,
       getMovieStreamSources,
       getTvEpisodeStreamSources,
       getSeriesEpisodes
@@ -62404,7 +62520,7 @@ function getManifest(config, originBase) {
     id: "pt.filmes-series-portuguesas",
     name: ADDON_DISPLAY_NAME,
     description: "Filmes, s\xE9ries e novelas portugueses. Cat\xE1logos separados: filmes, s\xE9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
-    version: "1.0.18",
+    version: "1.0.19",
     resources: ["catalog", "meta", "stream"],
     types: ["movie", "series"],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -62630,17 +62746,30 @@ async function handleMeta(type, id, config) {
   const slug = decoded.startsWith(MOVIE_PREFIX) ? decoded.replace(MOVIE_PREFIX, "") : stripStreamEpisodeSuffix(decoded);
   let item = null;
   let metaFromCatalogOnly = false;
+  let metaShell = false;
   if (decoded.startsWith(MOVIE_PREFIX)) {
     item = await scraper.getFilmeMeta(slug);
     if (!item) {
+      await scraper.warmCatalogForMetaLookup(true);
       item = scraper.minimalMovieMetaFromCatalog(slug);
       metaFromCatalogOnly = !!item;
+    }
+    if (!item) {
+      item = scraper.shellMovieMetaFromStremioId(decoded);
+      metaFromCatalogOnly = true;
+      metaShell = !!item;
     }
   } else {
     item = await scraper.getSeriesMeta(slug);
     if (!item) {
+      await scraper.warmCatalogForMetaLookup(false);
       item = scraper.minimalSeriesMetaFromCatalog(slug);
       metaFromCatalogOnly = !!item;
+    }
+    if (!item) {
+      item = scraper.shellSeriesMetaFromStremioId(decoded);
+      metaFromCatalogOnly = true;
+      metaShell = !!item;
     }
   }
   if (!item) return { meta: null };
@@ -62651,7 +62780,11 @@ async function handleMeta(type, id, config) {
   if (!item.name || !String(item.name).trim()) {
     item.name = fallbackTitleFromSlug(slug);
   }
-  if (metaFromCatalogOnly) {
+  if (metaShell) {
+    console.warn(
+      `${LOG_PREFIX} meta SHELL (site inacess\xEDvel ao servidor \u2014 bloqueio/WAF/rede). Streams podem falhar. Op\xE7\xF5es: addon em PC local, STREMIO_NP_PROXY, ou VPN residencial. id=${decoded.slice(0, 100)}`
+    );
+  } else if (metaFromCatalogOnly) {
     console.warn(
       `${LOG_PREFIX} meta s\xF3 a partir do cat\xE1logo (detalhe HTTP falhou) slug=${slug} type=${decoded.startsWith(MOVIE_PREFIX) ? "movie" : "series"}`
     );
@@ -63007,6 +63140,9 @@ server.listen(PORT, HOST, () => {
   );
   console.log(
     `${LOG_PREFIX} Meta JSON: imdb_id ao cliente = ${EXPOSE_IMDB_ID_TO_CLIENT ? "SIM (STREMIO_NP_EXPOSE_IMDB_ID=1)" : "N\xC3O (recomendado: evita fus\xE3o com Cinemeta e o efeito \u201Cano 20 / IMDb a desaparecer\u201D). imdbRating + link IMDb mant\xEAm-se."}`
+  );
+  console.log(
+    `${LOG_PREFIX} Rede: DNS IPv4 preferencial no Node | HTTP 403/429/503 com reintentos | proxy opcional STREMIO_NP_PROXY ou HTTPS_PROXY (\xFAtil se o site bloquear datacenters).`
   );
   console.log("");
   console.log("Stremio \u2014 instalar o addon:");
