@@ -45,7 +45,7 @@ function getManifest(config, originBase) {
     name: ADDON_DISPLAY_NAME,
     description:
       'Filmes, séries e novelas portugueses. Catálogos separados: filmes, séries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).',
-    version: '1.0.12',
+    version: '1.0.13',
     resources: ['catalog', 'meta', 'stream'],
     types: ['movie', 'series'],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -527,8 +527,10 @@ const server = http.createServer(async (req, res) => {
     if (method === 'HEAD') res.end();
     else res.end(msg);
   } catch (err) {
-    console.error(`${LOG_PREFIX} Erro HTTP:`, err);
-    sendJson(res, 500, { error: err.message }, method, { ...CORS });
+    const code = err && (err.code || err.cause?.code);
+    const msg = (err && err.message) || String(err);
+    console.error(`${LOG_PREFIX} Erro HTTP${code ? ` [${code}]` : ''}: ${msg}`);
+    sendJson(res, 500, { error: msg }, method, { ...CORS });
   }
 });
 

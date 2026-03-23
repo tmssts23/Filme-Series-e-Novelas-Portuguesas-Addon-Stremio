@@ -10,3 +10,11 @@ services:
     buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /manifest.json
+    # Opcional (Render já define RENDER=true → timeouts mais longos, menos pedidos paralelos):
+    # envVars:
+    #   - key: STREMIO_NP_HTTP_TIMEOUT_MS
+    #     value: "60000"
+    #   - key: STREMIO_NP_ARCHIVE_CONCURRENCY
+    #     value: "2"
+    #   - key: STREMIO_NP_SYNOPSIS_CONCURRENCY
+    #     value: "3"

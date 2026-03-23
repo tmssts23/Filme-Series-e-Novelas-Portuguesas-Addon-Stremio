@@ -61381,11 +61381,20 @@ var require_scraper = __commonJS({
     var NOVELAS_GENRE_ARCHIVE = `${BASE_URL}/genero/novelas/`;
     var ZETA_API = `${BASE_URL}/wp-json/zetaplayer/v2`;
     var USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
-    var httpsKeepAlive = new https.Agent({ keepAlive: true, maxSockets: 64 });
-    var httpKeepAlive = new http2.Agent({ keepAlive: true, maxSockets: 64 });
+    var IS_CLOUD_HOST = process.env.RENDER === "true" || !!process.env.FLY_APP_NAME || process.env.STREMIO_NP_LOW_CONCURRENCY === "1";
+    var HTTP_TIMEOUT_MS = Math.max(
+      8e3,
+      Number(process.env.STREMIO_NP_HTTP_TIMEOUT_MS) || (IS_CLOUD_HOST ? 45e3 : 25e3)
+    );
+    var HTTPS_MAX_SOCKETS = Math.max(
+      4,
+      Number(process.env.STREMIO_NP_MAX_HTTPS_SOCKETS) || (IS_CLOUD_HOST ? 16 : 64)
+    );
+    var httpsKeepAlive = new https.Agent({ keepAlive: true, maxSockets: HTTPS_MAX_SOCKETS });
+    var httpKeepAlive = new http2.Agent({ keepAlive: true, maxSockets: HTTPS_MAX_SOCKETS });
     var client = axios.create({
       baseURL: BASE_URL,
-      timeout: 25e3,
+      timeout: HTTP_TIMEOUT_MS,
       httpAgent: httpKeepAlive,
       httpsAgent: httpsKeepAlive,
       headers: {
@@ -61398,7 +61407,7 @@ var require_scraper = __commonJS({
     });
     var zetaClient = axios.create({
       baseURL: ZETA_API,
-      timeout: 2e4,
+      timeout: Math.min(12e4, Math.max(12e3, HTTP_TIMEOUT_MS)),
       httpAgent: httpKeepAlive,
       httpsAgent: httpsKeepAlive,
       headers: {
@@ -61429,11 +61438,58 @@ var require_scraper = __commonJS({
     }
     var CATALOG_SYNOPSIS_ENABLED = process.env.STREMIO_NP_CATALOG_SYNOPSIS !== "0";
     var CATALOG_RELEASE_ENABLED = process.env.STREMIO_NP_CATALOG_RELEASE !== "0";
-    var CATALOG_SYNOPSIS_CONCURRENCY = Math.max(1, Number(process.env.STREMIO_NP_SYNOPSIS_CONCURRENCY) || 8);
+    var CATALOG_SYNOPSIS_CONCURRENCY = Math.max(
+      1,
+      Number(process.env.STREMIO_NP_SYNOPSIS_CONCURRENCY) || (IS_CLOUD_HOST ? 4 : 8)
+    );
     var CATALOG_SYNOPSIS_MAX = Number(process.env.STREMIO_NP_MAX_SYNOPSIS);
     var CATALOG_DESC_PREVIEW_LEN = Math.min(2e3, Number(process.env.STREMIO_NP_CATALOG_DESC_LEN) || 900);
-    var ARCHIVE_PAGE_CONCURRENCY = Math.max(1, Number(process.env.STREMIO_NP_ARCHIVE_CONCURRENCY) || 8);
+    var ARCHIVE_PAGE_CONCURRENCY = Math.max(
+      1,
+      Number(process.env.STREMIO_NP_ARCHIVE_CONCURRENCY) || (IS_CLOUD_HOST ? 3 : 8)
+    );
     var ARCHIVE_MAX_PAGES = Math.max(1, Number(process.env.STREMIO_NP_MAX_ARCHIVE_PAGES) || 500);
+    if (IS_CLOUD_HOST) {
+      console.log(
+        `${LOG_PREFIX2} Modo cloud (RENDER/FLY ou STREMIO_NP_LOW_CONCURRENCY): HTTP ${HTTP_TIMEOUT_MS}ms | sockets HTTPS ${HTTPS_MAX_SOCKETS} | arquivo ${ARCHIVE_PAGE_CONCURRENCY} paralelo | detalhe ${CATALOG_SYNOPSIS_CONCURRENCY} paralelo`
+      );
+    }
+    var RETRYABLE_NET_CODES = /* @__PURE__ */ new Set([
+      "ETIMEDOUT",
+      "ECONNRESET",
+      "ECONNABORTED",
+      "ENOTFOUND",
+      "EAI_AGAIN",
+      "ECONNREFUSED"
+    ]);
+    function logScrapeNetworkError(ctx, path2, err) {
+      const code = err && (err.code || err.cause?.code);
+      const msg = err && err.message || String(err);
+      const line = `${code ? `[${code}] ` : ""}${msg}`.slice(0, 200);
+      console.warn(`${LOG_PREFIX2} ${ctx}: ${path2} \u2192 ${line}`);
+    }
+    async function safeClientGet(path2, retries = 3) {
+      const n = Math.max(1, retries);
+      for (let attempt = 1; attempt <= n; attempt++) {
+        try {
+          return await client.get(path2);
+        } catch (e) {
+          const code = e && (e.code || e.cause?.code);
+          const canRetry = attempt < n && RETRYABLE_NET_CODES.has(code);
+          if (canRetry) {
+            const wait = 500 * attempt;
+            console.warn(
+              `${LOG_PREFIX2} GET ${path2} ${code || "erro"} (${attempt}/${n}) \u2192 nova tentativa em ${wait}ms`
+            );
+            await new Promise((r) => setTimeout(r, wait));
+            continue;
+          }
+          logScrapeNetworkError("GET falhou", path2, e);
+          return null;
+        }
+      }
+      return null;
+    }
     function toTitleCase(str) {
       if (!str) return str;
       return str.toLowerCase().replace(/\S+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1));
@@ -61737,8 +61793,8 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
             if (!needsDetailFetch(item, idx)) return;
             try {
               synopsisRequests += 1;
-              const res = await client.get(`/${wpPathSeg}/${item.slug}/`);
-              if (res.status !== 200 || typeof res.data !== "string") return;
+              const res = await safeClientGet(`/${wpPathSeg}/${item.slug}/`, 2);
+              if (!res || res.status !== 200 || typeof res.data !== "string") return;
               synopsisOk += 1;
               const $ = cheerio.load(res.data);
               assignReleaseFromDetail($, item, contentType);
@@ -61764,6 +61820,16 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const seen = /* @__PURE__ */ new Set();
       const items = [];
       const archivePages = await fetchAllArchivePagesInto(FILMES_ARCHIVE, items, seen, "movie");
+      if (archivePages === 0 && items.length === 0) {
+        console.warn(
+          `${LOG_PREFIX2} REFRESH filmes: rede/site indispon\xEDvel (0 p\xE1ginas). Mant\xE9m cache anterior se existir.`
+        );
+        if (filmesCache && filmesCache.items.length) {
+          sanitizeCatalogItems(filmesCache.items);
+          return filmesCache.items;
+        }
+        return [];
+      }
       const { synopsisRequests, synopsisOk } = await hydrateCatalogSynopses(items, "filme");
       filmesCache = { time: now, items };
       logCatalogRefresh("filmes", FILMES_ARCHIVE, {
@@ -61811,19 +61877,24 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       return `${base}/page/${page}/`;
     }
     async function fetchArchiveHtmlPaths(paths) {
-      return Promise.all(
-        paths.map((path2) => client.get(path2))
-      );
+      const list = await Promise.all(paths.map((path2) => safeClientGet(path2, 3)));
+      return list.map((res, i) => {
+        if (res && res.status === 200 && typeof res.data === "string") return res;
+        if (paths[i]) {
+          console.warn(`${LOG_PREFIX2} arquivo listagem ignorada (falha/rede): ${paths[i]}`);
+        }
+        return { status: 0, data: "" };
+      });
     }
     async function fetchAllArchivePagesInto(startUrl, items, seenSlugs, contentType) {
       let pagesFetched = 0;
       const firstUrl = normalizeListPageUrl(startUrl);
       const visited = /* @__PURE__ */ new Set();
       const firstPath = firstUrl.startsWith(BASE_URL) ? firstUrl.slice(BASE_URL.length) || "/" : firstUrl;
-      const res = await client.get(firstPath);
-      if (res.status !== 200 || typeof res.data !== "string") {
+      const res = await safeClientGet(firstPath, 4);
+      if (!res || res.status !== 200 || typeof res.data !== "string") {
         console.warn(
-          `${LOG_PREFIX2} Arquivo: falha na 1.\xAA p\xE1gina (${contentType}) status=${res.status} \u2192 ${firstUrl}`
+          `${LOG_PREFIX2} Arquivo: falha na 1.\xAA p\xE1gina (${contentType}) ${res ? `status=${res.status}` : "sem resposta"} \u2192 ${firstUrl}`
         );
         return pagesFetched;
       }
@@ -61862,8 +61933,8 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         if (visited.has(abs)) break;
         visited.add(abs);
         const path2 = abs.startsWith(BASE_URL) ? abs.slice(BASE_URL.length) || "/" : abs;
-        const resN = await client.get(path2);
-        if (resN.status !== 200 || typeof resN.data !== "string") break;
+        const resN = await safeClientGet(path2, 3);
+        if (!resN || resN.status !== 200 || typeof resN.data !== "string") break;
         pagesFetched += 1;
         const $n = cheerio.load(resN.data);
         parseDisplayItems($n, items, seenSlugs, contentType);
@@ -61889,6 +61960,16 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const { items, archivePages, synopsisRequests, synopsisOk } = await buildSeriesCatalogFromArchive(
         SERIES_ARCHIVE
       );
+      if (archivePages === 0 && items.length === 0) {
+        console.warn(
+          `${LOG_PREFIX2} REFRESH s\xE9ries: rede/site indispon\xEDvel. Mant\xE9m cache anterior se existir.`
+        );
+        if (seriesPortuguesasCache && seriesPortuguesasCache.items.length) {
+          sanitizeCatalogItems(seriesPortuguesasCache.items);
+          return seriesPortuguesasCache.items;
+        }
+        return [];
+      }
       seriesPortuguesasCache = { time: now, items };
       logCatalogRefresh("s\xE9ries portuguesas", SERIES_ARCHIVE, {
         items: items.length,
@@ -61911,6 +61992,16 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const { items, archivePages, synopsisRequests, synopsisOk } = await buildSeriesCatalogFromArchive(
         NOVELAS_GENRE_ARCHIVE
       );
+      if (archivePages === 0 && items.length === 0) {
+        console.warn(
+          `${LOG_PREFIX2} REFRESH novelas: rede/site indispon\xEDvel. Mant\xE9m cache anterior se existir.`
+        );
+        if (novelasPortuguesasCache && novelasPortuguesasCache.items.length) {
+          sanitizeCatalogItems(novelasPortuguesasCache.items);
+          return novelasPortuguesasCache.items;
+        }
+        return [];
+      }
       novelasPortuguesasCache = { time: now, items };
       logCatalogRefresh("novelas portuguesas", NOVELAS_GENRE_ARCHIVE, {
         items: items.length,
@@ -61927,8 +62018,8 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       return m ? parseInt(m[1], 10) : null;
     }
     async function getFilmeMeta(slug) {
-      const res = await client.get(`/filme/${slug}/`);
-      if (res.status !== 200 || typeof res.data !== "string") return null;
+      const res = await safeClientGet(`/filme/${slug}/`, 3);
+      if (!res || res.status !== 200 || typeof res.data !== "string") return null;
       const html = res.data;
       const $ = cheerio.load(html);
       const rawName = $("h1").first().text().trim() || $(".heading-archive, .display-page-heading h1").first().text().trim() || slug.replace(/-/g, " ");
@@ -61990,8 +62081,8 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       return item;
     }
     async function getSeriesMeta(slug) {
-      const res = await client.get(`/serie/${slug}/`);
-      if (res.status !== 200 || typeof res.data !== "string") return null;
+      const res = await safeClientGet(`/serie/${slug}/`, 3);
+      if (!res || res.status !== 200 || typeof res.data !== "string") return null;
       const html = res.data;
       const $ = cheerio.load(html);
       const rawName = $("h1").first().text().trim() || $(".display-page-heading h1").first().text().trim() || slug.replace(/-/g, " ");
@@ -62087,7 +62178,13 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       const out = [];
       const seen = /* @__PURE__ */ new Set();
       for (let n = 1; n <= 30; n++) {
-        const res = await zetaClient.get(`/${wpPostId}/mv/${n}`);
+        let res;
+        try {
+          res = await zetaClient.get(`/${wpPostId}/mv/${n}`);
+        } catch (e) {
+          logScrapeNetworkError("zeta", `/${wpPostId}/mv/${n}`, e);
+          break;
+        }
         if (res.status !== 200 || !res.data) break;
         const d = res.data;
         if (d.type === false && !d.embed_url) break;
@@ -62108,7 +62205,13 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
     }
     async function getTvEpisodeStreamSources(wpEpisodePid) {
       if (!wpEpisodePid) return [];
-      const res = await zetaClient.get(`/tvep/${wpEpisodePid}`);
+      let res;
+      try {
+        res = await zetaClient.get(`/tvep/${wpEpisodePid}`);
+      } catch (e) {
+        logScrapeNetworkError("zeta", `/tvep/${wpEpisodePid}`, e);
+        return [];
+      }
       if (res.status !== 200 || !res.data) return [];
       const embed = res.data.embed;
       if (!Array.isArray(embed) || embed.length === 0) return [];
@@ -62182,7 +62285,7 @@ function getManifest(config, originBase) {
     id: "pt.filmes-series-portuguesas",
     name: ADDON_DISPLAY_NAME,
     description: "Filmes, s\xE9ries e novelas portugueses. Cat\xE1logos separados: filmes, s\xE9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
-    version: "1.0.12",
+    version: "1.0.13",
     resources: ["catalog", "meta", "stream"],
     types: ["movie", "series"],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
@@ -62603,8 +62706,10 @@ var server = http.createServer(async (req, res) => {
     if (method === "HEAD") res.end();
     else res.end(msg);
   } catch (err) {
-    console.error(`${LOG_PREFIX} Erro HTTP:`, err);
-    sendJson(res, 500, { error: err.message }, method, { ...CORS });
+    const code = err && (err.code || err.cause?.code);
+    const msg = err && err.message || String(err);
+    console.error(`${LOG_PREFIX} Erro HTTP${code ? ` [${code}]` : ""}: ${msg}`);
+    sendJson(res, 500, { error: msg }, method, { ...CORS });
   }
 });
 function getConfigureHtml() {
