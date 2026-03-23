@@ -61450,7 +61450,35 @@ var require_scraper = __commonJS({
     var seriesPortuguesasCache = null;
     var novelasPortuguesasCache = null;
     var CACHE_MS = Number(process.env.STREMIO_NP_CACHE_MS) || 6 * 60 * 60 * 1e3;
+    var movieMetaCache = /* @__PURE__ */ new Map();
+    var seriesMetaCache = /* @__PURE__ */ new Map();
+    var META_CACHE_MS = Number(process.env.STREMIO_NP_META_CACHE_MS) || CACHE_MS;
     var LOG_PREFIX2 = "[NovelasPT]";
+    function clonePlain(obj) {
+      if (obj == null) return obj;
+      try {
+        return JSON.parse(JSON.stringify(obj));
+      } catch (_) {
+        return obj;
+      }
+    }
+    function normalizeMetaCacheKey(slugLike) {
+      return stripDiacritics(String(slugLike || "").trim()).toLowerCase();
+    }
+    function getMetaCache(cacheMap, key, allowStale = false) {
+      const k = String(key || "").trim();
+      if (!k) return null;
+      const row = cacheMap.get(k);
+      if (!row || !row.item) return null;
+      const fresh = Date.now() - row.time < META_CACHE_MS;
+      if (!fresh && !allowStale) return null;
+      return clonePlain(row.item);
+    }
+    function setMetaCache(cacheMap, key, item) {
+      const k = String(key || "").trim();
+      if (!k || !item) return;
+      cacheMap.set(k, { time: Date.now(), item: clonePlain(item) });
+    }
     function logCatalogCacheHit(label, count, cachedAtMs) {
       const ageMin = Math.round((Date.now() - cachedAtMs) / 6e4);
       const ttlMin = Math.max(0, Math.round((cachedAtMs + CACHE_MS - Date.now()) / 6e4));
@@ -62238,6 +62266,9 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
     async function getFilmeMeta(slug) {
       const requested = String(slug || "").trim();
       if (!requested) return null;
+      const cacheKey = normalizeMetaCacheKey(requested);
+      const cached = getMetaCache(movieMetaCache, cacheKey);
+      if (cached) return cached;
       let fetched = await fetchFirstOkHtml(
         detailPathsForSlug("filme", requested),
         META_DETAIL_RETRIES,
@@ -62249,7 +62280,10 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         META_DETAIL_TIMEOUT_MS,
         META_DETAIL_MAX_PATHS
       );
-      if (!fetched) return null;
+      if (!fetched) {
+        const stale = getMetaCache(movieMetaCache, cacheKey, true);
+        return stale || null;
+      }
       const { html, path: path2 } = fetched;
       const fromPath = slugFromWpDetailPath(path2, ["filme", "serie"]);
       const slugForIds = String(fromPath || stripDiacritics(requested)).trim().toLowerCase();
@@ -62311,11 +62345,16 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       }
       await enrichMetaFromCinemeta(item, "movie");
       sanitizeItemYearRelease(item);
-      return item;
+      setMetaCache(movieMetaCache, cacheKey, item);
+      setMetaCache(movieMetaCache, slugForIds, item);
+      return clonePlain(item);
     }
     async function getSeriesMeta(slug) {
       const requested = String(slug || "").trim();
       if (!requested) return null;
+      const cacheKey = normalizeMetaCacheKey(requested);
+      const cached = getMetaCache(seriesMetaCache, cacheKey);
+      if (cached) return cached;
       let fetched = await fetchFirstOkHtml(
         detailPathsForSlug("serie", requested),
         META_DETAIL_RETRIES,
@@ -62327,7 +62366,10 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
         META_DETAIL_TIMEOUT_MS,
         META_DETAIL_MAX_PATHS
       );
-      if (!fetched) return null;
+      if (!fetched) {
+        const stale = getMetaCache(seriesMetaCache, cacheKey, true);
+        return stale || null;
+      }
       const { html, path: path2 } = fetched;
       const fromPath = slugFromWpDetailPath(path2, ["filme", "serie"]);
       const slugForIds = String(fromPath || stripDiacritics(requested)).trim().toLowerCase();
@@ -62418,7 +62460,9 @@ ${cm.description}`.trim().slice(0, DESC_MAX) : cm.description.slice(0, DESC_MAX)
       }
       await enrichMetaFromCinemeta(item, "series");
       sanitizeItemYearRelease(item);
-      return item;
+      setMetaCache(seriesMetaCache, cacheKey, item);
+      setMetaCache(seriesMetaCache, slugForIds, item);
+      return clonePlain(item);
     }
     function normalizeStreamUrlKey(u) {
       if (!u || typeof u !== "string") return "";
@@ -62546,7 +62590,7 @@ function getManifest(config, originBase) {
     id: "pt.filmes-series-portuguesas",
     name: ADDON_DISPLAY_NAME,
     description: "Filmes, s\xC3\xA9ries e novelas portugueses. Cat\xC3\xA1logos separados: filmes, s\xC3\xA9ries portuguesas e novelas portuguesas. Os reprodutores abrem no browser (URL externa).",
-    version: "1.0.21",
+    version: "1.0.22",
     resources: ["catalog", "meta", "stream"],
     types: ["movie", "series"],
     idPrefixes: [MOVIE_PREFIX, SERIES_PREFIX],
