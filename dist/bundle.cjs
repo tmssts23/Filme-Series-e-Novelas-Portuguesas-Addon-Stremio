@@ -61249,6 +61249,7 @@ var require_scraper = __commonJS({
     var META_MAX_PATHS = Math.max(1, Number(process.env.STREMIO_NP_META_MAX_PATHS) || 3);
     var ARCHIVE_MAX_PAGES = Math.max(1, Number(process.env.STREMIO_NP_MAX_ARCHIVE_PAGES) || 500);
     var ARCHIVE_CONCURRENCY = Math.max(1, Number(process.env.STREMIO_NP_ARCHIVE_CONCURRENCY) || 10);
+    var PROBE_MAX_PAGES = Math.max(1, Number(process.env.STREMIO_NP_PROBE_MAX_PAGES) || ARCHIVE_MAX_PAGES);
     var RETRYABLE_CODES = /* @__PURE__ */ new Set(["ETIMEDOUT", "ECONNRESET", "ECONNABORTED", "ENOTFOUND", "EAI_AGAIN"]);
     var RETRYABLE_STATUS = /* @__PURE__ */ new Set([403, 429, 502, 503, 504]);
     var httpAgent = new http2.Agent({ keepAlive: true, maxSockets: 64 });
@@ -61453,50 +61454,75 @@ var require_scraper = __commonJS({
       await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => runOne()));
       return out;
     }
+    function catalogLog(label, message) {
+      console.log(`${LOG_PREFIX2}[catalog:${label}] ${message}`);
+    }
     async function fetchCatalog(startUrl, contentType, sourceLabel) {
       const label = String(sourceLabel || contentType || "catalogo");
       const firstPath = startUrl.startsWith(BASE_URL) ? startUrl.slice(BASE_URL.length) : startUrl;
       const first = await safeClientGet(firstPath || "/", 3, HTTP_TIMEOUT_MS);
       if (!first || first.status !== 200 || typeof first.data !== "string") {
-        console.warn(`${LOG_PREFIX2} [catalog:${label}] falha na primeira pagina (${firstPath || "/"})`);
+        console.warn(`${LOG_PREFIX2}[catalog:${label}] Falha na pagina 1 (${firstPath || "/"})`);
         return [];
       }
-      const items = parseDisplayItems(cheerio.load(first.data), contentType);
-      const maxPage = extractArchiveMaxPage(cheerio.load(first.data), first.data);
-      console.log(
-        `${LOG_PREFIX2} [catalog:${label}] paginas_detetadas=${maxPage} itens_pagina1=${items.length}`
-      );
-      if (maxPage <= 1) {
-        console.log(`${LOG_PREFIX2} [catalog:${label}] total_carregado=${items.length}`);
-        return items;
-      }
-      const pages = [];
-      for (let p = 2; p <= maxPage; p++) {
-        pages.push({ num: p, url: `${startUrl.replace(/\/$/, "")}/page/${p}/` });
-      }
-      const rows = await poolMap(pages, ARCHIVE_CONCURRENCY, async ({ num, url }) => {
-        const path2 = url.startsWith(BASE_URL) ? url.slice(BASE_URL.length) : url;
-        const res = await safeClientGet(path2, 2, HTTP_TIMEOUT_MS);
-        if (!res || res.status !== 200 || typeof res.data !== "string") {
-          return { page: num, count: 0, ok: false, items: [] };
+      const firstItems = parseDisplayItems(cheerio.load(first.data), contentType);
+      const visibleMax = extractArchiveMaxPage(cheerio.load(first.data), first.data);
+      catalogLog(label, `Passo 1/2: descobrir total de paginas em ${startUrl}`);
+      catalogLog(label, `Pagina 1: ${firstItems.length} itens`);
+      catalogLog(label, `Paginacao visivel no HTML sugere ate ${visibleMax} paginas`);
+      const pageCache = /* @__PURE__ */ new Map();
+      pageCache.set(1, { ok: true, status: 200, items: firstItems });
+      let discoveredMax = 1;
+      let missesAfterFound = 0;
+      const probeLimit = Math.max(1, Math.min(PROBE_MAX_PAGES, ARCHIVE_MAX_PAGES));
+      if (probeLimit > 1) {
+        for (let p = 2; p <= probeLimit; p++) {
+          const probeUrl = `${startUrl.replace(/\/$/, "")}/page/${p}/`;
+          const probePath = probeUrl.startsWith(BASE_URL) ? probeUrl.slice(BASE_URL.length) : probeUrl;
+          const res = await safeClientGet(probePath, 2, HTTP_TIMEOUT_MS);
+          const status = res?.status || 0;
+          if (res && status === 200 && typeof res.data === "string") {
+            const pageItems = parseDisplayItems(cheerio.load(res.data), contentType);
+            pageCache.set(p, { ok: pageItems.length > 0, status, items: pageItems });
+            if (pageItems.length > 0) {
+              discoveredMax = p;
+              missesAfterFound = 0;
+              catalogLog(label, `Sondagem pagina ${p}: encontrada (${pageItems.length} itens)`);
+            } else {
+              missesAfterFound += 1;
+              catalogLog(label, `Sondagem pagina ${p}: sem conteudo (status ${status})`);
+            }
+          } else {
+            pageCache.set(p, { ok: false, status, items: [] });
+            missesAfterFound += 1;
+            catalogLog(label, `Sondagem pagina ${p}: sem conteudo (status ${status || "erro"})`);
+          }
+          if (p >= visibleMax && missesAfterFound >= 2) break;
         }
-        const pageItems = parseDisplayItems(cheerio.load(res.data), contentType);
-        return { page: num, count: pageItems.length, ok: true, items: pageItems };
-      });
-      const dedupe = new Map(items.map((x) => [x.id, x]));
-      for (const row of rows) {
-        for (const it of row.items) dedupe.set(it.id, it);
       }
-      const okPages = rows.filter((r) => r.ok).length;
-      const failedPages = rows.length - okPages;
-      const pageCounts = [items.length, ...rows.map((r) => r.count)];
-      const sample = pageCounts.slice(0, 20).map((c, i) => `${i + 1}:${c}`).join(", ");
-      console.log(
-        `${LOG_PREFIX2} [catalog:${label}] itens_por_pagina(site)=${sample}${pageCounts.length > 20 ? ", ..." : ""}`
-      );
-      console.log(
-        `${LOG_PREFIX2} [catalog:${label}] paginas_lidas=${maxPage} paginas_ok=${1 + okPages} paginas_falha=${failedPages} total_carregado=${dedupe.size}`
-      );
+      catalogLog(label, `Total de paginas encontradas: ${discoveredMax}`);
+      catalogLog(label, "Passo 2/2: recolher itens de cada pagina");
+      const dedupe = /* @__PURE__ */ new Map();
+      for (let p = 1; p <= discoveredMax; p++) {
+        let row = pageCache.get(p);
+        if (!row) {
+          const pageUrl = `${startUrl.replace(/\/$/, "")}/page/${p}/`;
+          const pagePath = pageUrl.startsWith(BASE_URL) ? pageUrl.slice(BASE_URL.length) : pageUrl;
+          const res = await safeClientGet(pagePath, 2, HTTP_TIMEOUT_MS);
+          const status = res?.status || 0;
+          if (res && status === 200 && typeof res.data === "string") {
+            const pageItems2 = parseDisplayItems(cheerio.load(res.data), contentType);
+            row = { ok: pageItems2.length > 0, status, items: pageItems2 };
+          } else {
+            row = { ok: false, status, items: [] };
+          }
+          pageCache.set(p, row);
+        }
+        const pageItems = row.items || [];
+        catalogLog(label, `Leitura pagina ${p}/${discoveredMax}: ${pageItems.length} itens`);
+        for (const it of pageItems) dedupe.set(it.id, it);
+      }
+      catalogLog(label, `Total carregado (deduplicado): ${dedupe.size}`);
       return [...dedupe.values()];
     }
     function genreToSlug(genreLabel) {
@@ -61561,7 +61587,7 @@ var require_scraper = __commonJS({
     async function getFilmes() {
       const row = getCacheRow("movie");
       if (row && Date.now() - row.time < CATALOG_CACHE_MS) {
-        console.log(`${LOG_PREFIX2} [catalog:filmes] cache_hit total=${row.items.length}`);
+        catalogLog("filmes", `Cache hit: ${row.items.length} itens`);
         return row.items;
       }
       const items = await fetchCatalog(FILMES_ARCHIVE, "movie", "filmes");
@@ -61571,7 +61597,7 @@ var require_scraper = __commonJS({
     async function getSeriesPortuguesas() {
       const row = getCacheRow("series");
       if (row && Date.now() - row.time < CATALOG_CACHE_MS) {
-        console.log(`${LOG_PREFIX2} [catalog:series] cache_hit total=${row.items.length}`);
+        catalogLog("series", `Cache hit: ${row.items.length} itens`);
         return row.items;
       }
       const items = await fetchCatalog(SERIES_ARCHIVE, "series", "series");
@@ -61581,7 +61607,7 @@ var require_scraper = __commonJS({
     async function getNovelasPortuguesas() {
       const row = getCacheRow("novelas");
       if (row && Date.now() - row.time < CATALOG_CACHE_MS) {
-        console.log(`${LOG_PREFIX2} [catalog:novelas] cache_hit total=${row.items.length}`);
+        catalogLog("novelas", `Cache hit: ${row.items.length} itens`);
         return row.items;
       }
       const items = await fetchCatalog(NOVELAS_ARCHIVE, "series", "novelas");
