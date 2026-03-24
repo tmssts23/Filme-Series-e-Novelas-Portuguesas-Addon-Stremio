@@ -177,12 +177,18 @@ function seriesBaseId(decodedSeriesId) {
 
 function releaseInfoFromItem(item) {
   const ri = String(item.releaseInfo || '').trim();
+  const broadcaster = String(item.runtime || '').trim();
   const rating = String(item.imdbRating || '').trim();
+  const broadcasterPart = broadcaster ? broadcaster : '';
   const ratingPart = rating ? `IMDb ${rating}` : '';
-  if (ri && !/^\d{1,3}$/.test(ri)) return ratingPart ? `${ri} | ${ratingPart}` : ri;
+  const appendParts = (base) => {
+    const parts = [String(base || '').trim(), broadcasterPart, ratingPart].filter(Boolean);
+    return parts.length ? parts.join(' | ') : undefined;
+  };
+  if (ri && !/^\d{1,3}$/.test(ri)) return appendParts(ri);
   const y = Number(item.year);
-  if (Number.isFinite(y) && y >= 1870 && y <= 2100) return ratingPart ? `${y} | ${ratingPart}` : String(y);
-  if (ratingPart) return ratingPart;
+  if (Number.isFinite(y) && y >= 1870 && y <= 2100) return appendParts(String(y));
+  if (broadcasterPart || ratingPart) return [broadcasterPart, ratingPart].filter(Boolean).join(' | ');
   return undefined;
 }
 
@@ -258,6 +264,33 @@ async function handleCatalog(type, id, extra) {
   else if (type === 'series' && id === 'novelaspt_series') items = await scraper.getSeriesPortuguesas();
   else if (type === 'series' && id === 'novelaspt_novelas') items = await scraper.getNovelasPortuguesas();
 
+  const genreRaw = String(extra.genre || '').trim();
+  if (genreRaw) {
+    const wanted = normalizeSearch(genreRaw);
+    if (wanted !== 'none') {
+      const byGenre = await scraper.getItemsByGenreLabel(genreRaw);
+      const allowedIds = new Set(
+        byGenre
+          .filter((x) => x.type === type)
+          .map((x) => x.id),
+      );
+      items = items
+        .filter((it) => allowedIds.has(it.id))
+        .map((it) => ({ ...it, genres: [genreRaw] }));
+      // Para o catálogo de novelas, restringe à lista de novelas.
+      if (type === 'series' && id === 'novelaspt_novelas') {
+        const novelasSet = new Set((await scraper.getNovelasPortuguesas()).map((x) => x.id));
+        items = items.filter((it) => novelasSet.has(it.id));
+      }
+    } else {
+      // "None": sem género mapeado no site.
+      const knownLabels = GENRE_OPTIONS.filter((g) => normalizeSearch(g) !== 'none');
+      const byKnown = await scraper.getCoveredIdsForGenres(knownLabels);
+      if (byKnown.size > 0) items = items.filter((it) => !byKnown.has(it.id));
+      items = items.map((it) => ({ ...it, genres: ['None'] }));
+    }
+  }
+
   const search = String(extra.search || '').trim();
   if (search) {
     const q = normalizeSearch(search);
@@ -266,31 +299,6 @@ async function handleCatalog(type, id, extra) {
       const s = normalizeSearch(String(it.slug || '').replace(/-/g, ' '));
       return n.includes(q) || s.includes(q);
     });
-  }
-
-  const genreRaw = String(extra.genre || '').trim();
-  if (genreRaw) {
-    const wanted = normalizeSearch(genreRaw);
-    const enriched = [];
-    for (const it of items) {
-      let full = null;
-      try {
-        full =
-          type === 'movie'
-            ? await scraper.getFilmeMeta(it.slug)
-            : await scraper.getSeriesMeta(it.slug);
-      } catch (_) {
-        full = null;
-      }
-      const row = full || it;
-      const gs = Array.isArray(row.genres) && row.genres.length ? row.genres : ['None'];
-      const hasWanted = gs.some((g) => normalizeSearch(g) === wanted);
-      const isNone = gs.every((g) => normalizeSearch(g) === 'none');
-      if ((wanted === 'none' && isNone) || (wanted !== 'none' && hasWanted)) {
-        enriched.push({ ...it, genres: gs });
-      }
-    }
-    items = enriched;
   }
 
   const skip = Math.max(0, Number.parseInt(String(extra.skip || '0'), 10) || 0);

@@ -61282,11 +61282,28 @@ var require_scraper = __commonJS({
       timeout: 9e3,
       validateStatus: () => true
     });
+    var imdbTitleClient = axios.create({
+      baseURL: "https://www.imdb.com",
+      timeout: 12e3,
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,pt-PT;q=0.8",
+        Referer: "https://www.imdb.com/"
+      },
+      validateStatus: () => true
+    });
     var filmesCache = null;
     var seriesCache = null;
     var novelasCache = null;
+    var genreArchiveCache = /* @__PURE__ */ new Map();
     var movieMetaCache = /* @__PURE__ */ new Map();
     var seriesMetaCache = /* @__PURE__ */ new Map();
+    var imdbRatingCache = /* @__PURE__ */ new Map();
+    var IMDB_ID_OVERRIDES = /* @__PURE__ */ new Map([
+      ["series:golpe de sorte", "tt10133388"],
+      ["series:golpe-de-sorte", "tt10133388"]
+    ]);
     function clone(obj) {
       if (obj == null) return obj;
       return JSON.parse(JSON.stringify(obj));
@@ -61385,6 +61402,43 @@ var require_scraper = __commonJS({
       });
       return [...map.values()];
     }
+    function parseDisplayItemsAny($) {
+      const map = /* @__PURE__ */ new Map();
+      $(".display-item .item-box").each((_, box) => {
+        const $box = $(box);
+        const href = $box.find("a[href]").first().attr("href");
+        if (!href) return;
+        let pathname = "";
+        try {
+          pathname = new URL(absoluteUrl(href)).pathname;
+        } catch (_2) {
+          return;
+        }
+        const parts = pathname.split("/").filter(Boolean);
+        let type = null;
+        let slug = null;
+        const iMovie = parts.indexOf("filme");
+        const iSeries = parts.indexOf("serie");
+        if (iMovie >= 0 && parts[iMovie + 1]) {
+          type = "movie";
+          slug = normalizeSlug(parts[iMovie + 1]);
+        } else if (iSeries >= 0 && parts[iSeries + 1]) {
+          type = "series";
+          slug = normalizeSlug(parts[iSeries + 1]);
+        }
+        if (!type || !slug || slug === "page" || slug === "feed") return;
+        const img = $box.find("img").first();
+        const poster = absoluteUrl(
+          img.attr("data-original") || img.attr("data-src") || img.attr("src") || ""
+        );
+        const name = toTitleCase(
+          (img.attr("alt") || "").trim() || $box.find(".item-desc-title h3, .item-desc-title").first().text().trim() || slug.replace(/-/g, " ")
+        );
+        const id = type === "movie" ? `novelaspt_movie_${slug}` : `novelaspt_series_${slug}`;
+        map.set(`${type}:${slug}`, { id, slug, type, name, poster: poster || void 0, genres: ["None"] });
+      });
+      return [...map.values()];
+    }
     async function poolMap(items, limit, worker) {
       const out = new Array(items.length);
       let idx = 0;
@@ -61420,6 +61474,54 @@ var require_scraper = __commonJS({
         for (const it of arr) dedupe.set(it.id, it);
       }
       return [...dedupe.values()];
+    }
+    function genreToSlug(genreLabel) {
+      return normalizeSlug(genreLabel).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    }
+    async function getItemsByGenreLabel(genreLabel) {
+      const slug = genreToSlug(genreLabel);
+      if (!slug) return [];
+      const key = slug;
+      const row = genreArchiveCache.get(key);
+      if (row && Date.now() - row.time < CATALOG_CACHE_MS) return clone(row.items);
+      const startUrl = `${BASE_URL}/genero/${slug}/`;
+      const firstPath = startUrl.slice(BASE_URL.length);
+      const first = await safeClientGet(firstPath || "/", 3, HTTP_TIMEOUT_MS);
+      if (!first || first.status !== 200 || typeof first.data !== "string") {
+        return row?.items ? clone(row.items) : [];
+      }
+      const dedupe = /* @__PURE__ */ new Map();
+      const addRows = (arr) => {
+        for (const it of arr) {
+          const k = `${it.type}:${it.slug}`;
+          if (!dedupe.has(k)) dedupe.set(k, it);
+        }
+      };
+      addRows(parseDisplayItemsAny(cheerio.load(first.data)));
+      const maxPage = extractArchiveMaxPage(cheerio.load(first.data), first.data);
+      if (maxPage > 1) {
+        const pages = [];
+        for (let p = 2; p <= maxPage; p++) pages.push(`${startUrl.replace(/\/$/, "")}/page/${p}/`);
+        const rows = await poolMap(pages, ARCHIVE_CONCURRENCY, async (url) => {
+          const path2 = url.slice(BASE_URL.length);
+          const res = await safeClientGet(path2, 2, HTTP_TIMEOUT_MS);
+          if (!res || res.status !== 200 || typeof res.data !== "string") return [];
+          return parseDisplayItemsAny(cheerio.load(res.data));
+        });
+        for (const arr of rows) addRows(arr);
+      }
+      const items = [...dedupe.values()].map((it) => ({ ...it, genres: [String(genreLabel)] }));
+      genreArchiveCache.set(key, { time: Date.now(), items: clone(items) });
+      return clone(items);
+    }
+    async function getCoveredIdsForGenres(labels) {
+      const set = /* @__PURE__ */ new Set();
+      const arr = Array.isArray(labels) ? labels : [];
+      for (const g of arr) {
+        const items = await getItemsByGenreLabel(g);
+        for (const it of items) set.add(it.id);
+      }
+      return set;
     }
     function getCacheRow(kind) {
       if (kind === "movie") return filmesCache;
@@ -61522,6 +61624,49 @@ ${String(html || "")}`;
       const n = Number.parseInt(String(y || ""), 10);
       return Number.isFinite(n) && n >= 1870 && n <= 2100 ? n : null;
     }
+    function parseImdbRatingValue(raw) {
+      const n = Number.parseFloat(String(raw || "").replace(",", "."));
+      if (!Number.isFinite(n) || n < 0 || n > 10) return void 0;
+      return n.toFixed(1);
+    }
+    function imdbOverrideId(type, title, slug) {
+      const t = String(type || "").trim().toLowerCase();
+      if (!t) return void 0;
+      const titleKey = `${t}:${normalizeKey(title)}`;
+      const slugKey = `${t}:${normalizeSlug(slug)}`;
+      const id = IMDB_ID_OVERRIDES.get(titleKey) || IMDB_ID_OVERRIDES.get(slugKey);
+      return /^tt\d{7,9}$/i.test(String(id || "")) ? String(id).toLowerCase() : void 0;
+    }
+    function extractImdbRatingFromTitleHtml(html) {
+      const raw = String(html || "");
+      if (!raw) return void 0;
+      const fromJsonLd = raw.match(/"aggregateRating"\s*:\s*\{[^{}]*"ratingValue"\s*:\s*"?(?<r>\d+(?:\.\d+)?)"?/i) || raw.match(/"ratingValue"\s*:\s*"?(?<r>\d+(?:\.\d+)?)"?/i);
+      if (fromJsonLd && fromJsonLd.groups && fromJsonLd.groups.r) {
+        const v = parseImdbRatingValue(fromJsonLd.groups.r);
+        if (v) return v;
+      }
+      const fromUi = raw.match(/heroRatingBarAggregateRating__Score[^<]*<span[^>]*>(?<r>\d+(?:\.\d+)?)<\/span>/i) || raw.match(/aria-label="IMDb rating:\s*(?<r>\d+(?:\.\d+)?)\/10"/i);
+      if (fromUi && fromUi.groups && fromUi.groups.r) {
+        const v = parseImdbRatingValue(fromUi.groups.r);
+        if (v) return v;
+      }
+      return void 0;
+    }
+    async function imdbRatingById(imdbId) {
+      const id = String(imdbId || "").trim().toLowerCase();
+      if (!/^tt\d{7,9}$/.test(id)) return null;
+      const row = imdbRatingCache.get(id);
+      if (row && Date.now() - row.time < META_CACHE_MS) return row.rating || null;
+      try {
+        const res = await imdbTitleClient.get(`/title/${id}/`);
+        if (res.status !== 200 || typeof res.data !== "string") return row?.rating || null;
+        const rating = extractImdbRatingFromTitleHtml(res.data) || null;
+        imdbRatingCache.set(id, { time: Date.now(), rating });
+        return rating;
+      } catch (_) {
+        return row?.rating || null;
+      }
+    }
     async function cinemetaByImdbId(type, imdbId) {
       const id = String(imdbId || "").trim().toLowerCase();
       if (!/^tt\d{7,9}$/.test(id)) return null;
@@ -61564,7 +61709,8 @@ ${String(html || "")}`;
             score,
             imdbId: id,
             imdbRating: m.imdbRating != null ? String(m.imdbRating) : void 0,
-            year: cYear || void 0
+            year: cYear || void 0,
+            exactTitle: name === want
           });
         }
         if (!scored.length) return null;
@@ -61572,13 +61718,15 @@ ${String(html || "")}`;
           const nearYear = scored.filter((c) => c.year != null && Math.abs(c.year - y) <= 2);
           if (nearYear.length) {
             nearYear.sort((a, b) => b.score - a.score);
-            return nearYear[0];
+            const best2 = nearYear[0];
+            return { ...best2, strong: !!best2.exactTitle };
           }
           return null;
         }
         scored.sort((a, b) => b.score - a.score);
         if ((scored[0]?.score || 0) < 6) return null;
-        return scored[0];
+        const best = scored[0];
+        return { ...best, strong: !!best.exactTitle && best.score >= 8 };
       } catch (_) {
         return null;
       }
@@ -61831,13 +61979,17 @@ ${String(html || "")}`;
         trailerYtId,
         wpPostId: Number.isFinite(wpPostId) ? wpPostId : void 0
       };
+      const overrideMovieImdbId = imdbOverrideId("movie", name, canonicalSlug);
+      if (overrideMovieImdbId) imdbId = overrideMovieImdbId;
       const cmById = imdbId ? await cinemetaByImdbId("movie", imdbId) : null;
       if (cmById?.imdbRating) imdbRating = cmById.imdbRating;
       if (!imdbId || !imdbRating) {
         const cmSearch = await cinemetaSearchBest("movie", name, year);
-        if (cmSearch?.imdbId && !imdbId) imdbId = cmSearch.imdbId;
-        if (cmSearch?.imdbRating && !imdbRating) imdbRating = cmSearch.imdbRating;
+        if (cmSearch?.imdbId && !imdbId && cmSearch.strong) imdbId = cmSearch.imdbId;
+        if (cmSearch?.imdbRating && !imdbRating && cmSearch.strong) imdbRating = cmSearch.imdbRating;
       }
+      const imdbRatingFromPage = imdbId ? await imdbRatingById(imdbId) : null;
+      if (imdbRatingFromPage) imdbRating = imdbRatingFromPage;
       item.imdbId = imdbId;
       item.imdbRating = imdbRating;
       movieMetaCache.set(key, { time: Date.now(), item: clone(item) });
@@ -61917,13 +62069,17 @@ ${String(html || "")}`;
         trailerYtId,
         episodes
       };
+      const overrideSeriesImdbId = imdbOverrideId("series", name, canonicalSlug);
+      if (overrideSeriesImdbId) imdbId = overrideSeriesImdbId;
       const cmById = imdbId ? await cinemetaByImdbId("series", imdbId) : null;
       if (cmById?.imdbRating) imdbRating = cmById.imdbRating;
       if (!imdbId || !imdbRating) {
         const cmSearch = await cinemetaSearchBest("series", name, year);
-        if (cmSearch?.imdbId && !imdbId) imdbId = cmSearch.imdbId;
-        if (cmSearch?.imdbRating && !imdbRating) imdbRating = cmSearch.imdbRating;
+        if (cmSearch?.imdbId && !imdbId && cmSearch.strong) imdbId = cmSearch.imdbId;
+        if (cmSearch?.imdbRating && !imdbRating && cmSearch.strong) imdbRating = cmSearch.imdbRating;
       }
+      const imdbRatingFromPage = imdbId ? await imdbRatingById(imdbId) : null;
+      if (imdbRatingFromPage) imdbRating = imdbRatingFromPage;
       item.imdbId = imdbId;
       item.imdbRating = imdbRating;
       seriesMetaCache.set(key, { time: Date.now(), item: clone(item) });
@@ -61987,6 +62143,8 @@ ${String(html || "")}`;
       getFilmes,
       getSeriesPortuguesas,
       getNovelasPortuguesas,
+      getItemsByGenreLabel,
+      getCoveredIdsForGenres,
       sanitizeCatalogItems,
       getFilmeMeta,
       getSeriesMeta,
@@ -62155,12 +62313,18 @@ function seriesBaseId(decodedSeriesId) {
 }
 function releaseInfoFromItem(item) {
   const ri = String(item.releaseInfo || "").trim();
+  const broadcaster = String(item.runtime || "").trim();
   const rating = String(item.imdbRating || "").trim();
+  const broadcasterPart = broadcaster ? broadcaster : "";
   const ratingPart = rating ? `IMDb ${rating}` : "";
-  if (ri && !/^\d{1,3}$/.test(ri)) return ratingPart ? `${ri} | ${ratingPart}` : ri;
+  const appendParts = (base) => {
+    const parts = [String(base || "").trim(), broadcasterPart, ratingPart].filter(Boolean);
+    return parts.length ? parts.join(" | ") : void 0;
+  };
+  if (ri && !/^\d{1,3}$/.test(ri)) return appendParts(ri);
   const y = Number(item.year);
-  if (Number.isFinite(y) && y >= 1870 && y <= 2100) return ratingPart ? `${y} | ${ratingPart}` : String(y);
-  if (ratingPart) return ratingPart;
+  if (Number.isFinite(y) && y >= 1870 && y <= 2100) return appendParts(String(y));
+  if (broadcasterPart || ratingPart) return [broadcasterPart, ratingPart].filter(Boolean).join(" | ");
   return void 0;
 }
 function metaPreview(item) {
@@ -62228,6 +62392,26 @@ async function handleCatalog(type, id, extra) {
   if (type === "movie" && id === "novelaspt_filmes") items = await scraper.getFilmes();
   else if (type === "series" && id === "novelaspt_series") items = await scraper.getSeriesPortuguesas();
   else if (type === "series" && id === "novelaspt_novelas") items = await scraper.getNovelasPortuguesas();
+  const genreRaw = String(extra.genre || "").trim();
+  if (genreRaw) {
+    const wanted = normalizeSearch(genreRaw);
+    if (wanted !== "none") {
+      const byGenre = await scraper.getItemsByGenreLabel(genreRaw);
+      const allowedIds = new Set(
+        byGenre.filter((x) => x.type === type).map((x) => x.id)
+      );
+      items = items.filter((it) => allowedIds.has(it.id)).map((it) => ({ ...it, genres: [genreRaw] }));
+      if (type === "series" && id === "novelaspt_novelas") {
+        const novelasSet = new Set((await scraper.getNovelasPortuguesas()).map((x) => x.id));
+        items = items.filter((it) => novelasSet.has(it.id));
+      }
+    } else {
+      const knownLabels = GENRE_OPTIONS.filter((g) => normalizeSearch(g) !== "none");
+      const byKnown = await scraper.getCoveredIdsForGenres(knownLabels);
+      if (byKnown.size > 0) items = items.filter((it) => !byKnown.has(it.id));
+      items = items.map((it) => ({ ...it, genres: ["None"] }));
+    }
+  }
   const search = String(extra.search || "").trim();
   if (search) {
     const q = normalizeSearch(search);
@@ -62236,27 +62420,6 @@ async function handleCatalog(type, id, extra) {
       const s = normalizeSearch(String(it.slug || "").replace(/-/g, " "));
       return n.includes(q) || s.includes(q);
     });
-  }
-  const genreRaw = String(extra.genre || "").trim();
-  if (genreRaw) {
-    const wanted = normalizeSearch(genreRaw);
-    const enriched = [];
-    for (const it of items) {
-      let full = null;
-      try {
-        full = type === "movie" ? await scraper.getFilmeMeta(it.slug) : await scraper.getSeriesMeta(it.slug);
-      } catch (_) {
-        full = null;
-      }
-      const row = full || it;
-      const gs = Array.isArray(row.genres) && row.genres.length ? row.genres : ["None"];
-      const hasWanted = gs.some((g) => normalizeSearch(g) === wanted);
-      const isNone = gs.every((g) => normalizeSearch(g) === "none");
-      if (wanted === "none" && isNone || wanted !== "none" && hasWanted) {
-        enriched.push({ ...it, genres: gs });
-      }
-    }
-    items = enriched;
   }
   const skip = Math.max(0, Number.parseInt(String(extra.skip || "0"), 10) || 0);
   const page = items.slice(skip, skip + CATALOG_PAGE_SIZE);
