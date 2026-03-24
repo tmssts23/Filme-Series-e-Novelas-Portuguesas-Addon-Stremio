@@ -14,6 +14,27 @@ const SERIES_PREFIX = 'novelaspt_series_';
 const ADDON_NAME = 'Filmes, Series e Novelas Portuguesas Addon Stremio';
 const VERSION = '2.0.0';
 const CATALOG_PAGE_SIZE = 100;
+const GENRE_OPTIONS = [
+  'None',
+  'Ação',
+  'Aventura',
+  'Comédia',
+  'Drama',
+  'Romance',
+  'Suspense',
+  'Terror',
+  'Crime',
+  'Documentário',
+  'Animação',
+  'Família',
+  'Fantasia',
+  'História',
+  'Música',
+  'Mistério',
+  'Guerra',
+  'Western',
+  'Biografia',
+];
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -45,19 +66,31 @@ function getManifest(originBase) {
         type: 'movie',
         id: 'novelaspt_filmes',
         name: 'Filmes Portugueses',
-        extra: [{ name: 'search', isRequired: false }, { name: 'skip', isRequired: false }],
+        extra: [
+          { name: 'search', isRequired: false },
+          { name: 'genre', isRequired: false, options: GENRE_OPTIONS },
+          { name: 'skip', isRequired: false },
+        ],
       },
       {
         type: 'series',
         id: 'novelaspt_series',
         name: 'Series Portuguesas',
-        extra: [{ name: 'search', isRequired: false }, { name: 'skip', isRequired: false }],
+        extra: [
+          { name: 'search', isRequired: false },
+          { name: 'genre', isRequired: false, options: GENRE_OPTIONS },
+          { name: 'skip', isRequired: false },
+        ],
       },
       {
         type: 'series',
         id: 'novelaspt_novelas',
         name: 'Novelas Portuguesas',
-        extra: [{ name: 'search', isRequired: false }, { name: 'skip', isRequired: false }],
+        extra: [
+          { name: 'search', isRequired: false },
+          { name: 'genre', isRequired: false, options: GENRE_OPTIONS },
+          { name: 'skip', isRequired: false },
+        ],
       },
     ],
     behaviorHints: base,
@@ -144,9 +177,12 @@ function seriesBaseId(decodedSeriesId) {
 
 function releaseInfoFromItem(item) {
   const ri = String(item.releaseInfo || '').trim();
-  if (ri && !/^\d{1,3}$/.test(ri)) return ri;
+  const rating = String(item.imdbRating || '').trim();
+  const ratingPart = rating ? `IMDb ${rating}` : '';
+  if (ri && !/^\d{1,3}$/.test(ri)) return ratingPart ? `${ri} | ${ratingPart}` : ri;
   const y = Number(item.year);
-  if (Number.isFinite(y) && y >= 1870 && y <= 2100) return String(y);
+  if (Number.isFinite(y) && y >= 1870 && y <= 2100) return ratingPart ? `${y} | ${ratingPart}` : String(y);
+  if (ratingPart) return ratingPart;
   return undefined;
 }
 
@@ -159,6 +195,7 @@ function metaPreview(item) {
     posterShape: 'poster',
     ...(item.description ? { description: item.description } : {}),
     ...(releaseInfoFromItem(item) ? { releaseInfo: releaseInfoFromItem(item) } : {}),
+    ...(Array.isArray(item.genres) && item.genres.length ? { genres: item.genres } : { genres: ['None'] }),
   };
 }
 
@@ -174,6 +211,16 @@ function fullMeta(item, responseId, forceType) {
     ...(item.background ? { background: item.background } : {}),
     ...(item.description ? { description: item.description } : {}),
     ...(releaseInfoFromItem(item) ? { releaseInfo: releaseInfoFromItem(item) } : {}),
+    ...(item.runtime ? { runtime: item.runtime } : {}),
+    ...(Array.isArray(item.genres) && item.genres.length ? { genres: item.genres } : { genres: ['None'] }),
+    ...(item.imdbRating ? { imdbRating: String(item.imdbRating) } : {}),
+    ...(item.trailerYtId
+      ? {
+          /* Trailer button no Stremio (ao lado de Add to library). */
+          trailer: { ytId: item.trailerYtId },
+          trailers: [{ source: item.trailerYtId, type: 'Trailer' }],
+        }
+      : {}),
   };
 
   if (type === 'movie') {
@@ -219,6 +266,35 @@ async function handleCatalog(type, id, extra) {
       const s = normalizeSearch(String(it.slug || '').replace(/-/g, ' '));
       return n.includes(q) || s.includes(q);
     });
+  }
+
+  const genreRaw = String(extra.genre || '').trim();
+  if (genreRaw) {
+    const wanted = normalizeSearch(genreRaw);
+    if (wanted !== 'none') {
+      const enriched = [];
+      for (const it of items) {
+        let full = null;
+        try {
+          full =
+            type === 'movie'
+              ? await scraper.getFilmeMeta(it.slug)
+              : await scraper.getSeriesMeta(it.slug);
+        } catch (_) {
+          full = null;
+        }
+        const row = full || it;
+        const gs = Array.isArray(row.genres) && row.genres.length ? row.genres : ['None'];
+        const has = gs.some((g) => normalizeSearch(g) === wanted);
+        if (has) enriched.push({ ...it, genres: gs });
+      }
+      items = enriched;
+    } else {
+      items = items.filter((it) => {
+        const gs = Array.isArray(it.genres) && it.genres.length ? it.genres : ['None'];
+        return gs.some((g) => normalizeSearch(g) === 'none');
+      });
+    }
   }
 
   const skip = Math.max(0, Number.parseInt(String(extra.skip || '0'), 10) || 0);

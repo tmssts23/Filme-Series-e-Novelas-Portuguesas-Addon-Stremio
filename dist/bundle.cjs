@@ -61369,7 +61369,14 @@ var require_scraper = __commonJS({
           (img.attr("alt") || "").trim() || $box.find(".item-desc-title h3, .item-desc-title").first().text().trim() || slug.replace(/-/g, " ")
         );
         const id = contentType === "movie" ? `novelaspt_movie_${slug}` : `novelaspt_series_${slug}`;
-        map.set(`${contentType}:${slug}`, { id, slug, type: contentType, name, poster: poster || void 0 });
+        map.set(`${contentType}:${slug}`, {
+          id,
+          slug,
+          type: contentType,
+          name,
+          poster: poster || void 0,
+          genres: ["None"]
+        });
       });
       return [...map.values()];
     }
@@ -61450,9 +61457,151 @@ var require_scraper = __commonJS({
     }
     function extractSynopsis($) {
       const block = $(".details-desc").first().text().replace(/\s+/g, " ").trim();
-      if (block && block.length > 20) return block.slice(0, 4500);
+      if (block) {
+        const fromResumo = block.match(/Resumo do Filme:\s*(.+)$/i) || block.match(/Resumo da S[ée]rie:\s*(.+)$/i) || block.match(/Resumo do S[ée]rie:\s*(.+)$/i) || block.match(/Resumo da Novela:\s*(.+)$/i) || block.match(/Resumo do Novela:\s*(.+)$/i) || block.match(/Resumo:\s*(.+)$/i) || block.match(/Sinopse:\s*(.+)$/i);
+        if (fromResumo && fromResumo[1]) {
+          const clean = fromResumo[1].replace(/\s+/g, " ").trim();
+          if (clean.length > 20) return clean.slice(0, 4500);
+        }
+        if (block.length > 20) return block.slice(0, 4500);
+      }
       const alt = $(".entry-content, .content, .single-desc, .description").first().text().replace(/\s+/g, " ").trim();
       return alt ? alt.slice(0, 4500) : void 0;
+    }
+    function extractYoutubeIdFromText(text) {
+      const src = String(text || "");
+      const patterns = [
+        /youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})/i,
+        /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/i,
+        /youtube-nocookie\.com\/embed\/([A-Za-z0-9_-]{11})/i,
+        /youtu\.be\/([A-Za-z0-9_-]{11})/i
+      ];
+      for (const re of patterns) {
+        const m = src.match(re);
+        if (m && m[1]) return m[1];
+      }
+      return void 0;
+    }
+    function extractYoutubeTrailerId($, html) {
+      const attrs = [
+        'iframe[src*="youtube.com"], iframe[src*="youtu.be"]',
+        'a[href*="youtube.com/watch"], a[href*="youtu.be/"]',
+        "[data-video], [data-src], [data-url], [data-trailer]"
+      ];
+      for (const sel of attrs) {
+        let found;
+        $(sel).each((_, el) => {
+          if (found) return;
+          const $el = $(el);
+          const raw = $el.attr("src") || $el.attr("href") || $el.attr("data-video") || $el.attr("data-src") || $el.attr("data-url") || $el.attr("data-trailer") || "";
+          const id = extractYoutubeIdFromText(raw);
+          if (id) found = id;
+        });
+        if (found) return found;
+      }
+      return extractYoutubeIdFromText(html);
+    }
+    function parseImdbRating(text, html) {
+      const raw = `${String(text || "")}
+${String(html || "")}`;
+      const m = raw.match(/IMDb(?:\s*Rating)?\s*[:\-]?\s*([0-9](?:[.,][0-9])?)/i) || raw.match(/imdbRating["']?\s*[:=]\s*["']?([0-9](?:\.[0-9])?)/i) || raw.match(/ratingValue["']?\s*[:=]\s*["']?([0-9](?:\.[0-9])?)/i);
+      if (!m || !m[1]) return void 0;
+      const n = parseFloat(String(m[1]).replace(",", "."));
+      if (!Number.isFinite(n) || n < 0 || n > 10) return void 0;
+      return n.toFixed(1);
+    }
+    function normalizeSpace(s) {
+      return String(s || "").replace(/\s+/g, " ").trim();
+    }
+    function blockText($) {
+      return normalizeSpace($(".details-desc").first().text() || "");
+    }
+    function labelValue(block, labels) {
+      const src = normalizeSpace(block);
+      if (!src) return "";
+      for (const label of labels) {
+        const re = new RegExp(`${label}\\s*:\\s*(.+?)(?=(?:\\b[A-Z\xC0-\xDD][A-Za-z\xC0-\xFF ]{1,35}:)|$)`, "i");
+        const m = src.match(re);
+        if (m && m[1]) {
+          const v = normalizeSpace(m[1]);
+          if (v) return v;
+        }
+      }
+      return "";
+    }
+    function splitGenres(raw) {
+      const txt = normalizeSpace(raw || "");
+      if (!txt) return ["None"];
+      const pieces = txt.split(/,|\/|;|\|/g).map((x) => normalizeSpace(x)).filter(Boolean).flatMap((x) => x.split(/\s+e\s+/i).map((y) => normalizeSpace(y)).filter(Boolean));
+      const dedupe = [];
+      const seen = /* @__PURE__ */ new Set();
+      for (const p of pieces) {
+        const cleaned = p.replace(/^[-–—:\s]+/, "").replace(/\s{2,}/g, " ").trim();
+        if (!cleaned) continue;
+        const key = cleaned.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        dedupe.push(cleaned);
+      }
+      return dedupe.length ? dedupe : ["None"];
+    }
+    function extractGenresFromBlock(block) {
+      const src = normalizeSpace(block);
+      if (!src) return ["None"];
+      const labeled = labelValue(src, [
+        "G[\xE9e]nero",
+        "G[\xE9e]neros",
+        "Categoria",
+        "Categorias",
+        "Classifica[c\xE7][a\xE3]o"
+      ]);
+      if (labeled) return splitGenres(labeled);
+      return ["None"];
+    }
+    function releaseInfoFromBlock(block, typeHint) {
+      const src = normalizeSpace(block);
+      if (!src) return void 0;
+      const period = labelValue(src, ["Per[i\xED]odo de Exibi[c\xE7][a\xE3]o", "Per[i\xED]odo"]) || labelValue(src, ["Anos de Exibi[c\xE7][a\xE3]o"]);
+      if (period) {
+        const years = [...period.matchAll(/\b((?:19|20)\d{2})\b/g)].map((m) => parseInt(m[1], 10));
+        if (years.length >= 2) {
+          years.sort((a, b) => a - b);
+          return `${years[0]}-${years[years.length - 1]}`;
+        }
+        if (years.length === 1) return String(years[0]);
+        return period.slice(0, 40);
+      }
+      const yearAfterLabel = src.match(
+        /(?:Ano do Filme|Ano da S[ée]rie|Ano do S[ée]rie|Ano da Novela|Ano do Novela)\s*:\s*((?:19|20)\d{2})/i
+      );
+      if (yearAfterLabel && yearAfterLabel[1]) return yearAfterLabel[1];
+      const dateAfterLabel = src.match(
+        /(?:Data de Estreia|Estreia|Primeira Exibi[cç][aã]o)\s*:\s*(\d{1,2}[\/\-]\d{1,2}[\/\-](?:19|20)\d{2})/i
+      );
+      if (dateAfterLabel && dateAfterLabel[1]) return dateAfterLabel[1];
+      const estreia = labelValue(src, ["Data de Estreia", "Estreia", "Primeira Exibi[c\xE7][a\xE3]o"]);
+      if (estreia) {
+        const y = estreia.match(/\b((?:19|20)\d{2})\b/);
+        if (y) return y[1];
+        return estreia.slice(0, 40);
+      }
+      if (typeHint === "series") {
+        const y = src.match(/\b((?:19|20)\d{2})\b/);
+        if (y) return y[1];
+      }
+      return void 0;
+    }
+    function broadcasterFromBlock(block) {
+      const src = normalizeSpace(block);
+      if (!src) return void 0;
+      const labeled = labelValue(src, ["Emissora", "Canal", "Transmiss[a\xE3]o", "Exibi[c\xE7][a\xE3]o original"]);
+      if (labeled) return labeled.slice(0, 40);
+      const known = ["TVI", "SIC", "RTP1", "RTP2", "RTP", "RTP Mem\xF3ria", "RTP A\xE7ores", "RTP Madeira", "Canal Q"];
+      for (const k of known) {
+        const re = new RegExp(`\\b${k.replace(/\s+/g, "\\s+")}\\b`, "i");
+        if (re.test(src)) return k;
+      }
+      return void 0;
     }
     function remapEpisodes(raw) {
       const ssids = [...new Set(raw.map((e) => e.rawSsid))].sort((a, b) => a - b);
@@ -61493,7 +61642,8 @@ var require_scraper = __commonJS({
         type: "movie",
         slug,
         name: toTitleCase(slug.replace(/-/g, " ")),
-        description: "Meta temporaria. O site de origem nao respondeu para este titulo."
+        description: "Meta temporaria. O site de origem nao respondeu para este titulo.",
+        genres: ["None"]
       };
     }
     function shellSeriesMetaFromStremioId(decoded) {
@@ -61509,6 +61659,7 @@ var require_scraper = __commonJS({
         slug,
         name: toTitleCase(slug.replace(/-/g, " ")),
         description: "Meta temporaria. O site de origem nao respondeu para esta serie.",
+        genres: ["None"],
         episodes: [{ season: 1, episode: 1, name: "A sincronizar...", wpPid: void 0 }]
       };
     }
@@ -61520,7 +61671,7 @@ var require_scraper = __commonJS({
       if (!fetched) {
         const fallback = await findCatalogItem("movie", slug) || null;
         if (fallback) {
-          const item2 = { ...fallback, type: "movie" };
+          const item2 = { ...fallback, type: "movie", genres: fallback.genres || ["None"] };
           movieMetaCache.set(key, { time: Date.now(), item: clone(item2) });
           return item2;
         }
@@ -61535,11 +61686,16 @@ var require_scraper = __commonJS({
         $("h1").first().text().trim() || $(".display-page-heading h1").first().text().trim() || canonicalSlug.replace(/-/g, " ")
       );
       const desc = extractSynopsis($);
-      const year = yearFromText($(".details-desc").first().text() || $("body").text()) || yearFromText($("h1").first().text());
-      const releaseInfo = year ? String(year) : void 0;
+      const details = blockText($);
+      const year = yearFromText(details || $("body").text()) || yearFromText($("h1").first().text());
+      const releaseInfo = releaseInfoFromBlock(details, "movie") || (year ? String(year) : void 0);
+      const runtime = broadcasterFromBlock(details);
+      const genres = extractGenresFromBlock(details);
       const poster = absoluteUrl($('meta[property="og:image"]').attr("content") || $("img").first().attr("src") || "");
       const imdbM = $.html().match(/imdb\.com\/title\/(tt\d{7,9})/i) || $("body").text().match(/(tt\d{7,9})/i);
       const imdbId = imdbM ? String(imdbM[1] || imdbM[0]).toLowerCase() : void 0;
+      const imdbRating = parseImdbRating($("body").text(), html);
+      const trailerYtId = extractYoutubeTrailerId($, html);
       const wpPostId = parseInt($.html().match(/[?&]p=(\d+)/)?.[1] || "", 10) || parseInt($(".zetaflix_player_option").first().attr("data-post") || "", 10) || void 0;
       const item = {
         id: `novelaspt_movie_${canonicalSlug}`,
@@ -61549,8 +61705,12 @@ var require_scraper = __commonJS({
         description: desc,
         year,
         releaseInfo,
+        runtime,
+        genres,
         poster: poster || void 0,
         imdbId,
+        imdbRating,
+        trailerYtId,
         wpPostId: Number.isFinite(wpPostId) ? wpPostId : void 0
       };
       movieMetaCache.set(key, { time: Date.now(), item: clone(item) });
@@ -61568,6 +61728,7 @@ var require_scraper = __commonJS({
           const item2 = {
             ...fallback,
             type: "series",
+            genres: fallback.genres || ["None"],
             episodes: [{ season: 1, episode: 1, name: "A sincronizar...", wpPid: void 0 }]
           };
           seriesMetaCache.set(key, { time: Date.now(), item: clone(item2) });
@@ -61584,11 +61745,16 @@ var require_scraper = __commonJS({
         $("h1").first().text().trim() || $(".display-page-heading h1").first().text().trim() || canonicalSlug.replace(/-/g, " ")
       );
       const desc = extractSynopsis($);
-      const year = yearFromText($(".details-desc").first().text() || $("body").text()) || yearFromText($("h1").first().text());
-      const releaseInfo = year ? String(year) : void 0;
+      const details = blockText($);
+      const year = yearFromText(details || $("body").text()) || yearFromText($("h1").first().text());
+      const releaseInfo = releaseInfoFromBlock(details, "series") || (year ? String(year) : void 0);
+      const runtime = broadcasterFromBlock(details);
+      const genres = extractGenresFromBlock(details);
       const poster = absoluteUrl($('meta[property="og:image"]').attr("content") || $("img").first().attr("src") || "");
       const imdbM = $.html().match(/imdb\.com\/title\/(tt\d{7,9})/i) || $("body").text().match(/(tt\d{7,9})/i);
       const imdbId = imdbM ? String(imdbM[1] || imdbM[0]).toLowerCase() : void 0;
+      const imdbRating = parseImdbRating($("body").text(), html);
+      const trailerYtId = extractYoutubeTrailerId($, html);
       const rawEpisodes = [];
       $(".play-ep").each((_, el) => {
         const $el = $(el);
@@ -61615,8 +61781,12 @@ var require_scraper = __commonJS({
         description: desc,
         year,
         releaseInfo,
+        runtime,
+        genres,
         poster: poster || void 0,
         imdbId,
+        imdbRating,
+        trailerYtId,
         episodes
       };
       seriesMetaCache.set(key, { time: Date.now(), item: clone(item) });
@@ -61705,6 +61875,27 @@ var SERIES_PREFIX = "novelaspt_series_";
 var ADDON_NAME = "Filmes, Series e Novelas Portuguesas Addon Stremio";
 var VERSION = "2.0.0";
 var CATALOG_PAGE_SIZE = 100;
+var GENRE_OPTIONS = [
+  "None",
+  "A\xE7\xE3o",
+  "Aventura",
+  "Com\xE9dia",
+  "Drama",
+  "Romance",
+  "Suspense",
+  "Terror",
+  "Crime",
+  "Document\xE1rio",
+  "Anima\xE7\xE3o",
+  "Fam\xEDlia",
+  "Fantasia",
+  "Hist\xF3ria",
+  "M\xFAsica",
+  "Mist\xE9rio",
+  "Guerra",
+  "Western",
+  "Biografia"
+];
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -61733,19 +61924,31 @@ function getManifest(originBase) {
         type: "movie",
         id: "novelaspt_filmes",
         name: "Filmes Portugueses",
-        extra: [{ name: "search", isRequired: false }, { name: "skip", isRequired: false }]
+        extra: [
+          { name: "search", isRequired: false },
+          { name: "genre", isRequired: false, options: GENRE_OPTIONS },
+          { name: "skip", isRequired: false }
+        ]
       },
       {
         type: "series",
         id: "novelaspt_series",
         name: "Series Portuguesas",
-        extra: [{ name: "search", isRequired: false }, { name: "skip", isRequired: false }]
+        extra: [
+          { name: "search", isRequired: false },
+          { name: "genre", isRequired: false, options: GENRE_OPTIONS },
+          { name: "skip", isRequired: false }
+        ]
       },
       {
         type: "series",
         id: "novelaspt_novelas",
         name: "Novelas Portuguesas",
-        extra: [{ name: "search", isRequired: false }, { name: "skip", isRequired: false }]
+        extra: [
+          { name: "search", isRequired: false },
+          { name: "genre", isRequired: false, options: GENRE_OPTIONS },
+          { name: "skip", isRequired: false }
+        ]
       }
     ],
     behaviorHints: base
@@ -61815,9 +62018,12 @@ function seriesBaseId(decodedSeriesId) {
 }
 function releaseInfoFromItem(item) {
   const ri = String(item.releaseInfo || "").trim();
-  if (ri && !/^\d{1,3}$/.test(ri)) return ri;
+  const rating = String(item.imdbRating || "").trim();
+  const ratingPart = rating ? `IMDb ${rating}` : "";
+  if (ri && !/^\d{1,3}$/.test(ri)) return ratingPart ? `${ri} | ${ratingPart}` : ri;
   const y = Number(item.year);
-  if (Number.isFinite(y) && y >= 1870 && y <= 2100) return String(y);
+  if (Number.isFinite(y) && y >= 1870 && y <= 2100) return ratingPart ? `${y} | ${ratingPart}` : String(y);
+  if (ratingPart) return ratingPart;
   return void 0;
 }
 function metaPreview(item) {
@@ -61828,7 +62034,8 @@ function metaPreview(item) {
     poster: item.poster,
     posterShape: "poster",
     ...item.description ? { description: item.description } : {},
-    ...releaseInfoFromItem(item) ? { releaseInfo: releaseInfoFromItem(item) } : {}
+    ...releaseInfoFromItem(item) ? { releaseInfo: releaseInfoFromItem(item) } : {},
+    ...Array.isArray(item.genres) && item.genres.length ? { genres: item.genres } : { genres: ["None"] }
   };
 }
 function fullMeta(item, responseId, forceType) {
@@ -61842,7 +62049,15 @@ function fullMeta(item, responseId, forceType) {
     ...item.poster ? { poster: item.poster } : {},
     ...item.background ? { background: item.background } : {},
     ...item.description ? { description: item.description } : {},
-    ...releaseInfoFromItem(item) ? { releaseInfo: releaseInfoFromItem(item) } : {}
+    ...releaseInfoFromItem(item) ? { releaseInfo: releaseInfoFromItem(item) } : {},
+    ...item.runtime ? { runtime: item.runtime } : {},
+    ...Array.isArray(item.genres) && item.genres.length ? { genres: item.genres } : { genres: ["None"] },
+    ...item.imdbRating ? { imdbRating: String(item.imdbRating) } : {},
+    ...item.trailerYtId ? {
+      /* Trailer button no Stremio (ao lado de Add to library). */
+      trailer: { ytId: item.trailerYtId },
+      trailers: [{ source: item.trailerYtId, type: "Trailer" }]
+    } : {}
   };
   if (type === "movie") {
     const y = Number(item.year);
@@ -61884,6 +62099,31 @@ async function handleCatalog(type, id, extra) {
       const s = normalizeSearch(String(it.slug || "").replace(/-/g, " "));
       return n.includes(q) || s.includes(q);
     });
+  }
+  const genreRaw = String(extra.genre || "").trim();
+  if (genreRaw) {
+    const wanted = normalizeSearch(genreRaw);
+    if (wanted !== "none") {
+      const enriched = [];
+      for (const it of items) {
+        let full = null;
+        try {
+          full = type === "movie" ? await scraper.getFilmeMeta(it.slug) : await scraper.getSeriesMeta(it.slug);
+        } catch (_) {
+          full = null;
+        }
+        const row = full || it;
+        const gs = Array.isArray(row.genres) && row.genres.length ? row.genres : ["None"];
+        const has = gs.some((g) => normalizeSearch(g) === wanted);
+        if (has) enriched.push({ ...it, genres: gs });
+      }
+      items = enriched;
+    } else {
+      items = items.filter((it) => {
+        const gs = Array.isArray(it.genres) && it.genres.length ? it.genres : ["None"];
+        return gs.some((g) => normalizeSearch(g) === "none");
+      });
+    }
   }
   const skip = Math.max(0, Number.parseInt(String(extra.skip || "0"), 10) || 0);
   const page = items.slice(skip, skip + CATALOG_PAGE_SIZE);

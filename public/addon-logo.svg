@@ -1,25 +1,87 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Bandeira de Portugal em forma de bola">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Bandeira de Portugal em formato de bola">
   <defs>
-    <radialGradient id="ptSphere" cx="32%" cy="28%" r="78%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45"/>
-      <stop offset="35%" stop-color="#ffffff" stop-opacity="0.08"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0.25"/>
-    </radialGradient>
-    <clipPath id="ptBall">
+    <clipPath id="ballClip">
       <circle cx="256" cy="256" r="236"/>
     </clipPath>
+    <radialGradient id="shine" cx="30%" cy="26%" r="78%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="30%" stop-color="#ffffff" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.30"/>
+    </radialGradient>
   </defs>
-  <g clip-path="url(#ptBall)">
-    <rect x="0" y="0" width="256" height="512" fill="#046A38"/>
-    <rect x="256" y="0" width="256" height="512" fill="#DA020E"/>
-    <!-- Esfera armilar + escudo (simplificado, centro na jun��o verde/vermelho) -->
-    <circle cx="256" cy="256" r="80" fill="#FFCC00" stroke="#1a1a1a" stroke-width="3"/>
-    <circle cx="256" cy="256" r="60" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
-    <ellipse cx="256" cy="256" rx="60" ry="24" fill="none" stroke="#1a1a1a" stroke-width="2"/>
-    <ellipse cx="256" cy="256" rx="24" ry="60" fill="none" stroke="#1a1a1a" stroke-width="2"/>
-    <path fill="#DA020E" stroke="#1a1a1a" stroke-width="2"
-      d="M256 218c-22 0-40 18-40 40v6c0 16 12 30 28 34v28h24v-28c16-4 28-18 28-34v-6c0-22-18-40-40-40z"/>
+
+  <g clip-path="url(#ballClip)">
+    <!-- Flag fields (official proportion 2/5 green, 3/5 red) -->
+    <rect x="0" y="0" width="205" height="512" fill="#00643a"/>
+    <rect x="205" y="0" width="307" height="512" fill="#d4001f"/>
+
+    <!-- Armillary sphere -->
+    <g transform="translate(205 256)">
+      <circle r="79" fill="none" stroke="#f8c300" stroke-width="18"/>
+      <ellipse rx="79" ry="30" fill="none" stroke="#f8c300" stroke-width="10"/>
+      <ellipse rx="30" ry="79" fill="none" stroke="#f8c300" stroke-width="10"/>
+      <path d="M-64 0h128M0-64v128" stroke="#f8c300" stroke-width="8" fill="none"/>
+      <circle r="86" fill="none" stroke="#b58600" stroke-width="2.5" opacity="0.8"/>
+    </g>
+
+    <!-- Portuguese shield (stylized original) -->
+    <g transform="translate(205 256)">
+      <path
+        d="M0-66
+           c34 0 62 19 62 51
+           v31
+           c0 39-29 72-62 83
+           c-33-11-62-44-62-83
+           v-31
+           c0-32 28-51 62-51z"
+        fill="#ffffff"
+        stroke="#111111"
+        stroke-width="2.5"/>
+
+      <!-- Red border -->
+      <path
+        d="M0-58
+           c28 0 51 16 51 43
+           v28
+           c0 32-23 59-51 69
+           c-28-10-51-37-51-69
+           v-28
+           c0-27 23-43 51-43z"
+        fill="#d4001f"
+        stroke="#111111"
+        stroke-width="1.8"/>
+
+      <!-- Five blue shields -->
+      <g fill="#0038a8" stroke="#0f0f0f" stroke-width="1.1">
+        <rect x="-14" y="-35" width="28" height="22" rx="3"/>
+        <rect x="-34" y="-12" width="20" height="18" rx="3"/>
+        <rect x="14" y="-12" width="20" height="18" rx="3"/>
+        <rect x="-14" y="10" width="28" height="22" rx="3"/>
+        <rect x="-14" y="-12" width="28" height="18" rx="3"/>
+      </g>
+
+      <!-- White bezants -->
+      <g fill="#ffffff">
+        <circle cx="-7" cy="-24" r="2.1"/><circle cx="0" cy="-24" r="2.1"/><circle cx="7" cy="-24" r="2.1"/>
+        <circle cx="-24" cy="-3" r="2.1"/><circle cx="-17" cy="-3" r="2.1"/>
+        <circle cx="17" cy="-3" r="2.1"/><circle cx="24" cy="-3" r="2.1"/>
+        <circle cx="-7" cy="21" r="2.1"/><circle cx="0" cy="21" r="2.1"/><circle cx="7" cy="21" r="2.1"/>
+        <circle cx="-7" cy="-3" r="2.1"/><circle cx="0" cy="-3" r="2.1"/><circle cx="7" cy="-3" r="2.1"/>
+      </g>
+
+      <!-- Yellow castles -->
+      <g fill="#f8c300" stroke="#7d5a00" stroke-width="0.9">
+        <rect x="-46" y="-44" width="10" height="8" rx="1"/>
+        <rect x="36" y="-44" width="10" height="8" rx="1"/>
+        <rect x="-52" y="-6" width="10" height="8" rx="1"/>
+        <rect x="42" y="-6" width="10" height="8" rx="1"/>
+        <rect x="-38" y="36" width="10" height="8" rx="1"/>
+        <rect x="28" y="36" width="10" height="8" rx="1"/>
+        <rect x="-8" y="48" width="16" height="8" rx="1"/>
+      </g>
+    </g>
   </g>
-  <circle cx="256" cy="256" r="236" fill="url(#ptSphere)" pointer-events="none"/>
-  <circle cx="256" cy="256" r="236" fill="none" stroke="#1a1a1a" stroke-width="4" opacity="0.35"/>
+
+  <circle cx="256" cy="256" r="236" fill="url(#shine)"/>
+  <circle cx="256" cy="256" r="236" fill="none" stroke="#111111" stroke-opacity="0.35" stroke-width="4"/>
 </svg>
