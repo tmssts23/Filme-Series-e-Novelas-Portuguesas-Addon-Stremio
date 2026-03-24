@@ -61239,6 +61239,7 @@ var require_scraper = __commonJS({
     var SERIES_ARCHIVE = `${BASE_URL}/serie/`;
     var NOVELAS_ARCHIVE = `${BASE_URL}/genero/novelas/`;
     var ZETA_API = `${BASE_URL}/wp-json/zetaplayer/v2`;
+    var LOG_PREFIX2 = "[NovelasPT]";
     var USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131 Safari/537.36";
     var HTTP_TIMEOUT_MS = Math.max(5e3, Number(process.env.STREMIO_NP_HTTP_TIMEOUT_MS) || 25e3);
     var CATALOG_CACHE_MS = Math.max(6e4, Number(process.env.STREMIO_NP_CACHE_MS) || 6 * 60 * 60 * 1e3);
@@ -61452,27 +61453,50 @@ var require_scraper = __commonJS({
       await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => runOne()));
       return out;
     }
-    async function fetchCatalog(startUrl, contentType) {
+    async function fetchCatalog(startUrl, contentType, sourceLabel) {
+      const label = String(sourceLabel || contentType || "catalogo");
       const firstPath = startUrl.startsWith(BASE_URL) ? startUrl.slice(BASE_URL.length) : startUrl;
       const first = await safeClientGet(firstPath || "/", 3, HTTP_TIMEOUT_MS);
-      if (!first || first.status !== 200 || typeof first.data !== "string") return [];
+      if (!first || first.status !== 200 || typeof first.data !== "string") {
+        console.warn(`${LOG_PREFIX2} [catalog:${label}] falha na primeira pagina (${firstPath || "/"})`);
+        return [];
+      }
       const items = parseDisplayItems(cheerio.load(first.data), contentType);
       const maxPage = extractArchiveMaxPage(cheerio.load(first.data), first.data);
-      if (maxPage <= 1) return items;
+      console.log(
+        `${LOG_PREFIX2} [catalog:${label}] paginas_detetadas=${maxPage} itens_pagina1=${items.length}`
+      );
+      if (maxPage <= 1) {
+        console.log(`${LOG_PREFIX2} [catalog:${label}] total_carregado=${items.length}`);
+        return items;
+      }
       const pages = [];
       for (let p = 2; p <= maxPage; p++) {
-        pages.push(`${startUrl.replace(/\/$/, "")}/page/${p}/`);
+        pages.push({ num: p, url: `${startUrl.replace(/\/$/, "")}/page/${p}/` });
       }
-      const rows = await poolMap(pages, ARCHIVE_CONCURRENCY, async (url) => {
+      const rows = await poolMap(pages, ARCHIVE_CONCURRENCY, async ({ num, url }) => {
         const path2 = url.startsWith(BASE_URL) ? url.slice(BASE_URL.length) : url;
         const res = await safeClientGet(path2, 2, HTTP_TIMEOUT_MS);
-        if (!res || res.status !== 200 || typeof res.data !== "string") return [];
-        return parseDisplayItems(cheerio.load(res.data), contentType);
+        if (!res || res.status !== 200 || typeof res.data !== "string") {
+          return { page: num, count: 0, ok: false, items: [] };
+        }
+        const pageItems = parseDisplayItems(cheerio.load(res.data), contentType);
+        return { page: num, count: pageItems.length, ok: true, items: pageItems };
       });
       const dedupe = new Map(items.map((x) => [x.id, x]));
-      for (const arr of rows) {
-        for (const it of arr) dedupe.set(it.id, it);
+      for (const row of rows) {
+        for (const it of row.items) dedupe.set(it.id, it);
       }
+      const okPages = rows.filter((r) => r.ok).length;
+      const failedPages = rows.length - okPages;
+      const pageCounts = [items.length, ...rows.map((r) => r.count)];
+      const sample = pageCounts.slice(0, 20).map((c, i) => `${i + 1}:${c}`).join(", ");
+      console.log(
+        `${LOG_PREFIX2} [catalog:${label}] itens_por_pagina(site)=${sample}${pageCounts.length > 20 ? ", ..." : ""}`
+      );
+      console.log(
+        `${LOG_PREFIX2} [catalog:${label}] paginas_lidas=${maxPage} paginas_ok=${1 + okPages} paginas_falha=${failedPages} total_carregado=${dedupe.size}`
+      );
       return [...dedupe.values()];
     }
     function genreToSlug(genreLabel) {
@@ -61536,22 +61560,31 @@ var require_scraper = __commonJS({
     }
     async function getFilmes() {
       const row = getCacheRow("movie");
-      if (row && Date.now() - row.time < CATALOG_CACHE_MS) return row.items;
-      const items = await fetchCatalog(FILMES_ARCHIVE, "movie");
+      if (row && Date.now() - row.time < CATALOG_CACHE_MS) {
+        console.log(`${LOG_PREFIX2} [catalog:filmes] cache_hit total=${row.items.length}`);
+        return row.items;
+      }
+      const items = await fetchCatalog(FILMES_ARCHIVE, "movie", "filmes");
       if (items.length) setCacheRow("movie", items);
       return items.length ? items : row?.items || [];
     }
     async function getSeriesPortuguesas() {
       const row = getCacheRow("series");
-      if (row && Date.now() - row.time < CATALOG_CACHE_MS) return row.items;
-      const items = await fetchCatalog(SERIES_ARCHIVE, "series");
+      if (row && Date.now() - row.time < CATALOG_CACHE_MS) {
+        console.log(`${LOG_PREFIX2} [catalog:series] cache_hit total=${row.items.length}`);
+        return row.items;
+      }
+      const items = await fetchCatalog(SERIES_ARCHIVE, "series", "series");
       if (items.length) setCacheRow("series", items);
       return items.length ? items : row?.items || [];
     }
     async function getNovelasPortuguesas() {
       const row = getCacheRow("novelas");
-      if (row && Date.now() - row.time < CATALOG_CACHE_MS) return row.items;
-      const items = await fetchCatalog(NOVELAS_ARCHIVE, "series");
+      if (row && Date.now() - row.time < CATALOG_CACHE_MS) {
+        console.log(`${LOG_PREFIX2} [catalog:novelas] cache_hit total=${row.items.length}`);
+        return row.items;
+      }
+      const items = await fetchCatalog(NOVELAS_ARCHIVE, "series", "novelas");
       if (items.length) setCacheRow("novelas", items);
       return items.length ? items : row?.items || [];
     }
