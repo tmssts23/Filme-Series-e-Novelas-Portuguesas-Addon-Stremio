@@ -51,7 +51,7 @@ function manifestOriginFromRequest(req) {
 
 function getManifest(originBase) {
   const base = { configurable: false, configurationRequired: false };
-  const logo = originBase ? `${originBase.replace(/\/$/, '')}/addon-logo.svg` : undefined;
+  const logo = originBase ? `${originBase.replace(/\/$/, '')}/addon-logo.png` : undefined;
   return {
     id: 'pt.filmes-series-portuguesas',
     version: VERSION,
@@ -271,30 +271,26 @@ async function handleCatalog(type, id, extra) {
   const genreRaw = String(extra.genre || '').trim();
   if (genreRaw) {
     const wanted = normalizeSearch(genreRaw);
-    if (wanted !== 'none') {
-      const enriched = [];
-      for (const it of items) {
-        let full = null;
-        try {
-          full =
-            type === 'movie'
-              ? await scraper.getFilmeMeta(it.slug)
-              : await scraper.getSeriesMeta(it.slug);
-        } catch (_) {
-          full = null;
-        }
-        const row = full || it;
-        const gs = Array.isArray(row.genres) && row.genres.length ? row.genres : ['None'];
-        const has = gs.some((g) => normalizeSearch(g) === wanted);
-        if (has) enriched.push({ ...it, genres: gs });
+    const enriched = [];
+    for (const it of items) {
+      let full = null;
+      try {
+        full =
+          type === 'movie'
+            ? await scraper.getFilmeMeta(it.slug)
+            : await scraper.getSeriesMeta(it.slug);
+      } catch (_) {
+        full = null;
       }
-      items = enriched;
-    } else {
-      items = items.filter((it) => {
-        const gs = Array.isArray(it.genres) && it.genres.length ? it.genres : ['None'];
-        return gs.some((g) => normalizeSearch(g) === 'none');
-      });
+      const row = full || it;
+      const gs = Array.isArray(row.genres) && row.genres.length ? row.genres : ['None'];
+      const hasWanted = gs.some((g) => normalizeSearch(g) === wanted);
+      const isNone = gs.every((g) => normalizeSearch(g) === 'none');
+      if ((wanted === 'none' && isNone) || (wanted !== 'none' && hasWanted)) {
+        enriched.push({ ...it, genres: gs });
+      }
     }
+    items = enriched;
   }
 
   const skip = Math.max(0, Number.parseInt(String(extra.skip || '0'), 10) || 0);
@@ -398,6 +394,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/manifest.json') {
       return sendJson(res, method, 200, getManifest(manifestOriginFromRequest(req)));
     }
+    if (pathname === '/addon-logo.png') return sendPublic(res, method, 'addon-logo.png', 'image/png');
     if (pathname === '/addon-logo.svg') return sendPublic(res, method, 'addon-logo.svg', 'image/svg+xml; charset=utf-8');
     if (pathname === '/configure' || pathname === '/configure/') return sendPublic(res, method, 'configure.html', 'text/html; charset=utf-8');
 
