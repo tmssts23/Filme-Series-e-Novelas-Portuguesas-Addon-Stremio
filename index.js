@@ -388,7 +388,7 @@ function sendPublic(res, method, filename, contentType) {
   res.end(body);
 }
 
-const server = http.createServer(async (req, res) => {
+async function requestHandler(req, res) {
   const method = req.method || 'GET';
   if (method === 'OPTIONS') {
     res.writeHead(204, CORS);
@@ -431,14 +431,20 @@ const server = http.createServer(async (req, res) => {
     console.error(`${LOG_PREFIX} HTTP error: ${msg}`);
     return sendJson(res, method, 500, { error: msg });
   }
-});
+}
+
+const server = http.createServer(requestHandler);
 
 server.on('error', (err) => {
   console.error(`${LOG_PREFIX} Server error: ${err.message}`);
   process.exit(1);
 });
 
-server.listen(PORT, HOST, () => {
-  console.log(`${LOG_PREFIX} Addon running on http://127.0.0.1:${PORT}`);
-  console.log(`${LOG_PREFIX} Manifest: http://127.0.0.1:${PORT}/manifest.json`);
-});
+if (require.main === module) {
+  server.listen(PORT, HOST, () => {
+    console.log(`${LOG_PREFIX} Addon running on http://127.0.0.1:${PORT}`);
+    console.log(`${LOG_PREFIX} Manifest: http://127.0.0.1:${PORT}/manifest.json`);
+  });
+}
+
+module.exports = { requestHandler };
