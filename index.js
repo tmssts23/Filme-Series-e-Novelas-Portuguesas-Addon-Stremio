@@ -14,6 +14,7 @@ const SERIES_PREFIX = 'novelaspt_series_';
 const ADDON_NAME = 'Filmes, Series e Novelas Portuguesas Addon Stremio';
 const VERSION = '2.0.0';
 const CATALOG_PAGE_SIZE = 100;
+const ACTIVE_USERS_WINDOW_MS = Math.max(60_000, Number(process.env.STREMIO_NP_ACTIVE_USERS_WINDOW_MS) || 24 * 60 * 60 * 1000);
 const GENRE_OPTIONS = [
   'None',
   'Ação',
@@ -41,6 +42,38 @@ const CORS = {
   'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
+
+const activeUsers = new Map();
+const seenUsers = new Set();
+
+function clientIdentity(req) {
+  const xff = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const xr = String(req.headers['x-real-ip'] || '').trim();
+  const remote = req.socket?.remoteAddress || '';
+  const ip = xff || xr || remote || 'unknown';
+  const ua = String(req.headers['user-agent'] || '').trim();
+  const key = crypto.createHash('sha1').update(`${ip}|${ua}`).digest('hex').slice(0, 12);
+  return { key };
+}
+
+function touchUsage(req) {
+  const now = Date.now();
+  const { key } = clientIdentity(req);
+  activeUsers.set(key, now);
+  seenUsers.add(key);
+  for (const [k, t] of activeUsers.entries()) {
+    if (now - t > ACTIVE_USERS_WINDOW_MS) activeUsers.delete(k);
+  }
+  return { key, activeNow: activeUsers.size, totalSeenProcess: seenUsers.size };
+}
+
+function usageLog(req, endpoint, extra) {
+  const u = touchUsage(req);
+  const details = String(extra || '').trim();
+  console.log(
+    `${LOG_PREFIX}[usage] endpoint=${endpoint} user=${u.key} ativos_janela=${u.activeNow} total_processo=${u.totalSeenProcess}${details ? ` ${details}` : ''}`,
+  );
+}
 
 function manifestOriginFromRequest(req) {
   const host = req.headers.host || `127.0.0.1:${PORT}`;
@@ -258,6 +291,14 @@ function streamIdFromUrl(u) {
   return crypto.createHash('sha256').update(String(u || '')).digest('hex').slice(0, 24);
 }
 
+function streamHost(u) {
+  try {
+    return new URL(String(u || '')).host || 'unknown-host';
+  } catch (_) {
+    return 'unknown-host';
+  }
+}
+
 async function handleCatalog(type, id, extra) {
   let items = [];
   if (type === 'movie' && id === 'novelaspt_filmes') items = await scraper.getFilmes();
@@ -335,7 +376,9 @@ async function handleStream(type, id, extra) {
     const meta = await scraper.getFilmeMeta(slug);
     if (!meta || !meta.wpPostId) return { streams: [] };
     const src = await scraper.getMovieStreamSources(meta.wpPostId);
+    const options = src.map((s, i) => `${i + 1}:${s.title || 'Player'}@${streamHost(s.url)}`).join(' | ');
     return {
+      _logInfo: `tipo=movie titulo="${meta.name || slug}" opcoes=${src.length}${options ? ` lista=[${options}]` : ''}`,
       streams: src.map((s) => ({
         id: `novelaspt-${streamIdFromUrl(s.url)}`,
         name: meta.name || 'NovelasPT',
@@ -364,7 +407,9 @@ async function handleStream(type, id, extra) {
   const ep = meta.episodes.find((x) => Number(x.season) === season && Number(x.episode) === episode);
   if (!ep || !ep.wpPid) return { streams: [] };
   const src = await scraper.getTvEpisodeStreamSources(ep.wpPid);
+  const options = src.map((s, i) => `${i + 1}:${s.title || 'Player'}@${streamHost(s.url)}`).join(' | ');
   return {
+    _logInfo: `tipo=series titulo="${meta.name || slug}" temporada=${season} episodio=${episode} opcoes=${src.length}${options ? ` lista=[${options}]` : ''}`,
     streams: src.map((s) => ({
       id: `novelaspt-${streamIdFromUrl(s.url)}`,
       name: meta.name || 'NovelasPT',
@@ -410,20 +455,25 @@ async function requestHandler(req, res) {
       const type = parts[1];
       const id = decodeURIComponent(String(parts[2]).replace(/\.json$/i, ''));
       const extra = { ...query, ...parseCatalogExtras(parts) };
+      usageLog(req, 'catalog', `type=${type} id=${id}`);
       const out = await handleCatalog(type, id, extra);
       return sendJson(res, method, 200, out);
     }
     if (parts[0] === 'meta' && parts.length >= 3) {
       const type = parts[1];
       const id = decodeURIComponent(String(parts[2]).replace(/\.json$/i, ''));
+      usageLog(req, 'meta', `type=${type} id=${id}`);
       const out = await handleMeta(type, id);
       return sendJson(res, method, 200, out);
     }
     if (parts[0] === 'stream' && parts.length >= 3) {
       const type = parts[1];
       const id = decodeURIComponent(String(parts[2]).replace(/\.json$/i, ''));
+      usageLog(req, 'stream', `type=${type} id=${id}`);
       const out = await handleStream(type, id, { season: query.season, episode: query.episode });
-      return sendJson(res, method, 200, out);
+      const logInfo = out && out._logInfo ? String(out._logInfo) : '';
+      if (logInfo) console.log(`${LOG_PREFIX}[stream] ${logInfo}`);
+      return sendJson(res, method, 200, { streams: Array.isArray(out?.streams) ? out.streams : [] });
     }
     return sendText(res, method, 404, 'Not found');
   } catch (err) {
